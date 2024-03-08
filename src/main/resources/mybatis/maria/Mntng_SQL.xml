@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="mntng">
+	<!-- 모니터링 서버IP -->
+	<select id="getSvrIP" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_Svr_S()
+	</select>
+	<!-- 모니터링 CPU -->
+	<select id="getCpuData" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_Cpu_S(#{Svr_Ip}, NULLIF(#{Top},''))
+	</select>
+	<!-- 모니터링 Memory -->
+	<select id="getMemoryData" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_Memory_S(#{Svr_Ip})
+	</select>
+	<!-- 모니터링 Disk -->
+	<select id="getDiskData" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_Disk_S(#{Svr_Ip})
+	</select>
+	<!-- 모니터링  NetWork -->
+	<select id="getNetworkData" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_Network_S(#{Svr_Ip}, #{Top}, #{Div} )
+	</select>
+	<!-- 모니터링  Process 상태 -->
+	<select id="getProcData" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_ProcHist_S(#{Svr_Ip})
+	</select>
+	<!-- 모니터링 최종및 금일 Summary Data -->
+	<select id="getSummaryData" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_Summary_S()
+	</select>
+	<!-- OSCC 실시간 모니터링 : 그룹 -->
+	<select id="getOSCCRealtimeGroup" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_GroupRealTime_S()
+	</select>
+	<!-- OSCC 실시간 모니터링 : 큐 -->
+	<select id="getOSCCRealtimeQueue" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_QueueRealTime_S()
+	</select>
+	<!-- OSCC 실시간 모니터링 : 큐 grant-->
+	<select id="getOSCCRealtimeQueueGrant" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_QueueRealTime_Grant_S(#{_EMP_NO})		
+	</select>
+	<!-- OSCC 실시간 모니터링 : 상담원 -->
+	<select id="getOSCCRealtimeUser" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_UserRealTime_S()
+	</select>
+	<!-- OSCC 실시간 모니터링 : 상담원 grant -->
+	<select id="getOSCCRealtimeUserGrant" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_UserRealTime_Grant_S(#{_EMP_NO})
+	</select>	
+	<!-- OSCC 실시간 모니터링 : 콜 -->
+	<select id="getOSCCRealtimeContact" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_ContactRealTime_S()
+	</select>
+	<!-- OSCC 실시간 모니터링 : 큐집계 -->
+	<select id="getOSCCCumlativeQueue" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_QueueCumulative_S()
+	</select>
+	<!-- OSCC 실시간 모니터링 : 큐집계 grant-->
+	<select id="getOSCCCumlativeQueueGrant" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_QueueCumulative_Grant_S(#{_EMP_NO})
+	</select>
+	<!-- OSCC 실시간 모니터링 : Dashboard 대기콜현황 -->
+	<select id="getOSCCDashBoardWaitCallStatus" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_Dash_WaitCallStatus_S()
+	</select>
+	<!-- OSCC 실시간 모니터링 : Dashboard 상담원현황 -->
+	<select id="getOSCCDashBoardAgentStatus" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_Dash_AgentStatus_S()
+	</select>
+	<!-- OSCC 실시간 모니터링 : Dashboard 콜현황 -->
+	<select id="getOSCCDashBoardCallStatus" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_Dash_QueueRealTime_S()
+	</select>
+	<!-- OSCC 실시간 모니터링 : Dashboard 응대율,포기율 -->
+	<select id="getOSCCDashBoardRstRate" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_QueueCumulative_Rate_S
+	</select>
+	<!-- OSCC 실시간 모니터링 : Dashboard 시간대별 콜정보 -->
+	<select id="getOSCCDashBoardTimeunit" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_Dash_QueueCumulative_Timeunit_S()
+	</select>
+	<!-- OSCC 실시간 모니터링 : Dashboard 대기콜현황 grant-->
+	<select id="getOSCCDashBoardWaitCallStatusGrant" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_Dash_WaitCallStatus_Grant_S(#{_EMP_NO}, #{Dept_No})
+	</select>
+	<!-- OSCC 실시간 모니터링 : Dashboard 상담원현황grant -->
+	<select id="getOSCCDashBoardAgentStatusGrant" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_Dash_AgentStatus_Grant_S(#{_EMP_NO}, #{Dept_No})
+	</select>
+	<!-- OSCC 실시간 모니터링 : Dashboard 콜현황 grant-->
+	<select id="getOSCCDashBoardCallStatusGrant" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_Dash_QueueRealTime_Grant_S(#{_EMP_NO}, #{Dept_No})
+	</select>
+	<!-- OSCC 실시간 모니터링 : Dashboard 응대율,포기율 grant-->
+	<select id="getOSCCDashBoardRstRateGrant" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_QueueCumulative_Rate_Grant_S(#{_EMP_NO}, #{Dept_No})
+	</select>
+	<!-- OSCC 실시간 모니터링 : Dashboard 시간대별 콜정보 grant-->
+	<select id="getOSCCDashBoardTimeunitGrant" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_Dash_QueueCumulative_Timeunit_Grant_S(#{_EMP_NO}, #{Dept_No})
+	</select>
+	<!-- OSCC 실시간 모니터링 : IVR 모니터링 -->
+	<select id="getIVRRealtime" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_IVRMONITOR_S()
+	</select>
+	
+	<!-- Monitoring Trunk -->
+	<select id="getTrunkStatus" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_TrunkStatus_S()
+	</select>
+	<!-- Monitoring Trunk -->
+	<select id="getTrunkIP" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mntng_BranchIP_S()
+	</select>
+	<!-- Monitoring Trunk -->
+	<select id="getTrunkStatus_Timeunit" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_TrunkStatus_timeunit_S(#{Trunk_Ip})
+	</select>
+	
+	<!-- Monitoring DNIS -->
+	<select id="getDNISStatus" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_DNISStatus_S()
+	</select>
+	
+	<!-- Monitoring DNIS grant -->
+	<select id="getDNISStatusGrant" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_DNISStatus_Grant_S(#{_EMP_NO})
+	</select>
+	
+	<!-- Monitoring getSwitch -->
+	<select id="getSwitch" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_Switch_S()
+	</select>
+	
+	<!-- Monitoring getSwitchPort -->
+	<select id="getSwitchPort" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_Switch_Port_S(#{Svr_Seq})
+	</select>
+	
+	<!--  getSwitchCpu -->
+	<select id="getSwitchCpu" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_Switch_Cpu_S(#{Svr_Seq})
+	</select>
+
+	<!-- CallBack Cnt 가져오기위한 brach_Cd - 유비케어 전용 -->
+	<select id="getDomainNum" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_CallBack_DomainNum_S(#{Dept_No}, #{_EMP_NO})
+	</select>
+
+	<!-- Call 관련 API 약국서비스팀 - 유비케어 전용 -->
+	<select id="getDomainNumNoSession" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_CallBack_DomainNum_No_Session_S(#{dept})
+	</select>
+
+	<!-- 메인 대쉬보드 개인속한 팀의 바로 상위및 같은레벨팀 가져오기 -->
+	<select id="getDeptSame" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_Dash_Mem_Dept_S(#{_EMP_NO})
+	</select>
+
+
+
+
+</mapper>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="code">
+    <select id="CmmCodeList" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Cmm_Code_S()
+	</select> 
+	<insert id="CmmCodeAdd" parameterType="hashmap">
+    	CALL USP_Cmm_Code_I(#{Cmm_Code_Nm})
+	</insert> 
+	<update id="CmmCodeEdt" parameterType="hashmap">
+    	CALL USP_Cmm_Code_U(IFNULL(#{Cmm_Code},''), #{Cmm_Code_Nm})
+	</update>
+	<update id="CmmCodeDel" parameterType="hashmap">
+    	CALL USP_Cmm_Code_D(IFNULL(#{Cmm_Code},''))
+	</update>
+	
+    <select id="CmmCodeDtlList" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Cmm_Code_Dtl_S(IFNULL(#{Cmm_Code},''))
+	</select> 
+	<insert id="CmmCodeDtlAdd" parameterType="hashmap">
+    	CALL USP_Cmm_Code_Dtl_I(IFNULL(#{Cmm_Code},''), #{Cmm_Dtl_Code}, #{Cmm_Dtl_Code_Nm})
+	</insert> 
+	<update id="CmmCodeDtlEdt" parameterType="hashmap">
+    	CALL USP_Cmm_Code_Dtl_U(#{Cmm_Dtl_Code_Idx}, #{Cmm_Dtl_Code}, #{Cmm_Dtl_Code_Nm}, #{_EMP_NO})
+	</update>
+	<update id="CmmCodeDtlDel" parameterType="hashmap">
+    	CALL USP_Cmm_Code_Dtl_D(IFNULL(#{Cmm_Dtl_Code_Idx},''), #{_EMP_NO})
+	</update>
+	
+	<insert id="CodeDept_I" parameterType="hashmap">
+    	CALL USP_Mem_Dept_I(#{Dept_Nm}, #{Dept_Type, jdbcType=INTEGER}, NULLIF(#{High_Dept_No}, ''), NULLIF(#{Team_Key}, ''), #{Dept_Desc}, #{_EMP_NO})
+	</insert> 
+	<update id="CodeDept_U" parameterType="hashmap">
+    	CALL USP_Mem_Dept_U(#{Dept_No}, #{Dept_Nm}, #{Dept_Type, jdbcType=INTEGER}, NULLIF(#{High_Dept_No}, ''), NULLIF(#{Team_Key}, ''), #{Dept_Desc}, #{_EMP_NO})
+	</update>
+	<update id="CodeDept_D" parameterType="hashmap">
+    	CALL USP_Mem_Dept_D(IFNULL(#{Dept_No},''), #{_EMP_NO})
+	</update>
+    <select id="DeptName_S" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Mem_Dept_Nm_S(IFNULL(#{Dept_No},''))
+	</select> 
+	
+	
+	
+    <select id="CodeQue_S" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Code_Que_S()
+	</select> 
+	<insert id="CodeQue_I" parameterType="hashmap">
+    	CALL USP_Code_Que_I(#{Que_Code}, #{Que_Nm}, #{Trans_Group_No}, IFNULL(#{Use_Stat},''))
+	</insert> 
+	<update id="CodeQue_U" parameterType="hashmap">
+    	CALL USP_Code_Que_U(IFNULL(#{Seq},''), IFNULL(#{Que_Code},''), #{Que_Nm}, #{Trans_Group_No}, IFNULL(#{Use_Stat},''))
+	</update>
+	<update id="CodeQue_D" parameterType="hashmap">
+    	CALL USP_Code_Que_D(IFNULL(#{Seq},''))
+	</update>
+	
+    <select id="CodeCalledNumber_S" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Code_CalledNumber_S()
+	</select> 
+	<insert id="CodeCalledNumber_I" parameterType="hashmap">
+    	CALL USP_Code_CalledNumber_I(IFNULL(#{Called_Key},''), #{CalledNumber}, #{Desc}, IFNULL(#{Use_Stat},''))
+	</insert> 
+	<update id="CodeCalledNumber_U" parameterType="hashmap">
+    	CALL USP_Code_CalledNumber_U(IFNULL(#{Seq},''), IFNULL(#{Called_Key},''), #{CalledNumber}, #{Desc}, IFNULL(#{Use_Stat},''))
+	</update>
+	<update id="CodeCalledNumber_D" parameterType="hashmap">
+    	CALL USP_Code_CalledNumber_D(IFNULL(#{Seq},''))
+	</update>
+	
+	
+	<!-- IMS_IFX VirtualGroups -->
+    <select id="VirtualGroupsList" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Ifx_VirtualGroups_S()
+	</select> 
+	<!-- IMS_IFX Teams -->
+    <select id="TeamsList" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Ifx_Teams_S()
+	</select> 
+	<!-- IMS_IFX CallType -->
+    <select id="CallTypeList" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Ifx_Calltype_S()
+	</select> 
+	<!-- IMS_IFX Monitoredresources -->
+    <select id="MonitoredresourcesList" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Ifx_Monitoredresources_S()
+	</select>
+	
+	
+</mapper>

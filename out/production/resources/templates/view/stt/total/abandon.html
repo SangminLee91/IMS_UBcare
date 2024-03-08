@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	$(document).ready(function() {
+		const table = $('#dt_basic').DataTable({
+			data:[],
+			columns: [
+				{ "data": "callstart_dt" },
+				{ "data": "Branch_Nm" },
+				// { "data": "origdestination_Desc" },
+				// { "data": "origdestination" },
+				{ "data": "ivr_abn" },
+				{ "data": "queue_abn" },
+				{ "data": "abn_total" },
+				{ "data": "abn1" },
+				{ "data": "abn2" },
+				{ "data": "abn3" },
+				{ "data": "abn4" },
+				{ "data": "abn5" }
+			],
+			ordering: false,
+			searching: false,
+			iDisplayLength: 20,
+			bPaginate: true
+
+/*			,footerCallback: function ( row, data, start, end, display ) {
+				let api = this.api();
+				let intVal = function ( i ) {
+					return typeof i === 'string' ?
+						i.replace(/[\$,]/g, '')*1 :
+						typeof i === 'number' ?
+							i : 0;
+				};
+
+				let Sum1 = api.column( 3, { page: 'current'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+				let Sum2 = api.column( 4, { page: 'current'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+				let Sum3 = api.column( 5, { page: 'current'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+				let Sum4 = api.column( 6, { page: 'current'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+				let Sum5 = api.column( 7, { page: 'current'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+				let Sum6 = api.column( 8, { page: 'current'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+				let Sum7 = api.column( 9, { page: 'current'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+				let Sum8 = api.column( 10, { page: 'current'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+
+				$( api.column(3).footer() ).html(Sum1);
+				$( api.column(4).footer() ).html(Sum2);
+				$( api.column(5).footer() ).html(Sum3);
+				$( api.column(6).footer() ).html(Sum4);
+				$( api.column(7).footer() ).html(Sum5);
+				$( api.column(8).footer() ).html(Sum6);
+				$( api.column(9).footer() ).html(Sum7);
+				$( api.column(10).footer() ).html(Sum8);
+			}*/
+
+		});
+
+
+		//브랜치코드 가져오기
+		const getBrachCode = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/cmm/ajax/grantbranch",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$.each(data.Code, function (i, item) {
+					$("#branch").append($('<option>', { value: item.Branch_Code, text: item.Branch_Nm }));
+				});
+
+				$('#branch').multiselect({
+					includeFilterClearBtn: false,
+					enableFiltering: true,
+					includeSelectAllOption: true,
+					selectAllText: '전체선택',
+					nonSelectedText: '대표번호',
+					allSelectedText: '전체 선택됨',
+					buttonWidth: '100%',
+					maxHeight: 400,
+					buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+				});
+			});
+		}
+
+
+		//검색Btn
+		$("._searchGo").click(function(){
+
+			let branch = $("#branch").val().toString().replace(/,/gi, "|"); // , => | 로 replace처리
+			let Srch_Type = $("._searchType:checked").val()
+			let sDate = $("#sdate").val();
+			let eDate = $("#edate").val();
+
+			table.clear().draw();
+
+			$(".dataTables_processing").css("display","block");
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/stt/total/abandon/stats",
+				data: {
+					origdestination: branch
+						, Srch_Type: Srch_Type
+						, Start_Dt: sDate
+						, End_Dt: eDate
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				table.clear().draw();
+				table.rows.add(data.Stt).draw();
+				$(".dataTables_processing").css("display","none");
+			});
+		})
+
+
+		$("#_excel").click(function(){
+			let branch =  $("#branch").val().toString().replace(/,/gi, "|");
+			let Start_Dt = $("#sdate").val();
+			let End_Dt = $("#edate").val();
+
+			location.href = CONTEXT_PATH+"/stt/ub/excel/abandon_dtl?origdestination="+encodeURI(branch)+"&Start_Dt="+encodeURI(Start_Dt)+"&End_Dt="+encodeURI(End_Dt);
+
+		});
+
+		getBrachCode();
+		$("#sdate").val(getToday()); //오늘날짜 기본
+		$("#edate").val(getToday()); //오늘날짜 기본
+	});
+	</script>
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 포기호 상세현황
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			 <div id="buttons" class="btn-group">
+				 <button class="btn-xs btn-dark" id="_excel">Excel</button>
+			 </div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+
+				<div class="form-row">
+					<div class="col-md-3">
+						<!--						<label class="form-label d-none">대표번호</label>-->
+						<!--						<select multiple="multiple" id="origdestination"></select>-->
+						<label class="form-label d-none">대리점</label>
+						<select multiple="multiple" id="branch"></select>
+					</div>
+					<div class="col-md">
+						<label class="form-label d-none">날짜</label>
+						<div class="input-daterange input-group">
+							<input type="text" class="form-control datepicker" name="startdate" id="sdate" placeholder="시작일자">
+							<div class="input-group-append input-group-prepend">
+								<span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>
+							</div>
+							<input type="text" class="form-control datepicker" name="finishdate" id="edate" placeholder="종료일자">
+						</div>
+					</div>
+					<div class="col-sm-2">
+						<label class="form-label d-none">&nbsp;</label>
+						<div class="frame-wrap pt-2">
+							<div class="custom-control custom-radio custom-control-inline">
+								<input type="radio" class="_searchType custom-control-input" id="rdo_month" name="searchType" value="0" checked="">
+								<label class="custom-control-label" for="rdo_month">월별</label>
+							</div>
+							<div class="custom-control custom-radio custom-control-inline">
+								<input type="radio" class="_searchType custom-control-input" id="rdo_day" name="searchType" value="1">
+								<label class="custom-control-label" for="rdo_day">일별</label>
+							</div>
+						</div>
+					</div>
+					<div class="col-md">
+						<label class="form-label d-none ">&nbsp;</label>
+						<button class="btn btn-sm btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span class="">Search</span></button>
+					</div>
+				</div>
+	
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">		                
+					<tr>
+						<th class="text-center">날짜</th>
+						<th class="text-center">대리점</th>
+<!--						<th class="text-center">대표번호</th>-->
+						<th class="text-center">메뉴진입전</th>
+						<th class="text-center">상담대기중</th>
+						<th class="text-center">합계</th>
+						<th class="text-center">0~10초</th>
+						<th class="text-center-0">11~20초</th>
+						<th class="text-center">21~30초</th>
+						<th class="text-center">31~40초</th>
+						<th class="text-center">41초~</th>
+					</tr>
+					</thead>
+<!--			        <tfoot>-->
+<!--		            <tr>-->
+<!--		                <th>합계</th>-->
+<!--		                <th></th>-->
+<!--		                <th></th>-->
+<!--		                <th></th>-->
+<!--		                <th></th>-->
+<!--		                <th></th>-->
+<!--		                <th></th>-->
+<!--		                <th></th>-->
+<!--		                <th></th>-->
+<!--		                <th></th>-->
+<!--		                <th></th>-->
+<!--		            </tr>-->
+<!--			        </tfoot>-->
+				</table>
+
+			</div>
+		</div>
+	</div>
+	
+</main>
+
+</html>>

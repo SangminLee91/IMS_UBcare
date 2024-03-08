@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	$(document).ready(function() {
+		const table = $('#dt_basic').DataTable({
+			"ajax": {
+				"url": "<c:url value='/json/getTemp.do'/>"
+			},
+			"columns": [
+				{ "data": "COL1" },
+				{ "data": "" },
+				{ "data": "" },
+				{ "data": "" },
+				{ "data": "" },
+				{ "data": "" },
+				{ "data": "" },
+				{ "data": "" },
+				{ "data": "" },
+				{ "data": "" },
+				{ "data": "" },
+				{ "data": "" },
+				{ "data": "" },
+				{ "data": "" },
+				{ "data": "" }
+			],
+			"bInfo": false,
+			"searching": false,
+			"bFilter" : false,
+			"bPaginate": false,
+			"autoWidth" : true
+		});
+
+		$('.select2').SumoSelect({
+			selectAll: true,
+			placeholder: '대표번호',
+			search : true,
+			noMatch : 'No matches for "{0}"',
+			locale :  ['OK', 'Cancel', '전체선택'],
+			captionFormat: '{0} 선택됨',
+			captionFormatAllSelected : '{0} 전체 선택됨',
+			forceCustomRendering: true
+		});
+
+	});
+	</script>
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 수신 통계
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			 <div id="buttons" class="btn-group"></div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+			
+			
+				<!-- BORAD SEARCH -->
+				<div class="px-4 pt-4 mb-4 search_area" style="border: 1px solid rgba(24,28,33,0.06);">
+					<div class="form-row">
+						<div class="col-md-3 mb-4">
+							<label class="form-label d-none">부서</label>
+							<select multiple="multiple" class="select2 hide" id="origdestination"></select>
+						</div>
+						<div class="col-md mb-4">
+							<label class="form-label d-none">날짜</label>
+							<div class="input-daterange input-group">
+								<input type="text" class="form-control datepicker" name="sdate" id="sdate" placeholder="시작일자">
+								<div class="input-group-append input-group-prepend">
+									<span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>
+								</div>
+								<input type="text" class="form-control datepicker" name="edate" id="edate" placeholder="종료일자">
+							</div>		
+						</div>
+						<div class="col-sm-2 mb-4">
+							<label class="form-label d-none">&nbsp;</label>
+							<div class="frame-wrap pt-2">
+								<div class="custom-control custom-radio custom-control-inline">
+									<input type="radio" class="_searchType custom-control-input" id="rdo_month" name="searchType" value="4">
+									<label class="custom-control-label" for="rdo_month">월별</label>
+								</div>
+								<div class="custom-control custom-radio custom-control-inline">
+									<input type="radio" class="_searchType custom-control-input" id="rdo_day" name="searchType" value="2" checked="">
+									<label class="custom-control-label" for="rdo_day">일별</label>
+								</div>
+							</div>		
+						</div>
+						<div class="col-md mb-4">
+							<label class="form-label d-none ">&nbsp;</label>
+							<button class="btn btn-sm btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span class="">Search</span></button>
+						</div>
+					</div>
+					
+				</div>	
+			
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">	
+						<tr>
+							<th data-hide="phone">날짜</th>
+							<th data-class="expand">번호이름</th>
+							<th data-hide="phone,tablet">대표번호</th>
+							<th>메뉴0</th>
+							<th>메뉴1</th>
+							<th data-hide="phone,tablet">메뉴2</th>
+							<th data-hide="phone,tablet">메뉴3</th>
+							<th data-hide="phone,tablet">메뉴4</th>
+							<th data-hide="phone,tablet">메뉴5</th>
+							<th data-hide="phone,tablet">메뉴6</th>
+							<th data-hide="phone,tablet">메뉴7</th>
+							<th data-hide="phone,tablet">메뉴8</th>
+							<th data-hide="phone,tablet">메뉴9</th>
+							<th data-hide="phone,tablet">착신전환</th>
+							<th data-hide="phone,tablet">메뉴합계</th>
+						</tr>
+					</thead>
+				</table>
+				
+			</div>
+		</div>
+	</div>
+	
+</main>	
+</html>>

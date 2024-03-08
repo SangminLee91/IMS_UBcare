@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+    <script type="text/javascript">
+    $(document).ready(function() {
+        let _total_ = 0;
+        let _idle_ = 0;
+        let _busy_ = 0;
+        const getChannelData = function() {
+            $.ajax({
+                method: "POST",
+                url: CONTEXT_PATH+"/mntng/trunk/ip", //<c:url value='/api/mntng/TrunkIP.do'/>",
+                error: function(jqXHR) { jqXHR_Process(jqXHR) }
+            }).done(function (data) {
+
+                let TrunkIP = "";
+                $.each(data.TrunkIP, function (i, item) {
+                    TrunkIP = item.Cmm_Dtl_Code;
+
+                    $.ajax({
+                        method: "POST",
+                        url: CONTEXT_PATH+"/mntng/trunk/channelinfo", //<c:url value='/api/mntng/TrunkChannelinfo.do'/>",
+                        data: { trunkip: TrunkIP},
+                        error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                    }).done(function (data) {
+                        _total_ += data.TrunkChannelinfo.total;
+                        _idle_ += data.TrunkChannelinfo.idle;
+                        _busy_ += data.TrunkChannelinfo.busy;
+                    });
+
+                });
+
+                $("#CHANNEL_TOTAL").text(_total_);
+                $("#CHANNEL_BUSY").text(_busy_);
+                $("#CHANNEL_IDLE").text(_idle_);
+
+                _total_ = 0;
+                _idle_ = 0;
+                _busy_ = 0;
+
+            });
+
+
+        }
+
+        const getAgentStatus = function() {
+            $.ajax({
+                method: "POST",
+                url: CONTEXT_PATH+"/main/dash", //<c:url value='/maindash.do'/>",
+                error: function(jqXHR) { jqXHR_Process(jqXHR) }
+
+            }).done(function (Rst) {
+                if(typeof Rst.DashAgent[0] !== "undefined"){
+
+                    $("._pbx_in").text(Rst.DashCur[0].IP_PBX_IN);
+
+                    $("._ivr_ans").text(Rst.DashCur[0].IVR_ANSWER);
+                    let ivr_ans_ratio = ((Rst.DashCur[0].IVR_ANSWER / Rst.DashCur[0].IP_PBX_IN) * 100).toFixed(0);
+
+                    if (ivr_ans_ratio == "NaN") ivr_ans_ratio = "0";
+                    $("#_ivr_ans_ratio").text(ivr_ans_ratio);
+
+                    $("#_agent_conn").text(Rst.DashCur[0].AGENT_CONN);
+                    let agent_conn_ratio = ((Rst.DashCur[0].AGENT_CONN / Rst.DashCur[0].IVR_ANSWER) * 100).toFixed(0);
+
+                    if (agent_conn_ratio == "NaN") agent_conn_ratio = "0";
+                    $("#_agent_conn_ratio").text(agent_conn_ratio);
+
+                    $("#_agent_answer").text(Rst.DashCur[0].AGENT_ANSWER);
+                    let agent_answer_ratio = ((Rst.DashCur[0].AGENT_ANSWER / Rst.DashCur[0].AGENT_CONN) * 100).toFixed(0);
+
+                    if (agent_answer_ratio == "NaN") agent_answer_ratio = "0";
+                    $("#_agent_answer_ratio").text(agent_answer_ratio);
+
+                    $("#_cust_standby").text(Rst.DashCur[0].AGENT_STANDBY);
+
+                    $('#agent_Idle').html(Rst.DashAgent[0].IDLE);
+
+                    $('#_IP_PBX_OUT').html(Rst.DashCur[0].IP_PBX_OUT);
+
+                    $('#_AGENT_LOGIN').html(Rst.DashAgent[0].LOGIN);
+                    $('#_AGENT_IDLE').html(Rst.DashAgent[0].IDLE);
+                    $('#_AGENT_BUSY').html(Rst.DashAgent[0].BUSY);
+                    $('#_AGENT_AWAY').html(Rst.DashAgent[0].AWAY);
+                    $('#_AGENT_WORK').html(Rst.DashAgent[0].WORK);
+
+                    $("#_IVR_CUR_IN").text(Rst.DashCur[0].IVR_CUR_IN);
+                    $("#_IVR_CUR_AGENT_REQ").text(Rst.DashCur[0].IVR_CUR_AGENT_REQ);
+                    $("#_IVR_CUR_SERVICE_TRANS").text(Rst.DashCur[0].IVR_CUR_SERVICE_TRANS);
+                    $("#_IVR_CUR_ABANDON").text(Rst.DashCur[0].IVR_CUR_ABANDON);
+                    $("#_IVR_CUR_CALLBACK").text(Rst.DashCur[0].IVR_CUR_CALLBACK);
+
+                    $("#CTI_Answered").text(Rst.DashCur[0].CTI_Answered);
+                    $("#CTI_Abandoned").text(Rst.DashCur[0].CTI_Abandoned);
+                    $("#CTI_Received").text(Rst.DashCur[0].CTI_Received);
+                    $("#CTI_Received_Rate").text(Rst.DashCur[0].CTI_Received_Rate);
+                    $("#CTI_CallBack").text(Rst.DashCur[0].CTI_CallBack);
+                    $("#CTI_CallBack_Rate").text(Rst.DashCur[0].CTI_CallBack_Rate);
+
+                    $("#IVR_TOT_CHANNEL").text(Rst.DashCur[0].IVR_TOT_CHANNEL);
+                    $("#IVR_USE_CHANNEL").text(Rst.DashCur[0].IVR_USE_CHANNEL);
+                    $("#IVR_STANDBY_CHANNEL").text(Rst.DashCur[0].IVR_STANDBY_CHANNEL);
+
+                }
+            });
+        }
+
+        const getPrevData = function() {
+            $.ajax({
+                method: "POST",
+                url: CONTEXT_PATH+"/main/dash/prev", //<c:url value='/maindashprev.do'/>",
+                error: function(jqXHR) { jqXHR_Process(jqXHR) }
+            }).done(function (Rst) {
+                $('#_IP_PBX_PREV_OUT').html(Rst.Prev[0].IP_PBX_PREV_OUT);
+
+
+                $("#_IP_PBX_PREV_IN").text(Rst.Prev[0].IP_PBX_PREV_IN);
+                $("#_IVR_PREV_IN").text(Rst.Prev[0].IVR_PREV_IN);
+                $("#_IVR_PREV_AGENT_REQ").text(Rst.Prev[0].IVR_PREV_AGENT_REQ);
+                $("#_IVR_PREV_SERVICE_TRANS").text(Rst.Prev[0].IVR_PREV_SERVICE_TRANS);
+                $("#_IVR_PREV_ABANDON").text(Rst.Prev[0].IVR_PREV_ABANDON);
+                $("#_IVR_PREV_CALLBACK").text(Rst.Prev[0].IVR_PREV_CALLBACK);
+
+                $("#CTI_PREV_Answered").text(Rst.Prev[0].CTI_PREV_Answered);
+                $("#CTI_PREV_Abandoned").text(Rst.Prev[0].CTI_PREV_Abandoned);
+                $("#CTI_PREV_Received").text(Rst.Prev[0].CTI_PREV_Received);
+                $("#CTI_PREV_Received_Rate").text(Rst.Prev[0].CTI_PREV_Received_Rate);
+                $("#CTI_PREV_CallBack").text(Rst.Prev[0].CTI_PREV_CallBack);
+                $("#CTI_PREV_CallBack_Rate").text(Rst.Prev[0].CTI_PREV_CallBack_Rate);
+
+            });
+        }
+
+        //getPrevData();
+
+        /*Start*/
+        function StartDashBoard() {
+            getAgentStatus();
+            getChannelData();
+            setTimeout(StartDashBoard, 5000); //3초
+        }
+
+        StartDashBoard();
+
+    });
+    </script>
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+    <div class="row">
+        <div class="col-xs-12 col-sm-3 col-md-2">
+            <div class="p-2 bg-primary-300 rounded overflow-hidden position-relative text-white mb-g">
+                <div>
+                    <h1 class="display-5 d-block l-h-n m-1 fw-500">
+                        <small class="m-0 l-h-n">IP-교환기 인입</small>
+                        <span class="_pbx_in">0</span>건
+                    </h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-3 col-md-2">
+            <div class="p-2 bg-primary-300 rounded overflow-hidden position-relative text-white mb-g">
+                <div>
+                    <h1 class="display-5 d-block l-h-n m-1 fw-500">
+                        <small class="m-0 l-h-n">IVR 응답</small>
+                        <span class="_ivr_ans">0</span>건 (<span id="_ivr_ans_ratio"></span>%)
+                    </h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-3 col-md-2">
+            <div class="p-2 bg-primary-300 rounded overflow-hidden position-relative text-white mb-g">
+                <div>
+                    <h1 class="display-5 d-block l-h-n m-1 fw-500">
+                        <small class="m-0 l-h-n">상담사 연결</small>
+                        <span class="_agent_conn">0</span>건 (<span id="_agent_conn_ratio"></span>%)
+                    </h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-3 col-md-2">
+            <div class="p-2 bg-primary-300 rounded overflow-hidden position-relative text-white mb-g">
+                <div>
+                    <h1 class="display-5 d-block l-h-n m-1 fw-500">
+                        <small class="m-0 l-h-n">상담사 응답</small>
+                        <span class="_agent_answer">0</span>건 (<span id="_agent_answer_ratio"></span>%)
+                    </h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-3 col-md-2">
+            <div class="p-2 bg-primary-300 rounded overflow-hidden position-relative text-white mb-g">
+                <div>
+                    <h1 class="display-5 d-block l-h-n m-1 fw-500">
+                        <small class="m-0 l-h-n">고객대기콜</small>
+                        <span class="_cust_standby">0</span>콜
+                    </h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-3 col-md-2">
+            <div class="p-2 bg-primary-300 rounded overflow-hidden position-relative text-white mb-g">
+                <div>
+                    <h1 class="display-5 d-block l-h-n m-1 fw-500">
+                        <small class="m-0 l-h-n">상담사 대기</small>
+                        <span class="agent_Idle">0</span> 명
+                    </h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <div class="col-xs-12 col-sm-2 col-md-4">
+            <div class="panel-hdr bg-info-600 bg-primray-gradient">
+                <h2> IP-교환기 </h2>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <table class="table m-0" style="background-color: #fff;">
+                        <tr>
+                            <th></th>
+                            <th>일 누적</th>
+                            <th>전일 누적</th>
+                        </tr>
+                        <tr class="active">
+                            <td>대표번호 수신</td>
+                            <td><span class="_pbx_in"></span>건</td>
+                            <td><span id="_IP_PBX_PREV_IN"></span>건</td>
+                        </tr>
+                        <tr>
+                            <td>발신</td>
+                            <td><span id="_IP_PBX_OUT"></span>건</td>
+                            <td><span id="_IP_PBX_PREV_OUT"></span>건</td>
+                        </tr>
+                        <tr><td colspan="3">&nbsp;</td></tr>
+                        <tr><td colspan="3">&nbsp;</td></tr>
+                        <tr><td colspan="3">&nbsp;</td></tr>
+                        <tr><td colspan="3">&nbsp;</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="col-xs-12 col-sm-2 col-md-4">
+            <div class="panel-hdr bg-info-600 bg-primray-gradient">
+                <h2> IVR </h2>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <table class="table m-0" style="background-color: #fff;">
+                        <tr>
+                            <th></th>
+                            <th>일 누적</th>
+                            <th>전일 누적</th>
+                        </tr>
+                        <tr class="active">
+                            <td>인입</td>
+                            <td><span id="_IVR_CUR_IN"></span>건</td>
+                            <td><span id="_IVR_PREV_IN"></span>건</td>
+                        </tr>
+                        <tr>
+                            <td>상담 요청</td>
+                            <td><span id="_IVR_CUR_AGENT_REQ"></span>건</td>
+                            <td><span id="_IVR_PREV_AGENT_REQ"></span>건</td>
+                        </tr>
+                        <tr class="active">
+                            <td>서비스 전환</td>
+                            <td><span id="_IVR_CUR_SERVICE_TRANS"></span>건</td>
+                            <td><span id="_IVR_PREV_SERVICE_TRANS"></span>건</td>
+                        </tr>
+                        <tr>
+                            <td>콜백</td>
+                            <td><span id="_IVR_CUR_CALLBACK"></span>건</td>
+                            <td><span id="_IVR_PREV_CALLBACK"></span>건</td>
+                        </tr>
+                        <tr class="active">
+                            <td>포기호</td>
+                            <td><span id="_IVR_CUR_ABANDON"></span>건</td>
+                            <td><span id="_IVR_PREV_ABANDON"></span>건</td>
+                        </tr>
+                        <tr><td colspan="3">&nbsp;</td></tr>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="col-xs-12 col-sm-2 col-md-4">
+            <div class="panel-hdr bg-info-600 bg-primray-gradient">
+                <h2> CTI </h2>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <table class="table m-0" style="background-color: #fff;">
+                        <tr>
+                            <th></th>
+                            <th>일 누적</th>
+                            <th>전일 누적</th>
+                        </tr>
+                        <tr class="active">
+                            <td>인입</td>
+                            <td><span id="CTI_Received"></span>건</td>
+                            <td><span id="CTI_PREV_Received"></span>건</td>
+                        </tr>
+                        <tr>
+                            <td>응답</td>
+                            <td><span id="CTI_Answered"></span>건</td>
+                            <td><span id="CTI_PREV_Answered"></span>건</td>
+                        </tr>
+                        <tr class="active">
+                            <td>응답율%</td>
+                            <td><span id="CTI_Received_Rate"></span>%</td>
+                            <td><span id="CTI_PREV_Received_Rate"></span>%</td>
+                        </tr>
+                        <tr>
+                            <td>콜백</td>
+                            <td><span id="CTI_CallBack"></span>건</td>
+                            <td><span id="CTI_PREV_CallBack"></span>건</td>
+                        </tr>
+                        <tr class="active">
+                            <td>콜백포함%</td>
+                            <td><span id="CTI_CallBack_Rate"></span>%</td>
+                            <td><span id="CTI_PREV_CallBack_Rate"></span>%</td>
+                        </tr>
+                        <tr>
+                            <td>포기호</td>
+                            <td><span id="CTI_Abandoned"></span>건</td>
+                            <td><span id="CTI_PREV_Abandoned"></span>건</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+
+        </div>
+
+    </div>
+
+    <div class="row pt-3">
+        <div class="col-xs-12 col-sm-2 col-md-4">
+            <div class="panel-hdr bg-info-600 bg-primray-gradient">
+                <h2> IP-교환기(국선) 실시간 현황  </h2>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <table class="table m-0" style="background-color: #fff;">
+                        <tr class="active">
+                            <td>국선 총 채널수</td>
+                            <td><span id="CHANNEL_TOTAL"></span> ch</td>
+                        </tr>
+                        <tr>
+                            <td>국선 사용  채널수</td>
+                            <td><span id="CHANNEL_BUSY"></span> ch</td>
+                        </tr>
+                        <tr class="active">
+                            <td>국선 대기 채널수</td>
+                            <td><span id="CHANNEL_IDLE"></span> ch</td>
+                        </tr>
+                        <tr><td>&nbsp;</td><td></td></tr>
+                        <tr><td>&nbsp;</td><td></td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-xs-12 col-sm-2 col-md-4">
+            <div class="panel-hdr bg-info-600 bg-primray-gradient">
+                <h2> IVR 실시간 현황  </h2>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <table class="table m-0" style="background-color: #fff;">
+                        <tr class="active">
+                            <td>IVR 총 채널수</td>
+                            <td><span id="IVR_TOT_CHANNEL"></span> ch</td>
+                        </tr>
+                        <tr>
+                            <td>IVR 사용  채널수</td>
+                            <td><span id="IVR_USE_CHANNEL"></span> ch</td>
+                        </tr>
+                        <tr class="active">
+                            <td>IVR 대기 채널수</td>
+                            <td><span id="IVR_STANDBY_CHANNEL"></span> ch</td>
+                        </tr>
+                        <tr><td>&nbsp;</td><td></td></tr>
+                        <tr><td>&nbsp;</td><td></td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-xs-12 col-sm-2 col-md-4">
+            <div class="panel-hdr bg-info-600 bg-primray-gradient">
+                <h2> CTI 실시간 현황  </h2>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <table class="table m-0" style="background-color: #fff;">
+                        <tr class="active">
+                            <td>로그인</td>
+                            <td><span id="_AGENT_LOGIN"></span> 명</td>
+                        </tr>
+                        <tr>
+                            <td>수신대기</td>
+                            <td><span id="_AGENT_IDLE"></span> 명</td>
+                        </tr>
+                        <tr class="active">
+                            <td>통화중</td>
+                            <td><span id="_AGENT_BUSY"></span> 명</td>
+                        </tr>
+                        <!--
+                        <tr>
+                            <td>발신통화중</td>
+                            <td><span id=""></span> 명</td>
+                        </tr> -->
+                        <tr>
+                            <td>이석</td>
+                            <td><span id="_AGENT_AWAY"></span> 명</td>
+                        </tr>
+                        <tr class="active">
+                            <td>작업중</td>
+                            <td><span id="_AGENT_WORK"></span> 명</td>
+                        </tr>
+                        <!-- <tr class="active">
+                            <td>로그아웃</td>
+                            <td><span id=""></span> 명</td>
+                        </tr>
+                         -->
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+</html>

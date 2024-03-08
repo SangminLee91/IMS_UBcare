@@ -1,0 +1,687 @@
+DEBUG 2024-02-15 10:50:53.802 [Thread-36] [DefaultLifecycleProcessor:238] - Bean 'webServerStartStop' completed its stop procedure
+DEBUG 2024-02-15 10:50:53.803 [Thread-36] [AnnotationMBeanExporter:452] - Unregistering JMX-exposed beans on shutdown
+DEBUG 2024-02-15 10:50:53.803 [Thread-36] [AnnotationMBeanExporter:186] - Unregistering JMX-exposed beans
+INFO  2024-02-15 10:50:53.804 [Thread-36] [ThreadPoolTaskExecutor:218] - Shutting down ExecutorService 'applicationTaskExecutor'
+INFO  2024-02-15 10:50:53.804 [Thread-36] [ThreadPoolTaskScheduler:218] - Shutting down ExecutorService 'scheduler'
+DEBUG 2024-02-15 10:50:53.805 [Thread-36] [PoolingHttpClientConnectionManager:411] - Connection manager is shutting down
+DEBUG 2024-02-15 10:50:53.805 [Thread-36] [PoolingHttpClientConnectionManager:434] - Connection manager shut down
+INFO  2024-02-15 10:50:53.805 [Thread-36] [HikariDataSource:350] - HikariPool-9 - Shutdown initiated...
+DEBUG 2024-02-15 10:50:53.805 [Thread-36] [HikariPool:421] - HikariPool-9 - Before shutdown stats (total=10, active=0, idle=10, waiting=0)
+DEBUG 2024-02-15 10:50:53.805 [HikariPool-9 connection closer] [PoolBase:134] - HikariPool-9 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@48a39725: (connection evicted)
+DEBUG 2024-02-15 10:50:53.806 [HikariPool-9 connection closer] [PoolBase:134] - HikariPool-9 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@46647041: (connection evicted)
+DEBUG 2024-02-15 10:50:53.806 [HikariPool-9 connection closer] [PoolBase:134] - HikariPool-9 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@425bfc55: (connection evicted)
+DEBUG 2024-02-15 10:50:53.807 [HikariPool-9 connection closer] [PoolBase:134] - HikariPool-9 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@7597a7a: (connection evicted)
+DEBUG 2024-02-15 10:50:53.807 [HikariPool-9 connection closer] [PoolBase:134] - HikariPool-9 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@5397df0b: (connection evicted)
+DEBUG 2024-02-15 10:50:53.807 [HikariPool-9 connection closer] [PoolBase:134] - HikariPool-9 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@36145b40: (connection evicted)
+DEBUG 2024-02-15 10:50:53.807 [HikariPool-9 connection closer] [PoolBase:134] - HikariPool-9 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@2b30a083: (connection evicted)
+DEBUG 2024-02-15 10:50:53.808 [HikariPool-9 connection closer] [PoolBase:134] - HikariPool-9 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@67768535: (connection evicted)
+DEBUG 2024-02-15 10:50:53.808 [HikariPool-9 connection closer] [PoolBase:134] - HikariPool-9 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@a747157: (connection evicted)
+DEBUG 2024-02-15 10:50:53.808 [HikariPool-9 connection closer] [PoolBase:134] - HikariPool-9 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@1eaef502: (connection evicted)
+DEBUG 2024-02-15 10:50:53.808 [Thread-36] [HikariPool:421] - HikariPool-9 - After shutdown stats (total=0, active=0, idle=0, waiting=0)
+INFO  2024-02-15 10:50:53.809 [Thread-36] [HikariDataSource:352] - HikariPool-9 - Shutdown completed.
+DEBUG 2024-02-15 10:50:53.903 [Thread-36] [Restarter:85] - Created RestartClassLoader org.springframework.boot.devtools.restart.classloader.RestartClassLoader@57c0424f
+DEBUG 2024-02-15 10:50:53.903 [Thread-36] [Restarter:281] - Starting application com.vdc.ims.ImsApplication with URLs [file:/C:/Users/82106/IdeaProjects/%ec%8b%a4%eb%ac%b4/ims_ubcare/ims_ubcare/build/classes/java/main/, file:/C:/Users/82106/IdeaProjects/%ec%8b%a4%eb%ac%b4/ims_ubcare/ims_ubcare/build/resources/main/]
+DEBUG 2024-02-15 10:57:23.403 [File Watcher] [Restarter:249] - Restarting application
+DEBUG 2024-02-15 10:57:23.404 [Thread-11] [Restarter:305] - Stopping application
+DEBUG 2024-02-15 10:57:23.405 [Thread-11] [AnnotationConfigServletWebServerApplicationContext:1048] - Closing org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@709c7bb0, started on Thu Feb 15 10:52:23 KST 2024
+DEBUG 2024-02-15 10:57:23.406 [Thread-11] [PropertySourcesPropertyResolver:115] - Found key 'spring.liveBeansView.mbeanDomain' in PropertySource 'systemProperties' with value of type String
+DEBUG 2024-02-15 10:57:23.407 [Thread-11] [DefaultLifecycleProcessor:365] - Stopping beans in phase 2147483647
+DEBUG 2024-02-15 10:57:23.407 [Thread-11] [DefaultLifecycleProcessor:238] - Bean 'webServerGracefulShutdown' completed its stop procedure
+DEBUG 2024-02-15 10:57:23.408 [Thread-11] [DefaultLifecycleProcessor:365] - Stopping beans in phase 2147483646
+DEBUG 2024-02-15 10:57:23.651 [Thread-11] [DefaultLifecycleProcessor:238] - Bean 'webServerStartStop' completed its stop procedure
+DEBUG 2024-02-15 10:57:23.651 [Thread-11] [AnnotationMBeanExporter:452] - Unregistering JMX-exposed beans on shutdown
+DEBUG 2024-02-15 10:57:23.652 [Thread-11] [AnnotationMBeanExporter:186] - Unregistering JMX-exposed beans
+INFO  2024-02-15 10:57:23.652 [Thread-11] [ThreadPoolTaskExecutor:218] - Shutting down ExecutorService 'applicationTaskExecutor'
+INFO  2024-02-15 10:57:23.652 [Thread-11] [ThreadPoolTaskScheduler:218] - Shutting down ExecutorService 'scheduler'
+DEBUG 2024-02-15 10:57:23.653 [Thread-11] [PoolingHttpClientConnectionManager:411] - Connection manager is shutting down
+DEBUG 2024-02-15 10:57:23.653 [Thread-11] [PoolingHttpClientConnectionManager:434] - Connection manager shut down
+INFO  2024-02-15 10:57:23.654 [Thread-11] [HikariDataSource:350] - HikariPool-1 - Shutdown initiated...
+DEBUG 2024-02-15 10:57:23.654 [Thread-11] [HikariPool:421] - HikariPool-1 - Before shutdown stats (total=10, active=0, idle=10, waiting=0)
+DEBUG 2024-02-15 10:57:23.655 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@53309640: (connection evicted)
+DEBUG 2024-02-15 10:57:23.657 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@28a741df: (connection evicted)
+DEBUG 2024-02-15 10:57:23.657 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@78ab1f7e: (connection evicted)
+DEBUG 2024-02-15 10:57:23.657 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@2847b511: (connection evicted)
+DEBUG 2024-02-15 10:57:23.657 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@7c676f7b: (connection evicted)
+DEBUG 2024-02-15 10:57:23.657 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@6e5c6091: (connection evicted)
+DEBUG 2024-02-15 10:57:23.657 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@4e2cd2cb: (connection evicted)
+DEBUG 2024-02-15 10:57:23.657 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@5b560922: (connection evicted)
+DEBUG 2024-02-15 10:57:23.658 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@1c8db984: (connection evicted)
+DEBUG 2024-02-15 10:57:23.658 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@11580a6c: (connection evicted)
+DEBUG 2024-02-15 10:57:23.658 [Thread-11] [HikariPool:421] - HikariPool-1 - After shutdown stats (total=0, active=0, idle=0, waiting=0)
+INFO  2024-02-15 10:57:23.658 [Thread-11] [HikariDataSource:352] - HikariPool-1 - Shutdown completed.
+DEBUG 2024-02-15 10:57:23.788 [Thread-11] [Restarter:85] - Created RestartClassLoader org.springframework.boot.devtools.restart.classloader.RestartClassLoader@623c7347
+DEBUG 2024-02-15 10:57:23.788 [Thread-11] [Restarter:281] - Starting application com.vdc.ims.ImsApplication with URLs [file:/C:/Users/82106/IdeaProjects/%ec%8b%a4%eb%ac%b4/ims_ubcare/ims_ubcare/build/classes/java/main/, file:/C:/Users/82106/IdeaProjects/%ec%8b%a4%eb%ac%b4/ims_ubcare/ims_ubcare/build/resources/main/]
+DEBUG 2024-02-15 14:34:30.855 [Thread-10] [DefaultLifecycleProcessor:238] - Bean 'webServerStartStop' completed its stop procedure
+DEBUG 2024-02-15 14:34:30.855 [Thread-10] [AnnotationMBeanExporter:452] - Unregistering JMX-exposed beans on shutdown
+DEBUG 2024-02-15 14:34:30.856 [Thread-10] [AnnotationMBeanExporter:186] - Unregistering JMX-exposed beans
+INFO  2024-02-15 14:34:30.856 [Thread-10] [ThreadPoolTaskExecutor:218] - Shutting down ExecutorService 'applicationTaskExecutor'
+INFO  2024-02-15 14:34:30.856 [Thread-10] [ThreadPoolTaskScheduler:218] - Shutting down ExecutorService 'scheduler'
+DEBUG 2024-02-15 14:34:30.857 [Thread-10] [PoolingHttpClientConnectionManager:411] - Connection manager is shutting down
+DEBUG 2024-02-15 14:34:30.857 [Thread-10] [PoolingHttpClientConnectionManager:434] - Connection manager shut down
+INFO  2024-02-15 14:34:30.858 [Thread-10] [HikariDataSource:350] - HikariPool-1 - Shutdown initiated...
+DEBUG 2024-02-15 14:34:30.858 [Thread-10] [HikariPool:421] - HikariPool-1 - Before shutdown stats (total=10, active=0, idle=10, waiting=0)
+DEBUG 2024-02-15 14:34:30.859 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@28305e1b: (connection evicted)
+DEBUG 2024-02-15 14:34:30.859 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@26f7b56d: (connection evicted)
+DEBUG 2024-02-15 14:34:30.860 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@22c8356b: (connection evicted)
+DEBUG 2024-02-15 14:34:30.860 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@67cabf56: (connection evicted)
+DEBUG 2024-02-15 14:34:30.860 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@4d20f532: (connection evicted)
+DEBUG 2024-02-15 14:34:30.860 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@56e77d26: (connection evicted)
+DEBUG 2024-02-15 14:34:30.860 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@35e769fc: (connection evicted)
+DEBUG 2024-02-15 14:34:30.861 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@7e54019: (connection evicted)
+DEBUG 2024-02-15 14:34:30.861 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@4d26bcb2: (connection evicted)
+DEBUG 2024-02-15 14:34:30.861 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@20c5e67d: (connection evicted)
+DEBUG 2024-02-15 14:34:30.861 [Thread-10] [HikariPool:421] - HikariPool-1 - After shutdown stats (total=0, active=0, idle=0, waiting=0)
+INFO  2024-02-15 14:34:30.861 [Thread-10] [HikariDataSource:352] - HikariPool-1 - Shutdown completed.
+DEBUG 2024-02-15 14:34:30.958 [Thread-10] [Restarter:85] - Created RestartClassLoader org.springframework.boot.devtools.restart.classloader.RestartClassLoader@34edbc0b
+DEBUG 2024-02-15 14:34:30.958 [Thread-10] [Restarter:281] - Starting application com.vdc.ims.ImsApplication with URLs [file:/C:/Users/82106/IdeaProjects/%ec%8b%a4%eb%ac%b4/ims_ubcare/ims_ubcare/build/classes/java/main/, file:/C:/Users/82106/IdeaProjects/%ec%8b%a4%eb%ac%b4/ims_ubcare/ims_ubcare/build/resources/main/]
+DEBUG 2024-02-15 16:03:38.723 [https-jsse-nio-8443-exec-2] [DispatcherServlet:91] - GET "/ims/cmm/hist/rec/loginhisttot/", parameters={}
+DEBUG 2024-02-15 16:03:38.724 [https-jsse-nio-8443-exec-2] [RequestMappingHandlerMapping:515] - Mapped to com.vdc.ims.controller.CmmEtcController#LoginHistCount(CommandMap, HttpSession, HttpServletRequest)
+DEBUG 2024-02-15 16:03:38.724 [https-jsse-nio-8443-exec-2] [AbstractDAO:15] - 	 QueryId  	:  auth.AuthCheck
+DEBUG 2024-02-15 16:03:38.724 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - Creating a new SqlSession
+DEBUG 2024-02-15 16:03:38.724 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@57557c6] was not registered for synchronization because synchronization is not active
+DEBUG 2024-02-15 16:03:38.724 [https-jsse-nio-8443-exec-2] [DataSourceUtils:115] - Fetching JDBC Connection from DataSource
+DEBUG 2024-02-15 16:03:38.725 [https-jsse-nio-8443-exec-2] [SpringManagedTransaction:49] - JDBC Connection [HikariProxyConnection@1074102602 wrapping net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@774507f7] will not be managed by Spring
+DEBUG 2024-02-15 16:03:38.726 [https-jsse-nio-8443-exec-2] [AuthCheck:137] - ==>  Preparing: CALL USP_Cmm_AuthCheck(?, ?)
+DEBUG 2024-02-15 16:03:38.732 [https-jsse-nio-8443-exec-2] [AuthCheck:137] - ==> Parameters: /ims/cmm/hist/rec/loginhisttot/(String), 1000(String)
+DEBUG 2024-02-15 16:03:38.733 [https-jsse-nio-8443-exec-2] [sqlonly:223] -  com.zaxxer.hikari.pool.ProxyPreparedStatement.execute(ProxyPreparedStatement.java:44)
+1. CALL USP_Cmm_AuthCheck('/ims/cmm/hist/rec/loginhisttot/', '1000')
+
+DEBUG 2024-02-15 16:03:38.737 [https-jsse-nio-8443-exec-2] [AuthCheck:137] - <==      Total: 1
+DEBUG 2024-02-15 16:03:38.738 [https-jsse-nio-8443-exec-2] [AuthCheck:137] - <==    Updates: 0
+DEBUG 2024-02-15 16:03:38.738 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@57557c6]
+DEBUG 2024-02-15 16:03:38.738 [https-jsse-nio-8443-exec-2] [LoggerInterceptor:18] - ==================== BEGIN ====================
+DEBUG 2024-02-15 16:03:38.738 [https-jsse-nio-8443-exec-2] [LoggerInterceptor:19] - Request URI ===> /ims/cmm/hist/rec/loginhisttot/
+DEBUG 2024-02-15 16:03:38.738 [https-jsse-nio-8443-exec-2] [LoggerInterceptor:27] - ==================== END ======================
+DEBUG 2024-02-15 16:03:38.738 [https-jsse-nio-8443-exec-2] [AbstractDAO:15] - 	 QueryId  	:  cmmEtc.getMenu
+DEBUG 2024-02-15 16:03:38.739 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - Creating a new SqlSession
+DEBUG 2024-02-15 16:03:38.739 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@3c5f5bcb] was not registered for synchronization because synchronization is not active
+DEBUG 2024-02-15 16:03:38.739 [https-jsse-nio-8443-exec-2] [DataSourceUtils:115] - Fetching JDBC Connection from DataSource
+DEBUG 2024-02-15 16:03:38.739 [https-jsse-nio-8443-exec-2] [SpringManagedTransaction:49] - JDBC Connection [HikariProxyConnection@470396941 wrapping net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@774507f7] will not be managed by Spring
+DEBUG 2024-02-15 16:03:38.739 [https-jsse-nio-8443-exec-2] [getMenu:137] - ==>  Preparing: CALL USP_Cmm_Menu_S_New(?, ?)
+DEBUG 2024-02-15 16:03:38.739 [https-jsse-nio-8443-exec-2] [getMenu:137] - ==> Parameters: 1000(String), /ims/cmm/hist/rec/loginhisttot/(String)
+DEBUG 2024-02-15 16:03:38.739 [https-jsse-nio-8443-exec-2] [sqlonly:223] -  com.zaxxer.hikari.pool.ProxyPreparedStatement.execute(ProxyPreparedStatement.java:44)
+1. CALL USP_Cmm_Menu_S_New('1000', '/ims/cmm/hist/rec/loginhisttot/')
+
+DEBUG 2024-02-15 16:03:38.796 [https-jsse-nio-8443-exec-2] [getMenu:137] - <==      Total: 79
+DEBUG 2024-02-15 16:03:38.797 [https-jsse-nio-8443-exec-2] [getMenu:137] - <==    Updates: 81
+DEBUG 2024-02-15 16:03:38.797 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@3c5f5bcb]
+DEBUG 2024-02-15 16:03:38.798 [https-jsse-nio-8443-exec-2] [ContentNegotiatingViewResolver:349] - Selected 'text/html' given [text/html, application/xhtml+xml, image/avif, image/webp, image/apng, application/xml;q=0.9, application/signed-exchange;v=b3;q=0.7, */*;q=0.8]
+DEBUG 2024-02-15 16:03:38.819 [https-jsse-nio-8443-exec-2] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.823 [https-jsse-nio-8443-exec-3] [DispatcherServlet:91] - GET "/ims/css/vendors.bundle.css", parameters={}
+DEBUG 2024-02-15 16:03:38.825 [https-jsse-nio-8443-exec-1] [DispatcherServlet:91] - GET "/ims/css/skins/skin-master.css", parameters={}
+DEBUG 2024-02-15 16:03:38.825 [https-jsse-nio-8443-exec-5] [DispatcherServlet:91] - GET "/ims/css/app.bundle.css", parameters={}
+DEBUG 2024-02-15 16:03:38.826 [https-jsse-nio-8443-exec-3] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.827 [https-jsse-nio-8443-exec-5] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.829 [https-jsse-nio-8443-exec-1] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.837 [https-jsse-nio-8443-exec-1] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.839 [https-jsse-nio-8443-exec-1] [DispatcherServlet:91] - GET "/ims/css/fa-brands.css", parameters={}
+DEBUG 2024-02-15 16:03:38.841 [https-jsse-nio-8443-exec-1] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.848 [https-jsse-nio-8443-exec-1] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.849 [https-jsse-nio-8443-exec-1] [DispatcherServlet:91] - GET "/ims/css/formplugins/alertify/alertify.min.css", parameters={}
+DEBUG 2024-02-15 16:03:38.850 [https-jsse-nio-8443-exec-1] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.852 [https-jsse-nio-8443-exec-5] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.853 [https-jsse-nio-8443-exec-2] [DispatcherServlet:91] - GET "/ims/css/datagrid/datatables/datatables.bundle.css", parameters={}
+DEBUG 2024-02-15 16:03:38.856 [https-jsse-nio-8443-exec-2] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.858 [https-jsse-nio-8443-exec-1] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.860 [https-jsse-nio-8443-exec-3] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.860 [https-jsse-nio-8443-exec-9] [DispatcherServlet:91] - GET "/ims/css/site.css", parameters={}
+DEBUG 2024-02-15 16:03:38.861 [https-jsse-nio-8443-exec-3] [DispatcherServlet:91] - GET "/ims/css/formplugins/bootstrap-timepicker/bootstrap-timepicker.css", parameters={}
+DEBUG 2024-02-15 16:03:38.863 [https-jsse-nio-8443-exec-3] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.863 [https-jsse-nio-8443-exec-9] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.865 [https-jsse-nio-8443-exec-2] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.866 [https-jsse-nio-8443-exec-3] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.867 [https-jsse-nio-8443-exec-2] [DispatcherServlet:91] - GET "/ims/css/formplugins/sumoselect/sumoselect.css", parameters={}
+DEBUG 2024-02-15 16:03:38.870 [https-jsse-nio-8443-exec-9] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.871 [https-jsse-nio-8443-exec-9] [DispatcherServlet:91] - GET "/ims/cmm/hist/rec/loginhisttot/", parameters={}
+DEBUG 2024-02-15 16:03:38.871 [https-jsse-nio-8443-exec-2] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.871 [https-jsse-nio-8443-exec-9] [RequestMappingHandlerMapping:515] - Mapped to com.vdc.ims.controller.CmmEtcController#LoginHistCount(CommandMap, HttpSession, HttpServletRequest)
+DEBUG 2024-02-15 16:03:38.871 [https-jsse-nio-8443-exec-9] [AbstractDAO:15] - 	 QueryId  	:  auth.AuthCheck
+DEBUG 2024-02-15 16:03:38.871 [https-jsse-nio-8443-exec-9] [SqlSessionUtils:49] - Creating a new SqlSession
+DEBUG 2024-02-15 16:03:38.871 [https-jsse-nio-8443-exec-9] [SqlSessionUtils:49] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@615a7db] was not registered for synchronization because synchronization is not active
+DEBUG 2024-02-15 16:03:38.872 [https-jsse-nio-8443-exec-9] [DataSourceUtils:115] - Fetching JDBC Connection from DataSource
+DEBUG 2024-02-15 16:03:38.872 [https-jsse-nio-8443-exec-8] [DispatcherServlet:91] - GET "/ims/css/formplugins/bootstrap-datepicker/bootstrap-datepicker.css", parameters={}
+DEBUG 2024-02-15 16:03:38.872 [https-jsse-nio-8443-exec-9] [SpringManagedTransaction:49] - JDBC Connection [HikariProxyConnection@2144280779 wrapping net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@774507f7] will not be managed by Spring
+DEBUG 2024-02-15 16:03:38.872 [https-jsse-nio-8443-exec-9] [AuthCheck:137] - ==>  Preparing: CALL USP_Cmm_AuthCheck(?, ?)
+DEBUG 2024-02-15 16:03:38.872 [https-jsse-nio-8443-exec-9] [AuthCheck:137] - ==> Parameters: /ims/cmm/hist/rec/loginhisttot/(String), 1000(String)
+DEBUG 2024-02-15 16:03:38.873 [https-jsse-nio-8443-exec-9] [sqlonly:223] -  com.zaxxer.hikari.pool.ProxyPreparedStatement.execute(ProxyPreparedStatement.java:44)
+1. CALL USP_Cmm_AuthCheck('/ims/cmm/hist/rec/loginhisttot/', '1000')
+
+DEBUG 2024-02-15 16:03:38.874 [https-jsse-nio-8443-exec-8] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.874 [https-jsse-nio-8443-exec-2] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.875 [https-jsse-nio-8443-exec-2] [DispatcherServlet:91] - GET "/ims/img/logo.png", parameters={}
+DEBUG 2024-02-15 16:03:38.877 [https-jsse-nio-8443-exec-2] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.878 [https-jsse-nio-8443-exec-8] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.879 [https-jsse-nio-8443-exec-2] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.880 [https-jsse-nio-8443-exec-6] [DispatcherServlet:91] - GET "/ims/img/demo/avatars/avatar-admin.png", parameters={}
+DEBUG 2024-02-15 16:03:38.880 [https-jsse-nio-8443-exec-4] [DispatcherServlet:91] - GET "/ims/img/card-backgrounds/cover-2-lg.png", parameters={}
+DEBUG 2024-02-15 16:03:38.880 [https-jsse-nio-8443-exec-9] [AuthCheck:137] - <==      Total: 1
+DEBUG 2024-02-15 16:03:38.881 [https-jsse-nio-8443-exec-9] [AuthCheck:137] - <==    Updates: 0
+DEBUG 2024-02-15 16:03:38.881 [https-jsse-nio-8443-exec-9] [SqlSessionUtils:49] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@615a7db]
+DEBUG 2024-02-15 16:03:38.881 [https-jsse-nio-8443-exec-9] [LoggerInterceptor:18] - ==================== BEGIN ====================
+DEBUG 2024-02-15 16:03:38.881 [https-jsse-nio-8443-exec-9] [LoggerInterceptor:19] - Request URI ===> /ims/cmm/hist/rec/loginhisttot/
+DEBUG 2024-02-15 16:03:38.882 [https-jsse-nio-8443-exec-6] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.882 [https-jsse-nio-8443-exec-4] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.882 [https-jsse-nio-8443-exec-9] [LoggerInterceptor:27] - ==================== END ======================
+DEBUG 2024-02-15 16:03:38.882 [https-jsse-nio-8443-exec-9] [AbstractDAO:15] - 	 QueryId  	:  cmmEtc.getMenu
+DEBUG 2024-02-15 16:03:38.882 [https-jsse-nio-8443-exec-9] [SqlSessionUtils:49] - Creating a new SqlSession
+DEBUG 2024-02-15 16:03:38.882 [https-jsse-nio-8443-exec-9] [SqlSessionUtils:49] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@dc346cc] was not registered for synchronization because synchronization is not active
+DEBUG 2024-02-15 16:03:38.883 [https-jsse-nio-8443-exec-9] [DataSourceUtils:115] - Fetching JDBC Connection from DataSource
+DEBUG 2024-02-15 16:03:38.883 [https-jsse-nio-8443-exec-9] [SpringManagedTransaction:49] - JDBC Connection [HikariProxyConnection@133568101 wrapping net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@774507f7] will not be managed by Spring
+DEBUG 2024-02-15 16:03:38.883 [https-jsse-nio-8443-exec-9] [getMenu:137] - ==>  Preparing: CALL USP_Cmm_Menu_S_New(?, ?)
+DEBUG 2024-02-15 16:03:38.884 [https-jsse-nio-8443-exec-9] [getMenu:137] - ==> Parameters: 1000(String), /ims/cmm/hist/rec/loginhisttot/(String)
+DEBUG 2024-02-15 16:03:38.884 [https-jsse-nio-8443-exec-9] [sqlonly:223] -  com.zaxxer.hikari.pool.ProxyPreparedStatement.execute(ProxyPreparedStatement.java:44)
+1. CALL USP_Cmm_Menu_S_New('1000', '/ims/cmm/hist/rec/loginhisttot/')
+
+DEBUG 2024-02-15 16:03:38.885 [https-jsse-nio-8443-exec-6] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.886 [https-jsse-nio-8443-exec-6] [DispatcherServlet:91] - GET "/ims/js/vendors.bundle.js", parameters={}
+DEBUG 2024-02-15 16:03:38.887 [https-jsse-nio-8443-exec-4] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.888 [https-jsse-nio-8443-exec-2] [DispatcherServlet:91] - GET "/ims/js/formplugins/alertify/alertify.min.js", parameters={}
+DEBUG 2024-02-15 16:03:38.888 [https-jsse-nio-8443-exec-6] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.890 [https-jsse-nio-8443-exec-2] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.896 [https-jsse-nio-8443-exec-2] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.898 [https-jsse-nio-8443-exec-3] [DispatcherServlet:91] - GET "/ims/js/datagrid/datatables/datatables.bundle.js", parameters={}
+DEBUG 2024-02-15 16:03:38.898 [https-jsse-nio-8443-exec-7] [DispatcherServlet:91] - GET "/ims/js/datagrid/datatables/datatables.export.js", parameters={}
+DEBUG 2024-02-15 16:03:38.900 [https-jsse-nio-8443-exec-7] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.900 [https-jsse-nio-8443-exec-3] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.924 [https-jsse-nio-8443-exec-4] [DispatcherServlet:91] - GET "/ims/js/app.bundle.js", parameters={}
+DEBUG 2024-02-15 16:03:38.926 [https-jsse-nio-8443-exec-4] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.930 [https-jsse-nio-8443-exec-8] [DispatcherServlet:91] - GET "/ims/js/datagrid/datatables/datatables.default.setting.js", parameters={}
+DEBUG 2024-02-15 16:03:38.933 [https-jsse-nio-8443-exec-8] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.936 [https-jsse-nio-8443-exec-4] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.939 [https-jsse-nio-8443-exec-8] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.942 [https-jsse-nio-8443-exec-5] [DispatcherServlet:91] - GET "/ims/js/formplugins/bootstrap-datepicker/bootstrap-datepicker.js", parameters={}
+DEBUG 2024-02-15 16:03:38.942 [https-jsse-nio-8443-exec-10] [DispatcherServlet:91] - GET "/ims/js/formplugins/sumoselect/jquery.sumoselect.min.js", parameters={}
+DEBUG 2024-02-15 16:03:38.944 [https-jsse-nio-8443-exec-5] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.944 [https-jsse-nio-8443-exec-10] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.948 [https-jsse-nio-8443-exec-10] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.950 [https-jsse-nio-8443-exec-6] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.952 [https-jsse-nio-8443-exec-5] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.954 [https-jsse-nio-8443-exec-2] [DispatcherServlet:91] - GET "/ims/js/bootstrap-multiselect.js", parameters={}
+DEBUG 2024-02-15 16:03:38.954 [https-jsse-nio-8443-exec-4] [DispatcherServlet:91] - GET "/ims/js/formplugins/bootstrap-timepicker/bootstrap-timepicker.min.js", parameters={}
+DEBUG 2024-02-15 16:03:38.954 [https-jsse-nio-8443-exec-1] [DispatcherServlet:91] - GET "/ims/js/ims.js", parameters={}
+DEBUG 2024-02-15 16:03:38.955 [https-jsse-nio-8443-exec-4] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.955 [https-jsse-nio-8443-exec-1] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.956 [https-jsse-nio-8443-exec-2] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:38.958 [https-jsse-nio-8443-exec-1] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.959 [https-jsse-nio-8443-exec-4] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.963 [https-jsse-nio-8443-exec-2] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:38.973 [https-jsse-nio-8443-exec-3] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:39.043 [https-jsse-nio-8443-exec-9] [getMenu:137] - <==      Total: 79
+DEBUG 2024-02-15 16:03:39.044 [https-jsse-nio-8443-exec-9] [getMenu:137] - <==    Updates: 81
+DEBUG 2024-02-15 16:03:39.045 [https-jsse-nio-8443-exec-9] [SqlSessionUtils:49] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@dc346cc]
+DEBUG 2024-02-15 16:03:39.045 [https-jsse-nio-8443-exec-9] [ContentNegotiatingViewResolver:349] - Selected '*/*' given [text/css, */*;q=0.1]
+DEBUG 2024-02-15 16:03:39.071 [https-jsse-nio-8443-exec-9] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:39.109 [https-jsse-nio-8443-exec-8] [DispatcherServlet:91] - GET "/ims/css/formplugins/bootstrap-datepicker/bootstrap-datepicker.css.map", parameters={}
+DEBUG 2024-02-15 16:03:39.111 [https-jsse-nio-8443-exec-8] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:39.114 [https-jsse-nio-8443-exec-5] [DispatcherServlet:91] - GET "/ims/css/skins/skin-master.css.map", parameters={}
+DEBUG 2024-02-15 16:03:39.114 [https-jsse-nio-8443-exec-1] [DispatcherServlet:91] - GET "/ims/css/fa-brands.css.map", parameters={}
+DEBUG 2024-02-15 16:03:39.114 [https-jsse-nio-8443-exec-6] [DispatcherServlet:91] - GET "/ims/css/app.bundle.css.map", parameters={}
+DEBUG 2024-02-15 16:03:39.114 [https-jsse-nio-8443-exec-10] [DispatcherServlet:91] - GET "/ims/css/vendors.bundle.css.map", parameters={}
+DEBUG 2024-02-15 16:03:39.115 [https-jsse-nio-8443-exec-1] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:39.115 [https-jsse-nio-8443-exec-5] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:39.115 [https-jsse-nio-8443-exec-6] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:39.116 [https-jsse-nio-8443-exec-10] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:39.122 [https-jsse-nio-8443-exec-8] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:39.122 [https-jsse-nio-8443-exec-5] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:39.123 [https-jsse-nio-8443-exec-4] [DispatcherServlet:91] - GET "/ims/img/logo.png", parameters={}
+DEBUG 2024-02-15 16:03:39.123 [https-jsse-nio-8443-exec-2] [DispatcherServlet:91] - GET "/ims/css/datagrid/datatables/datatables.bundle.css.map", parameters={}
+DEBUG 2024-02-15 16:03:39.124 [https-jsse-nio-8443-exec-7] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:39.124 [https-jsse-nio-8443-exec-4] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:39.124 [https-jsse-nio-8443-exec-2] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:39.128 [https-jsse-nio-8443-exec-4] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:39.132 [https-jsse-nio-8443-exec-2] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:39.136 [https-jsse-nio-8443-exec-1] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:39.142 [https-jsse-nio-8443-exec-6] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:39.156 [https-jsse-nio-8443-exec-3] [DispatcherServlet:91] - GET "/ims/webfonts/fa-light-300.woff2", parameters={}
+DEBUG 2024-02-15 16:03:39.157 [https-jsse-nio-8443-exec-9] [DispatcherServlet:91] - GET "/ims/js/bootstrap.js.map", parameters={}
+DEBUG 2024-02-15 16:03:39.158 [https-jsse-nio-8443-exec-3] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:39.158 [https-jsse-nio-8443-exec-9] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:39.159 [https-jsse-nio-8443-exec-9] [ResourceHttpRequestHandler:525] - Resource not found
+DEBUG 2024-02-15 16:03:39.160 [https-jsse-nio-8443-exec-9] [DispatcherServlet:1131] - Completed 404 NOT_FOUND
+DEBUG 2024-02-15 16:03:39.160 [https-jsse-nio-8443-exec-9] [DispatcherServlet:91] - "ERROR" dispatch for GET "/ims/error", parameters={}
+DEBUG 2024-02-15 16:03:39.161 [https-jsse-nio-8443-exec-9] [RequestMappingHandlerMapping:515] - Mapped to org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController#error(HttpServletRequest)
+DEBUG 2024-02-15 16:03:39.161 [https-jsse-nio-8443-exec-9] [AbstractDAO:15] - 	 QueryId  	:  auth.AuthCheck
+DEBUG 2024-02-15 16:03:39.161 [https-jsse-nio-8443-exec-9] [SqlSessionUtils:49] - Creating a new SqlSession
+DEBUG 2024-02-15 16:03:39.161 [https-jsse-nio-8443-exec-9] [SqlSessionUtils:49] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@1ab5e470] was not registered for synchronization because synchronization is not active
+DEBUG 2024-02-15 16:03:39.162 [https-jsse-nio-8443-exec-9] [DataSourceUtils:115] - Fetching JDBC Connection from DataSource
+DEBUG 2024-02-15 16:03:39.162 [https-jsse-nio-8443-exec-9] [SpringManagedTransaction:49] - JDBC Connection [HikariProxyConnection@249851083 wrapping net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@774507f7] will not be managed by Spring
+DEBUG 2024-02-15 16:03:39.162 [https-jsse-nio-8443-exec-9] [AuthCheck:137] - ==>  Preparing: CALL USP_Cmm_AuthCheck(?, ?)
+DEBUG 2024-02-15 16:03:39.163 [https-jsse-nio-8443-exec-9] [AuthCheck:137] - ==> Parameters: /ims/error(String), 1000(String)
+DEBUG 2024-02-15 16:03:39.163 [https-jsse-nio-8443-exec-10] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:39.163 [https-jsse-nio-8443-exec-9] [sqlonly:223] -  com.zaxxer.hikari.pool.ProxyPreparedStatement.execute(ProxyPreparedStatement.java:44)
+1. CALL USP_Cmm_AuthCheck('/ims/error', '1000')
+
+DEBUG 2024-02-15 16:03:39.165 [https-jsse-nio-8443-exec-9] [AuthCheck:137] - <==      Total: 1
+DEBUG 2024-02-15 16:03:39.165 [https-jsse-nio-8443-exec-9] [AuthCheck:137] - <==    Updates: 0
+DEBUG 2024-02-15 16:03:39.166 [https-jsse-nio-8443-exec-9] [SqlSessionUtils:49] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@1ab5e470]
+DEBUG 2024-02-15 16:03:39.166 [https-jsse-nio-8443-exec-9] [LoggerInterceptor:18] - ==================== BEGIN ====================
+DEBUG 2024-02-15 16:03:39.166 [https-jsse-nio-8443-exec-9] [LoggerInterceptor:19] - Request URI ===> /ims/error
+DEBUG 2024-02-15 16:03:39.166 [https-jsse-nio-8443-exec-9] [HttpEntityMethodProcessor:255] - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/json, application/*+json]
+DEBUG 2024-02-15 16:03:39.167 [https-jsse-nio-8443-exec-9] [HttpEntityMethodProcessor:91] - Writing [{timestamp=Thu Feb 15 16:03:39 KST 2024, status=404, error=Not Found, message=No message available,  (truncated)...]
+DEBUG 2024-02-15 16:03:39.167 [https-jsse-nio-8443-exec-9] [LoggerInterceptor:27] - ==================== END ======================
+DEBUG 2024-02-15 16:03:39.167 [https-jsse-nio-8443-exec-9] [DispatcherServlet:1127] - Exiting from "ERROR" dispatch, status 404
+DEBUG 2024-02-15 16:03:39.171 [https-jsse-nio-8443-exec-3] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:39.263 [https-jsse-nio-8443-exec-8] [DispatcherServlet:91] - GET "/ims/js/datagrid/datatables/pdfmake.js.map", parameters={}
+DEBUG 2024-02-15 16:03:39.264 [https-jsse-nio-8443-exec-8] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 16:03:39.265 [https-jsse-nio-8443-exec-8] [ResourceHttpRequestHandler:525] - Resource not found
+DEBUG 2024-02-15 16:03:39.265 [https-jsse-nio-8443-exec-8] [DispatcherServlet:1131] - Completed 404 NOT_FOUND
+DEBUG 2024-02-15 16:03:39.265 [https-jsse-nio-8443-exec-8] [DispatcherServlet:91] - "ERROR" dispatch for GET "/ims/error", parameters={}
+DEBUG 2024-02-15 16:03:39.265 [https-jsse-nio-8443-exec-8] [RequestMappingHandlerMapping:515] - Mapped to org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController#error(HttpServletRequest)
+DEBUG 2024-02-15 16:03:39.266 [https-jsse-nio-8443-exec-8] [AbstractDAO:15] - 	 QueryId  	:  auth.AuthCheck
+DEBUG 2024-02-15 16:03:39.266 [https-jsse-nio-8443-exec-8] [SqlSessionUtils:49] - Creating a new SqlSession
+DEBUG 2024-02-15 16:03:39.266 [https-jsse-nio-8443-exec-8] [SqlSessionUtils:49] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@7df1a786] was not registered for synchronization because synchronization is not active
+DEBUG 2024-02-15 16:03:39.266 [https-jsse-nio-8443-exec-8] [DataSourceUtils:115] - Fetching JDBC Connection from DataSource
+DEBUG 2024-02-15 16:03:39.267 [https-jsse-nio-8443-exec-8] [SpringManagedTransaction:49] - JDBC Connection [HikariProxyConnection@218333188 wrapping net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@774507f7] will not be managed by Spring
+DEBUG 2024-02-15 16:03:39.267 [https-jsse-nio-8443-exec-8] [AuthCheck:137] - ==>  Preparing: CALL USP_Cmm_AuthCheck(?, ?)
+DEBUG 2024-02-15 16:03:39.267 [https-jsse-nio-8443-exec-8] [AuthCheck:137] - ==> Parameters: /ims/error(String), 1000(String)
+DEBUG 2024-02-15 16:03:39.267 [https-jsse-nio-8443-exec-8] [sqlonly:223] -  com.zaxxer.hikari.pool.ProxyPreparedStatement.execute(ProxyPreparedStatement.java:44)
+1. CALL USP_Cmm_AuthCheck('/ims/error', '1000')
+
+DEBUG 2024-02-15 16:03:39.269 [https-jsse-nio-8443-exec-8] [AuthCheck:137] - <==      Total: 1
+DEBUG 2024-02-15 16:03:39.270 [https-jsse-nio-8443-exec-8] [AuthCheck:137] - <==    Updates: 0
+DEBUG 2024-02-15 16:03:39.270 [https-jsse-nio-8443-exec-8] [SqlSessionUtils:49] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@7df1a786]
+DEBUG 2024-02-15 16:03:39.270 [https-jsse-nio-8443-exec-8] [LoggerInterceptor:18] - ==================== BEGIN ====================
+DEBUG 2024-02-15 16:03:39.270 [https-jsse-nio-8443-exec-8] [LoggerInterceptor:19] - Request URI ===> /ims/error
+DEBUG 2024-02-15 16:03:39.271 [https-jsse-nio-8443-exec-8] [HttpEntityMethodProcessor:255] - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/json, application/*+json]
+DEBUG 2024-02-15 16:03:39.271 [https-jsse-nio-8443-exec-8] [HttpEntityMethodProcessor:91] - Writing [{timestamp=Thu Feb 15 16:03:39 KST 2024, status=404, error=Not Found, message=No message available,  (truncated)...]
+DEBUG 2024-02-15 16:03:39.272 [https-jsse-nio-8443-exec-8] [LoggerInterceptor:27] - ==================== END ======================
+DEBUG 2024-02-15 16:03:39.272 [https-jsse-nio-8443-exec-8] [DispatcherServlet:1127] - Exiting from "ERROR" dispatch, status 404
+DEBUG 2024-02-15 16:03:39.382 [https-jsse-nio-8443-exec-5] [DispatcherServlet:91] - POST "/ims/cmm/ajax/usergroup/list", parameters={}
+DEBUG 2024-02-15 16:03:39.382 [https-jsse-nio-8443-exec-5] [RequestMappingHandlerMapping:515] - Mapped to com.vdc.ims.controller.CmmRestApiController#getUserGroup(CommandMap, HttpSession, HttpServletRequest)
+DEBUG 2024-02-15 16:03:39.383 [https-jsse-nio-8443-exec-5] [LoggerInterceptor:18] - ==================== BEGIN ====================
+DEBUG 2024-02-15 16:03:39.383 [https-jsse-nio-8443-exec-5] [LoggerInterceptor:19] - Request URI ===> /ims/cmm/ajax/usergroup/list
+DEBUG 2024-02-15 16:03:39.383 [https-jsse-nio-8443-exec-5] [AbstractDAO:15] - 	 QueryId  	:  cmmRestApi.getUserGroup
+DEBUG 2024-02-15 16:03:39.383 [https-jsse-nio-8443-exec-5] [SqlSessionUtils:49] - Creating a new SqlSession
+DEBUG 2024-02-15 16:03:39.383 [https-jsse-nio-8443-exec-5] [SqlSessionUtils:49] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@4d6c67c2] was not registered for synchronization because synchronization is not active
+DEBUG 2024-02-15 16:03:39.384 [https-jsse-nio-8443-exec-5] [DataSourceUtils:115] - Fetching JDBC Connection from DataSource
+DEBUG 2024-02-15 16:03:39.384 [https-jsse-nio-8443-exec-5] [sqlonly:223] -  com.zaxxer.hikari.pool.PoolBase.isConnectionAlive(PoolBase.java:169)
+11. select getdate() as MSSQL
+
+DEBUG 2024-02-15 16:03:39.386 [https-jsse-nio-8443-exec-5] [SpringManagedTransaction:49] - JDBC Connection [HikariProxyConnection@66275374 wrapping net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@2044fb3] will not be managed by Spring
+DEBUG 2024-02-15 16:03:39.387 [https-jsse-nio-8443-exec-5] [getUserGroup:137] - ==>  Preparing: EXEC IMS.dbo.usp_get_group_user ?
+DEBUG 2024-02-15 16:03:39.387 [https-jsse-nio-8443-exec-5] [getUserGroup:137] - ==> Parameters: 1000(String)
+DEBUG 2024-02-15 16:03:39.388 [https-jsse-nio-8443-exec-5] [sqlonly:223] -  com.zaxxer.hikari.pool.ProxyPreparedStatement.execute(ProxyPreparedStatement.java:44)
+11. EXEC IMS.dbo.usp_get_group_user '1000'
+
+DEBUG 2024-02-15 16:03:39.392 [https-jsse-nio-8443-exec-5] [getUserGroup:137] - <==      Total: 57
+DEBUG 2024-02-15 16:03:39.393 [https-jsse-nio-8443-exec-5] [SqlSessionUtils:49] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@4d6c67c2]
+DEBUG 2024-02-15 16:03:39.393 [https-jsse-nio-8443-exec-5] [LoggerInterceptor:27] - ==================== END ======================
+DEBUG 2024-02-15 16:03:39.393 [https-jsse-nio-8443-exec-5] [ContentNegotiatingViewResolver:349] - Selected '*/*' given [*/*]
+DEBUG 2024-02-15 16:03:39.394 [https-jsse-nio-8443-exec-5] [MappingJackson2JsonView:309] - View name 'jsonView', model {userGroup=[{order_no=0, part_depth=1, spart_code=0, mpart_code=0, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=유비케어_본사}, {order_no=0, part_depth=2, spart_code=0, mpart_code=410, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=01_고객지원유닛(의사랑)}, {order_no=0, part_depth=3, spart_code=411, mpart_code=410, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=의원서비스1팀}, {order_no=0, part_depth=3, spart_code=412, mpart_code=410, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=의원서비스2팀}, {order_no=0, part_depth=3, spart_code=415, mpart_code=410, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=의원서비스3팀}, {order_no=0, part_depth=3, spart_code=515, mpart_code=410, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=고객관리팀}, {part_depth=2, spart_code=0, mpart_code=500, bpart_code=1000, use_yn=1, business_code=1, part_name=02_약국사업유닛(유팜)}, {part_depth=3, spart_code=510, mpart_code=500, bpart_code=1000, use_yn=1, business_code=1, delete_day=180, part_name=약국서비스팀}, {part_depth=3, spart_code=511, mpart_code=500, bpart_code=1000, use_yn=1, business_code=1, delete_day=180, part_name=약국품질팀}, {order_no=0, part_depth=2, spart_code=0, mpart_code=610, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=05_초음파사업팀}, {order_no=0, part_depth=3, spart_code=611, mpart_code=610, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=초음파사업팀}, {order_no=0, part_depth=2, spart_code=0, mpart_code=710, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=03_이비즈사업팀}, {order_no=0, part_depth=3, spart_code=711, mpart_code=710, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=이비즈사업팀}, {order_no=0, part_depth=2, spart_code=0, mpart_code=810, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=04_PACs팀}, {order_no=0, part_depth=3, spart_code=811, mpart_code=810, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=PACs팀}, {order_no=0, part_depth=2, spart_code=0, mpart_code=910, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=06_영업관리팀}, {order_no=0, part_depth=3, spart_code=911, mpart_code=910, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=영업관리팀}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1110, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=10_데이터팀}, {order_no=0, part_depth=3, spart_code=1111, mpart_code=1110, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=데이터기획팀}, {order_no=0, part_depth=3, spart_code=2222, mpart_code=1110, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=데이타사업팀}, {order_no=0, part_depth=2, spart_code=0, mpart_code=9999, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=관리자}, {order_no=0, part_depth=3, spart_code=9999, mpart_code=9999, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=관리자그룹}, {order_no=0, part_depth=1, spart_code=0, mpart_code=0, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=유비케어_지부}, {order_no=0, part_depth=2, spart_code=0, mpart_code=110, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=01_강남메디패스}, {order_no=0, part_depth=3, spart_code=111, mpart_code=110, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=강남메디패스}, {order_no=0, part_depth=2, spart_code=0, mpart_code=210, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=02_동원메디텍}, {order_no=0, part_depth=3, spart_code=211, mpart_code=210, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=동원메디텍}, {order_no=0, part_depth=2, spart_code=0, mpart_code=310, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=03_두리메디컴}, {order_no=0, part_depth=3, spart_code=311, mpart_code=310, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=두리메디컴}, {order_no=0, part_depth=2, spart_code=0, mpart_code=410, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=04_디라인}, {order_no=0, part_depth=3, spart_code=411, mpart_code=410, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=디라인}, {order_no=0, part_depth=2, spart_code=0, mpart_code=510, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=05_메디네트}, {order_no=0, part_depth=3, spart_code=511, mpart_code=510, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=메디네트}, {order_no=0, part_depth=2, spart_code=0, mpart_code=610, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=06_메디케어}, {order_no=0, part_depth=3, spart_code=611, mpart_code=610, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=메디케어}, {order_no=0, part_depth=2, spart_code=0, mpart_code=710, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=07_비즈현메디칼}, {order_no=0, part_depth=3, spart_code=711, mpart_code=710, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=비즈현메디칼}, {order_no=0, part_depth=2, spart_code=0, mpart_code=810, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=08_세일메디넷}, {order_no=0, part_depth=3, spart_code=811, mpart_code=810, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=세일메디넷}, {order_no=0, part_depth=2, spart_code=0, mpart_code=910, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=09_씨제이넷}, {order_no=0, part_depth=3, spart_code=911, mpart_code=910, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=씨제이넷}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1010, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=10_에버넷}, {order_no=0, part_depth=3, spart_code=1011, mpart_code=1010, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=에버넷}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1110, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=11_엠베이스}, {order_no=0, part_depth=3, spart_code=1111, mpart_code=1110, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=엠베이스}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1210, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=12_이안메드}, {order_no=0, part_depth=3, spart_code=1211, mpart_code=1210, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=이안메드}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1310, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=13_이오넷}, {order_no=0, part_depth=3, spart_code=1311, mpart_code=1310, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=이오넷}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1410, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=14_프로비즈넷}, {order_no=0, part_depth=3, spart_code=1411, mpart_code=1410, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=프로비즈넷}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1610, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=16_M-NET}, {order_no=0, part_depth=3, spart_code=1611, mpart_code=1610, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=M-NET}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1710, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=17_UB-Net}, {order_no=0, part_depth=3, spart_code=1711, mpart_code=1710, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=UB-Net}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1810, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=18_올데이팜}, {order_no=0, part_depth=3, spart_code=1811, mpart_code=1810, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=올데이팜}]}
+DEBUG 2024-02-15 16:03:39.395 [https-jsse-nio-8443-exec-5] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 16:03:39.657 [File Watcher] [Restarter:249] - Restarting application
+DEBUG 2024-02-15 16:03:39.657 [Thread-12] [Restarter:305] - Stopping application
+DEBUG 2024-02-15 16:03:39.658 [Thread-12] [AnnotationConfigServletWebServerApplicationContext:1048] - Closing org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@121b55b2, started on Thu Feb 15 16:00:58 KST 2024
+DEBUG 2024-02-15 16:03:39.658 [Thread-12] [PropertySourcesPropertyResolver:115] - Found key 'spring.liveBeansView.mbeanDomain' in PropertySource 'systemProperties' with value of type String
+DEBUG 2024-02-15 16:03:39.659 [Thread-12] [DefaultLifecycleProcessor:365] - Stopping beans in phase 2147483647
+DEBUG 2024-02-15 16:03:39.661 [Thread-12] [DefaultLifecycleProcessor:238] - Bean 'webServerGracefulShutdown' completed its stop procedure
+DEBUG 2024-02-15 16:03:39.661 [Thread-12] [DefaultLifecycleProcessor:365] - Stopping beans in phase 2147483646
+DEBUG 2024-02-15 16:03:40.072 [Thread-12] [DefaultLifecycleProcessor:238] - Bean 'webServerStartStop' completed its stop procedure
+DEBUG 2024-02-15 16:03:40.073 [Thread-12] [AnnotationMBeanExporter:452] - Unregistering JMX-exposed beans on shutdown
+DEBUG 2024-02-15 16:03:40.073 [Thread-12] [AnnotationMBeanExporter:186] - Unregistering JMX-exposed beans
+INFO  2024-02-15 16:03:40.074 [Thread-12] [ThreadPoolTaskExecutor:218] - Shutting down ExecutorService 'applicationTaskExecutor'
+INFO  2024-02-15 16:03:40.074 [Thread-12] [ThreadPoolTaskScheduler:218] - Shutting down ExecutorService 'scheduler'
+DEBUG 2024-02-15 16:03:40.075 [Thread-12] [PoolingHttpClientConnectionManager:411] - Connection manager is shutting down
+DEBUG 2024-02-15 16:03:40.075 [Thread-12] [PoolingHttpClientConnectionManager:434] - Connection manager shut down
+INFO  2024-02-15 16:03:40.076 [Thread-12] [HikariDataSource:350] - HikariPool-1 - Shutdown initiated...
+DEBUG 2024-02-15 16:03:40.077 [Thread-12] [HikariPool:421] - HikariPool-1 - Before shutdown stats (total=10, active=0, idle=10, waiting=0)
+DEBUG 2024-02-15 16:03:40.077 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@774507f7: (connection evicted)
+DEBUG 2024-02-15 16:03:40.080 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@4c62b0f0: (connection evicted)
+DEBUG 2024-02-15 16:03:40.080 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@612e3167: (connection evicted)
+DEBUG 2024-02-15 16:03:40.080 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@794226b5: (connection evicted)
+DEBUG 2024-02-15 16:03:40.080 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@202f997c: (connection evicted)
+DEBUG 2024-02-15 16:03:40.080 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@799358b9: (connection evicted)
+DEBUG 2024-02-15 16:03:40.080 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@69a6ebe5: (connection evicted)
+DEBUG 2024-02-15 16:03:40.081 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@1b91fea: (connection evicted)
+DEBUG 2024-02-15 16:03:40.081 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@5d8182d8: (connection evicted)
+DEBUG 2024-02-15 16:03:40.081 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@3eb45f41: (connection evicted)
+DEBUG 2024-02-15 16:03:40.081 [Thread-12] [HikariPool:421] - HikariPool-1 - After shutdown stats (total=0, active=0, idle=0, waiting=0)
+INFO  2024-02-15 16:03:40.081 [Thread-12] [HikariDataSource:352] - HikariPool-1 - Shutdown completed.
+DEBUG 2024-02-15 16:03:40.275 [Thread-12] [Restarter:85] - Created RestartClassLoader org.springframework.boot.devtools.restart.classloader.RestartClassLoader@2b8f4cbf
+DEBUG 2024-02-15 16:03:40.275 [Thread-12] [Restarter:281] - Starting application com.vdc.ims.ImsApplication with URLs [file:/C:/Users/82106/IdeaProjects/%ec%8b%a4%eb%ac%b4/ims_ubcare/ims_ubcare/build/classes/java/main/, file:/C:/Users/82106/IdeaProjects/%ec%8b%a4%eb%ac%b4/ims_ubcare/ims_ubcare/build/resources/main/]
+DEBUG 2024-02-15 17:18:15.550 [https-jsse-nio-8443-exec-9] [DispatcherServlet:91] - GET "/ims/js/datagrid/datatables/pdfmake.js.map", parameters={}
+DEBUG 2024-02-15 17:18:15.551 [https-jsse-nio-8443-exec-9] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.552 [https-jsse-nio-8443-exec-9] [ResourceHttpRequestHandler:525] - Resource not found
+DEBUG 2024-02-15 17:18:15.553 [https-jsse-nio-8443-exec-9] [DispatcherServlet:1131] - Completed 404 NOT_FOUND
+DEBUG 2024-02-15 17:18:15.553 [https-jsse-nio-8443-exec-9] [DispatcherServlet:91] - "ERROR" dispatch for GET "/ims/error", parameters={}
+DEBUG 2024-02-15 17:18:15.553 [https-jsse-nio-8443-exec-9] [RequestMappingHandlerMapping:515] - Mapped to org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController#error(HttpServletRequest)
+DEBUG 2024-02-15 17:18:15.554 [https-jsse-nio-8443-exec-9] [AbstractDAO:15] - 	 QueryId  	:  auth.AuthCheck
+DEBUG 2024-02-15 17:18:15.554 [https-jsse-nio-8443-exec-9] [SqlSessionUtils:49] - Creating a new SqlSession
+DEBUG 2024-02-15 17:18:15.554 [https-jsse-nio-8443-exec-9] [SqlSessionUtils:49] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@39e2ac03] was not registered for synchronization because synchronization is not active
+DEBUG 2024-02-15 17:18:15.554 [https-jsse-nio-8443-exec-9] [DataSourceUtils:115] - Fetching JDBC Connection from DataSource
+DEBUG 2024-02-15 17:18:15.554 [https-jsse-nio-8443-exec-9] [SpringManagedTransaction:49] - JDBC Connection [HikariProxyConnection@239660356 wrapping net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@12f4b81c] will not be managed by Spring
+DEBUG 2024-02-15 17:18:15.558 [https-jsse-nio-8443-exec-9] [AuthCheck:137] - ==>  Preparing: CALL USP_Cmm_AuthCheck(?, ?)
+DEBUG 2024-02-15 17:18:15.565 [https-jsse-nio-8443-exec-9] [AuthCheck:137] - ==> Parameters: /ims/error(String), 1000(String)
+DEBUG 2024-02-15 17:18:15.565 [https-jsse-nio-8443-exec-9] [sqlonly:223] -  com.zaxxer.hikari.pool.ProxyPreparedStatement.execute(ProxyPreparedStatement.java:44)
+1. CALL USP_Cmm_AuthCheck('/ims/error', '1000')
+
+DEBUG 2024-02-15 17:18:15.570 [https-jsse-nio-8443-exec-9] [AuthCheck:137] - <==      Total: 1
+DEBUG 2024-02-15 17:18:15.570 [https-jsse-nio-8443-exec-9] [AuthCheck:137] - <==    Updates: 0
+DEBUG 2024-02-15 17:18:15.570 [https-jsse-nio-8443-exec-9] [SqlSessionUtils:49] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@39e2ac03]
+DEBUG 2024-02-15 17:18:15.571 [https-jsse-nio-8443-exec-9] [LoggerInterceptor:18] - ==================== BEGIN ====================
+DEBUG 2024-02-15 17:18:15.571 [https-jsse-nio-8443-exec-9] [LoggerInterceptor:19] - Request URI ===> /ims/error
+DEBUG 2024-02-15 17:18:15.571 [https-jsse-nio-8443-exec-9] [HttpEntityMethodProcessor:255] - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/json, application/*+json]
+DEBUG 2024-02-15 17:18:15.571 [https-jsse-nio-8443-exec-9] [HttpEntityMethodProcessor:91] - Writing [{timestamp=Thu Feb 15 17:18:15 KST 2024, status=404, error=Not Found, message=No message available,  (truncated)...]
+DEBUG 2024-02-15 17:18:15.572 [https-jsse-nio-8443-exec-9] [LoggerInterceptor:27] - ==================== END ======================
+DEBUG 2024-02-15 17:18:15.572 [https-jsse-nio-8443-exec-9] [DispatcherServlet:1127] - Exiting from "ERROR" dispatch, status 404
+DEBUG 2024-02-15 17:18:15.599 [https-jsse-nio-8443-exec-2] [DispatcherServlet:91] - GET "/ims/cmm/hist/rec/loginhisttot/", parameters={}
+DEBUG 2024-02-15 17:18:15.599 [https-jsse-nio-8443-exec-2] [RequestMappingHandlerMapping:515] - Mapped to com.vdc.ims.controller.CmmEtcController#LoginHistCount(CommandMap, HttpSession, HttpServletRequest)
+DEBUG 2024-02-15 17:18:15.599 [https-jsse-nio-8443-exec-2] [AbstractDAO:15] - 	 QueryId  	:  auth.AuthCheck
+DEBUG 2024-02-15 17:18:15.600 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - Creating a new SqlSession
+DEBUG 2024-02-15 17:18:15.600 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@ead6a06] was not registered for synchronization because synchronization is not active
+DEBUG 2024-02-15 17:18:15.600 [https-jsse-nio-8443-exec-2] [DataSourceUtils:115] - Fetching JDBC Connection from DataSource
+DEBUG 2024-02-15 17:18:15.600 [https-jsse-nio-8443-exec-2] [SpringManagedTransaction:49] - JDBC Connection [HikariProxyConnection@1308047430 wrapping net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@12f4b81c] will not be managed by Spring
+DEBUG 2024-02-15 17:18:15.600 [https-jsse-nio-8443-exec-2] [AuthCheck:137] - ==>  Preparing: CALL USP_Cmm_AuthCheck(?, ?)
+DEBUG 2024-02-15 17:18:15.600 [https-jsse-nio-8443-exec-2] [AuthCheck:137] - ==> Parameters: /ims/cmm/hist/rec/loginhisttot/(String), 1000(String)
+DEBUG 2024-02-15 17:18:15.601 [https-jsse-nio-8443-exec-2] [sqlonly:223] -  com.zaxxer.hikari.pool.ProxyPreparedStatement.execute(ProxyPreparedStatement.java:44)
+1. CALL USP_Cmm_AuthCheck('/ims/cmm/hist/rec/loginhisttot/', '1000')
+
+DEBUG 2024-02-15 17:18:15.602 [https-jsse-nio-8443-exec-2] [AuthCheck:137] - <==      Total: 1
+DEBUG 2024-02-15 17:18:15.602 [https-jsse-nio-8443-exec-2] [AuthCheck:137] - <==    Updates: 0
+DEBUG 2024-02-15 17:18:15.602 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@ead6a06]
+DEBUG 2024-02-15 17:18:15.602 [https-jsse-nio-8443-exec-2] [LoggerInterceptor:18] - ==================== BEGIN ====================
+DEBUG 2024-02-15 17:18:15.603 [https-jsse-nio-8443-exec-2] [LoggerInterceptor:19] - Request URI ===> /ims/cmm/hist/rec/loginhisttot/
+DEBUG 2024-02-15 17:18:15.603 [https-jsse-nio-8443-exec-2] [LoggerInterceptor:27] - ==================== END ======================
+DEBUG 2024-02-15 17:18:15.603 [https-jsse-nio-8443-exec-2] [AbstractDAO:15] - 	 QueryId  	:  cmmEtc.getMenu
+DEBUG 2024-02-15 17:18:15.603 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - Creating a new SqlSession
+DEBUG 2024-02-15 17:18:15.603 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@5e6b435e] was not registered for synchronization because synchronization is not active
+DEBUG 2024-02-15 17:18:15.603 [https-jsse-nio-8443-exec-2] [DataSourceUtils:115] - Fetching JDBC Connection from DataSource
+DEBUG 2024-02-15 17:18:15.604 [https-jsse-nio-8443-exec-2] [SpringManagedTransaction:49] - JDBC Connection [HikariProxyConnection@1309137205 wrapping net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@12f4b81c] will not be managed by Spring
+DEBUG 2024-02-15 17:18:15.604 [https-jsse-nio-8443-exec-2] [getMenu:137] - ==>  Preparing: CALL USP_Cmm_Menu_S_New(?, ?)
+DEBUG 2024-02-15 17:18:15.604 [https-jsse-nio-8443-exec-2] [getMenu:137] - ==> Parameters: 1000(String), /ims/cmm/hist/rec/loginhisttot/(String)
+DEBUG 2024-02-15 17:18:15.604 [https-jsse-nio-8443-exec-2] [sqlonly:223] -  com.zaxxer.hikari.pool.ProxyPreparedStatement.execute(ProxyPreparedStatement.java:44)
+1. CALL USP_Cmm_Menu_S_New('1000', '/ims/cmm/hist/rec/loginhisttot/')
+
+DEBUG 2024-02-15 17:18:15.633 [https-jsse-nio-8443-exec-4] [DispatcherServlet:91] - POST "/ims/cmm/ajax/usergroup/list", parameters={}
+DEBUG 2024-02-15 17:18:15.633 [https-jsse-nio-8443-exec-4] [RequestMappingHandlerMapping:515] - Mapped to com.vdc.ims.controller.CmmRestApiController#getUserGroup(CommandMap, HttpSession, HttpServletRequest)
+DEBUG 2024-02-15 17:18:15.634 [https-jsse-nio-8443-exec-4] [LoggerInterceptor:18] - ==================== BEGIN ====================
+DEBUG 2024-02-15 17:18:15.634 [https-jsse-nio-8443-exec-4] [LoggerInterceptor:19] - Request URI ===> /ims/cmm/ajax/usergroup/list
+DEBUG 2024-02-15 17:18:15.634 [https-jsse-nio-8443-exec-4] [AbstractDAO:15] - 	 QueryId  	:  cmmRestApi.getUserGroup
+DEBUG 2024-02-15 17:18:15.634 [https-jsse-nio-8443-exec-4] [SqlSessionUtils:49] - Creating a new SqlSession
+DEBUG 2024-02-15 17:18:15.635 [https-jsse-nio-8443-exec-4] [SqlSessionUtils:49] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@6ca801b] was not registered for synchronization because synchronization is not active
+DEBUG 2024-02-15 17:18:15.635 [https-jsse-nio-8443-exec-4] [DataSourceUtils:115] - Fetching JDBC Connection from DataSource
+DEBUG 2024-02-15 17:18:15.635 [https-jsse-nio-8443-exec-4] [sqlonly:223] -  com.zaxxer.hikari.pool.PoolBase.isConnectionAlive(PoolBase.java:169)
+11. select getdate() as MSSQL
+
+DEBUG 2024-02-15 17:18:15.640 [https-jsse-nio-8443-exec-4] [SpringManagedTransaction:49] - JDBC Connection [HikariProxyConnection@1952548696 wrapping net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@7df284e9] will not be managed by Spring
+DEBUG 2024-02-15 17:18:15.641 [https-jsse-nio-8443-exec-4] [getUserGroup:137] - ==>  Preparing: EXEC IMS.dbo.usp_get_group_user ?
+DEBUG 2024-02-15 17:18:15.641 [https-jsse-nio-8443-exec-4] [getUserGroup:137] - ==> Parameters: 1000(String)
+DEBUG 2024-02-15 17:18:15.642 [https-jsse-nio-8443-exec-4] [sqlonly:223] -  com.zaxxer.hikari.pool.ProxyPreparedStatement.execute(ProxyPreparedStatement.java:44)
+11. EXEC IMS.dbo.usp_get_group_user '1000'
+
+DEBUG 2024-02-15 17:18:15.648 [https-jsse-nio-8443-exec-4] [getUserGroup:137] - <==      Total: 57
+DEBUG 2024-02-15 17:18:15.649 [https-jsse-nio-8443-exec-4] [SqlSessionUtils:49] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@6ca801b]
+DEBUG 2024-02-15 17:18:15.649 [https-jsse-nio-8443-exec-4] [LoggerInterceptor:27] - ==================== END ======================
+DEBUG 2024-02-15 17:18:15.650 [https-jsse-nio-8443-exec-4] [ContentNegotiatingViewResolver:349] - Selected '*/*' given [*/*]
+DEBUG 2024-02-15 17:18:15.650 [https-jsse-nio-8443-exec-4] [MappingJackson2JsonView:309] - View name 'jsonView', model {userGroup=[{order_no=0, part_depth=1, spart_code=0, mpart_code=0, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=유비케어_본사}, {order_no=0, part_depth=2, spart_code=0, mpart_code=410, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=01_고객지원유닛(의사랑)}, {order_no=0, part_depth=3, spart_code=411, mpart_code=410, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=의원서비스1팀}, {order_no=0, part_depth=3, spart_code=412, mpart_code=410, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=의원서비스2팀}, {order_no=0, part_depth=3, spart_code=415, mpart_code=410, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=의원서비스3팀}, {order_no=0, part_depth=3, spart_code=515, mpart_code=410, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=고객관리팀}, {part_depth=2, spart_code=0, mpart_code=500, bpart_code=1000, use_yn=1, business_code=1, part_name=02_약국사업유닛(유팜)}, {part_depth=3, spart_code=510, mpart_code=500, bpart_code=1000, use_yn=1, business_code=1, delete_day=180, part_name=약국서비스팀}, {part_depth=3, spart_code=511, mpart_code=500, bpart_code=1000, use_yn=1, business_code=1, delete_day=180, part_name=약국품질팀}, {order_no=0, part_depth=2, spart_code=0, mpart_code=610, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=05_초음파사업팀}, {order_no=0, part_depth=3, spart_code=611, mpart_code=610, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=초음파사업팀}, {order_no=0, part_depth=2, spart_code=0, mpart_code=710, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=03_이비즈사업팀}, {order_no=0, part_depth=3, spart_code=711, mpart_code=710, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=이비즈사업팀}, {order_no=0, part_depth=2, spart_code=0, mpart_code=810, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=04_PACs팀}, {order_no=0, part_depth=3, spart_code=811, mpart_code=810, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=PACs팀}, {order_no=0, part_depth=2, spart_code=0, mpart_code=910, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=06_영업관리팀}, {order_no=0, part_depth=3, spart_code=911, mpart_code=910, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=영업관리팀}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1110, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=10_데이터팀}, {order_no=0, part_depth=3, spart_code=1111, mpart_code=1110, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=데이터기획팀}, {order_no=0, part_depth=3, spart_code=2222, mpart_code=1110, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=데이타사업팀}, {order_no=0, part_depth=2, spart_code=0, mpart_code=9999, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=관리자}, {order_no=0, part_depth=3, spart_code=9999, mpart_code=9999, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=관리자그룹}, {order_no=0, part_depth=1, spart_code=0, mpart_code=0, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=유비케어_지부}, {order_no=0, part_depth=2, spart_code=0, mpart_code=110, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=01_강남메디패스}, {order_no=0, part_depth=3, spart_code=111, mpart_code=110, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=강남메디패스}, {order_no=0, part_depth=2, spart_code=0, mpart_code=210, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=02_동원메디텍}, {order_no=0, part_depth=3, spart_code=211, mpart_code=210, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=동원메디텍}, {order_no=0, part_depth=2, spart_code=0, mpart_code=310, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=03_두리메디컴}, {order_no=0, part_depth=3, spart_code=311, mpart_code=310, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=두리메디컴}, {order_no=0, part_depth=2, spart_code=0, mpart_code=410, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=04_디라인}, {order_no=0, part_depth=3, spart_code=411, mpart_code=410, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=디라인}, {order_no=0, part_depth=2, spart_code=0, mpart_code=510, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=05_메디네트}, {order_no=0, part_depth=3, spart_code=511, mpart_code=510, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=메디네트}, {order_no=0, part_depth=2, spart_code=0, mpart_code=610, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=06_메디케어}, {order_no=0, part_depth=3, spart_code=611, mpart_code=610, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=메디케어}, {order_no=0, part_depth=2, spart_code=0, mpart_code=710, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=07_비즈현메디칼}, {order_no=0, part_depth=3, spart_code=711, mpart_code=710, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=비즈현메디칼}, {order_no=0, part_depth=2, spart_code=0, mpart_code=810, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=08_세일메디넷}, {order_no=0, part_depth=3, spart_code=811, mpart_code=810, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=세일메디넷}, {order_no=0, part_depth=2, spart_code=0, mpart_code=910, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=09_씨제이넷}, {order_no=0, part_depth=3, spart_code=911, mpart_code=910, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=씨제이넷}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1010, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=10_에버넷}, {order_no=0, part_depth=3, spart_code=1011, mpart_code=1010, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=에버넷}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1110, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=11_엠베이스}, {order_no=0, part_depth=3, spart_code=1111, mpart_code=1110, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=엠베이스}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1210, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=12_이안메드}, {order_no=0, part_depth=3, spart_code=1211, mpart_code=1210, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=이안메드}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1310, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=13_이오넷}, {order_no=0, part_depth=3, spart_code=1311, mpart_code=1310, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=이오넷}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1410, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=14_프로비즈넷}, {order_no=0, part_depth=3, spart_code=1411, mpart_code=1410, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=프로비즈넷}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1610, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=16_M-NET}, {order_no=0, part_depth=3, spart_code=1611, mpart_code=1610, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=M-NET}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1710, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=17_UB-Net}, {order_no=0, part_depth=3, spart_code=1711, mpart_code=1710, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=UB-Net}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1810, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=18_올데이팜}, {order_no=0, part_depth=3, spart_code=1811, mpart_code=1810, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=올데이팜}]}
+DEBUG 2024-02-15 17:18:15.682 [https-jsse-nio-8443-exec-4] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.711 [https-jsse-nio-8443-exec-2] [getMenu:137] - <==      Total: 79
+DEBUG 2024-02-15 17:18:15.711 [https-jsse-nio-8443-exec-2] [getMenu:137] - <==    Updates: 81
+DEBUG 2024-02-15 17:18:15.711 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@5e6b435e]
+DEBUG 2024-02-15 17:18:15.712 [https-jsse-nio-8443-exec-2] [ContentNegotiatingViewResolver:349] - Selected 'text/html' given [text/html, application/xhtml+xml, image/avif, image/webp, image/apng, application/xml;q=0.9, application/signed-exchange;v=b3;q=0.7, */*;q=0.8]
+DEBUG 2024-02-15 17:18:15.734 [https-jsse-nio-8443-exec-2] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.738 [https-jsse-nio-8443-exec-1] [DispatcherServlet:91] - GET "/ims/css/vendors.bundle.css", parameters={}
+DEBUG 2024-02-15 17:18:15.738 [https-jsse-nio-8443-exec-10] [DispatcherServlet:91] - GET "/ims/css/app.bundle.css", parameters={}
+DEBUG 2024-02-15 17:18:15.739 [https-jsse-nio-8443-exec-1] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.740 [https-jsse-nio-8443-exec-5] [DispatcherServlet:91] - GET "/ims/css/skins/skin-master.css", parameters={}
+DEBUG 2024-02-15 17:18:15.741 [https-jsse-nio-8443-exec-5] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.740 [https-jsse-nio-8443-exec-10] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.742 [https-jsse-nio-8443-exec-6] [DispatcherServlet:91] - GET "/ims/css/formplugins/alertify/alertify.min.css", parameters={}
+DEBUG 2024-02-15 17:18:15.742 [https-jsse-nio-8443-exec-8] [DispatcherServlet:91] - GET "/ims/css/fa-brands.css", parameters={}
+DEBUG 2024-02-15 17:18:15.743 [https-jsse-nio-8443-exec-6] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.743 [https-jsse-nio-8443-exec-8] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.746 [https-jsse-nio-8443-exec-6] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.750 [https-jsse-nio-8443-exec-5] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.751 [https-jsse-nio-8443-exec-8] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.751 [https-jsse-nio-8443-exec-8] [DispatcherServlet:91] - GET "/ims/css/formplugins/sumoselect/sumoselect.css", parameters={}
+DEBUG 2024-02-15 17:18:15.750 [https-jsse-nio-8443-exec-9] [DispatcherServlet:91] - GET "/ims/css/datagrid/datatables/datatables.bundle.css", parameters={}
+DEBUG 2024-02-15 17:18:15.753 [https-jsse-nio-8443-exec-8] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.754 [https-jsse-nio-8443-exec-9] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.756 [https-jsse-nio-8443-exec-4] [DispatcherServlet:91] - GET "/ims/css/formplugins/bootstrap-datepicker/bootstrap-datepicker.css", parameters={}
+DEBUG 2024-02-15 17:18:15.758 [https-jsse-nio-8443-exec-4] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.760 [https-jsse-nio-8443-exec-8] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.761 [https-jsse-nio-8443-exec-10] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.761 [https-jsse-nio-8443-exec-8] [DispatcherServlet:91] - GET "/ims/css/site.css", parameters={}
+DEBUG 2024-02-15 17:18:15.763 [https-jsse-nio-8443-exec-7] [DispatcherServlet:91] - GET "/ims/css/formplugins/bootstrap-timepicker/bootstrap-timepicker.css", parameters={}
+DEBUG 2024-02-15 17:18:15.764 [https-jsse-nio-8443-exec-7] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.764 [https-jsse-nio-8443-exec-8] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.766 [https-jsse-nio-8443-exec-4] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.768 [https-jsse-nio-8443-exec-7] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.772 [https-jsse-nio-8443-exec-9] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.773 [https-jsse-nio-8443-exec-8] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.775 [https-jsse-nio-8443-exec-2] [DispatcherServlet:91] - GET "/ims/cmm/hist/rec/loginhisttot/", parameters={}
+DEBUG 2024-02-15 17:18:15.775 [https-jsse-nio-8443-exec-5] [DispatcherServlet:91] - GET "/ims/img/logo.png", parameters={}
+DEBUG 2024-02-15 17:18:15.776 [https-jsse-nio-8443-exec-6] [DispatcherServlet:91] - GET "/ims/img/demo/avatars/avatar-admin.png", parameters={}
+DEBUG 2024-02-15 17:18:15.776 [https-jsse-nio-8443-exec-2] [RequestMappingHandlerMapping:515] - Mapped to com.vdc.ims.controller.CmmEtcController#LoginHistCount(CommandMap, HttpSession, HttpServletRequest)
+DEBUG 2024-02-15 17:18:15.776 [https-jsse-nio-8443-exec-1] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.776 [https-jsse-nio-8443-exec-2] [AbstractDAO:15] - 	 QueryId  	:  auth.AuthCheck
+DEBUG 2024-02-15 17:18:15.776 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - Creating a new SqlSession
+DEBUG 2024-02-15 17:18:15.776 [https-jsse-nio-8443-exec-8] [DispatcherServlet:91] - GET "/ims/img/card-backgrounds/cover-2-lg.png", parameters={}
+DEBUG 2024-02-15 17:18:15.777 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@cb4478d] was not registered for synchronization because synchronization is not active
+DEBUG 2024-02-15 17:18:15.777 [https-jsse-nio-8443-exec-2] [DataSourceUtils:115] - Fetching JDBC Connection from DataSource
+DEBUG 2024-02-15 17:18:15.777 [https-jsse-nio-8443-exec-5] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.777 [https-jsse-nio-8443-exec-6] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.777 [https-jsse-nio-8443-exec-2] [SpringManagedTransaction:49] - JDBC Connection [HikariProxyConnection@2135870102 wrapping net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@12f4b81c] will not be managed by Spring
+DEBUG 2024-02-15 17:18:15.777 [https-jsse-nio-8443-exec-2] [AuthCheck:137] - ==>  Preparing: CALL USP_Cmm_AuthCheck(?, ?)
+DEBUG 2024-02-15 17:18:15.778 [https-jsse-nio-8443-exec-2] [AuthCheck:137] - ==> Parameters: /ims/cmm/hist/rec/loginhisttot/(String), 1000(String)
+DEBUG 2024-02-15 17:18:15.778 [https-jsse-nio-8443-exec-2] [sqlonly:223] -  com.zaxxer.hikari.pool.ProxyPreparedStatement.execute(ProxyPreparedStatement.java:44)
+1. CALL USP_Cmm_AuthCheck('/ims/cmm/hist/rec/loginhisttot/', '1000')
+
+DEBUG 2024-02-15 17:18:15.779 [https-jsse-nio-8443-exec-8] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.780 [https-jsse-nio-8443-exec-5] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.780 [https-jsse-nio-8443-exec-6] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.782 [https-jsse-nio-8443-exec-2] [AuthCheck:137] - <==      Total: 1
+DEBUG 2024-02-15 17:18:15.782 [https-jsse-nio-8443-exec-2] [AuthCheck:137] - <==    Updates: 0
+DEBUG 2024-02-15 17:18:15.783 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@cb4478d]
+DEBUG 2024-02-15 17:18:15.783 [https-jsse-nio-8443-exec-2] [LoggerInterceptor:18] - ==================== BEGIN ====================
+DEBUG 2024-02-15 17:18:15.783 [https-jsse-nio-8443-exec-2] [LoggerInterceptor:19] - Request URI ===> /ims/cmm/hist/rec/loginhisttot/
+DEBUG 2024-02-15 17:18:15.784 [https-jsse-nio-8443-exec-2] [LoggerInterceptor:27] - ==================== END ======================
+DEBUG 2024-02-15 17:18:15.784 [https-jsse-nio-8443-exec-2] [AbstractDAO:15] - 	 QueryId  	:  cmmEtc.getMenu
+DEBUG 2024-02-15 17:18:15.784 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - Creating a new SqlSession
+DEBUG 2024-02-15 17:18:15.784 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@5dd4f8b1] was not registered for synchronization because synchronization is not active
+DEBUG 2024-02-15 17:18:15.785 [https-jsse-nio-8443-exec-3] [DispatcherServlet:91] - GET "/ims/js/vendors.bundle.js", parameters={}
+DEBUG 2024-02-15 17:18:15.785 [https-jsse-nio-8443-exec-2] [DataSourceUtils:115] - Fetching JDBC Connection from DataSource
+DEBUG 2024-02-15 17:18:15.785 [https-jsse-nio-8443-exec-2] [SpringManagedTransaction:49] - JDBC Connection [HikariProxyConnection@1520239677 wrapping net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@12f4b81c] will not be managed by Spring
+DEBUG 2024-02-15 17:18:15.785 [https-jsse-nio-8443-exec-2] [getMenu:137] - ==>  Preparing: CALL USP_Cmm_Menu_S_New(?, ?)
+DEBUG 2024-02-15 17:18:15.785 [https-jsse-nio-8443-exec-2] [getMenu:137] - ==> Parameters: 1000(String), /ims/cmm/hist/rec/loginhisttot/(String)
+DEBUG 2024-02-15 17:18:15.786 [https-jsse-nio-8443-exec-2] [sqlonly:223] -  com.zaxxer.hikari.pool.ProxyPreparedStatement.execute(ProxyPreparedStatement.java:44)
+1. CALL USP_Cmm_Menu_S_New('1000', '/ims/cmm/hist/rec/loginhisttot/')
+
+DEBUG 2024-02-15 17:18:15.786 [https-jsse-nio-8443-exec-3] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.789 [https-jsse-nio-8443-exec-8] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.789 [https-jsse-nio-8443-exec-1] [DispatcherServlet:91] - GET "/ims/js/formplugins/alertify/alertify.min.js", parameters={}
+DEBUG 2024-02-15 17:18:15.789 [https-jsse-nio-8443-exec-9] [DispatcherServlet:91] - GET "/ims/js/app.bundle.js", parameters={}
+DEBUG 2024-02-15 17:18:15.789 [https-jsse-nio-8443-exec-8] [DispatcherServlet:91] - GET "/ims/js/datagrid/datatables/datatables.bundle.js", parameters={}
+DEBUG 2024-02-15 17:18:15.790 [https-jsse-nio-8443-exec-1] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.791 [https-jsse-nio-8443-exec-8] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.791 [https-jsse-nio-8443-exec-9] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.797 [https-jsse-nio-8443-exec-1] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.799 [https-jsse-nio-8443-exec-1] [DispatcherServlet:91] - GET "/ims/js/datagrid/datatables/datatables.export.js", parameters={}
+DEBUG 2024-02-15 17:18:15.802 [https-jsse-nio-8443-exec-9] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.803 [https-jsse-nio-8443-exec-7] [DispatcherServlet:91] - GET "/ims/js/datagrid/datatables/datatables.default.setting.js", parameters={}
+DEBUG 2024-02-15 17:18:15.804 [https-jsse-nio-8443-exec-7] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.805 [https-jsse-nio-8443-exec-1] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.807 [https-jsse-nio-8443-exec-7] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.809 [https-jsse-nio-8443-exec-6] [DispatcherServlet:91] - GET "/ims/js/formplugins/sumoselect/jquery.sumoselect.min.js", parameters={}
+DEBUG 2024-02-15 17:18:15.810 [https-jsse-nio-8443-exec-6] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.813 [https-jsse-nio-8443-exec-6] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.814 [https-jsse-nio-8443-exec-5] [DispatcherServlet:91] - GET "/ims/js/formplugins/bootstrap-datepicker/bootstrap-datepicker.js", parameters={}
+DEBUG 2024-02-15 17:18:15.816 [https-jsse-nio-8443-exec-5] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.821 [https-jsse-nio-8443-exec-5] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.822 [https-jsse-nio-8443-exec-10] [DispatcherServlet:91] - GET "/ims/js/bootstrap-multiselect.js", parameters={}
+DEBUG 2024-02-15 17:18:15.823 [https-jsse-nio-8443-exec-10] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.831 [https-jsse-nio-8443-exec-10] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.832 [https-jsse-nio-8443-exec-9] [DispatcherServlet:91] - GET "/ims/js/ims.js", parameters={}
+DEBUG 2024-02-15 17:18:15.834 [https-jsse-nio-8443-exec-9] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.836 [https-jsse-nio-8443-exec-9] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.838 [https-jsse-nio-8443-exec-7] [DispatcherServlet:91] - GET "/ims/js/formplugins/bootstrap-timepicker/bootstrap-timepicker.min.js", parameters={}
+DEBUG 2024-02-15 17:18:15.839 [https-jsse-nio-8443-exec-7] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:15.843 [https-jsse-nio-8443-exec-7] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.866 [https-jsse-nio-8443-exec-3] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:15.879 [https-jsse-nio-8443-exec-8] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:16.008 [https-jsse-nio-8443-exec-2] [getMenu:137] - <==      Total: 79
+DEBUG 2024-02-15 17:18:16.009 [https-jsse-nio-8443-exec-2] [getMenu:137] - <==    Updates: 81
+DEBUG 2024-02-15 17:18:16.009 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@5dd4f8b1]
+DEBUG 2024-02-15 17:18:16.010 [https-jsse-nio-8443-exec-2] [ContentNegotiatingViewResolver:349] - Selected '*/*' given [text/css, */*;q=0.1]
+DEBUG 2024-02-15 17:18:16.037 [https-jsse-nio-8443-exec-2] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:16.085 [https-jsse-nio-8443-exec-9] [DispatcherServlet:91] - GET "/ims/css/formplugins/bootstrap-datepicker/bootstrap-datepicker.css.map", parameters={}
+DEBUG 2024-02-15 17:18:16.085 [https-jsse-nio-8443-exec-6] [DispatcherServlet:91] - GET "/ims/css/vendors.bundle.css.map", parameters={}
+DEBUG 2024-02-15 17:18:16.085 [https-jsse-nio-8443-exec-7] [DispatcherServlet:91] - GET "/ims/css/fa-brands.css.map", parameters={}
+DEBUG 2024-02-15 17:18:16.085 [https-jsse-nio-8443-exec-4] [DispatcherServlet:91] - GET "/ims/css/app.bundle.css.map", parameters={}
+DEBUG 2024-02-15 17:18:16.086 [https-jsse-nio-8443-exec-9] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:16.087 [https-jsse-nio-8443-exec-7] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:16.087 [https-jsse-nio-8443-exec-6] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:16.087 [https-jsse-nio-8443-exec-4] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:16.092 [https-jsse-nio-8443-exec-7] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:16.093 [https-jsse-nio-8443-exec-7] [DispatcherServlet:91] - GET "/ims/img/logo.png", parameters={}
+DEBUG 2024-02-15 17:18:16.095 [https-jsse-nio-8443-exec-7] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:16.097 [https-jsse-nio-8443-exec-1] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:16.097 [https-jsse-nio-8443-exec-3] [DispatcherServlet:91] - GET "/ims/css/skins/skin-master.css.map", parameters={}
+DEBUG 2024-02-15 17:18:16.099 [https-jsse-nio-8443-exec-3] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:16.099 [https-jsse-nio-8443-exec-9] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:16.106 [https-jsse-nio-8443-exec-3] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:16.107 [https-jsse-nio-8443-exec-3] [DispatcherServlet:91] - GET "/ims/css/datagrid/datatables/datatables.bundle.css.map", parameters={}
+DEBUG 2024-02-15 17:18:16.108 [https-jsse-nio-8443-exec-3] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:16.114 [https-jsse-nio-8443-exec-7] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:16.115 [https-jsse-nio-8443-exec-3] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:16.125 [https-jsse-nio-8443-exec-4] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:16.137 [https-jsse-nio-8443-exec-6] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:16.143 [https-jsse-nio-8443-exec-10] [DispatcherServlet:91] - GET "/ims/webfonts/fa-light-300.woff2", parameters={}
+DEBUG 2024-02-15 17:18:16.143 [https-jsse-nio-8443-exec-9] [DispatcherServlet:91] - GET "/ims/js/bootstrap.js.map", parameters={}
+DEBUG 2024-02-15 17:18:16.144 [https-jsse-nio-8443-exec-10] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:16.145 [https-jsse-nio-8443-exec-9] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:16.148 [https-jsse-nio-8443-exec-9] [ResourceHttpRequestHandler:525] - Resource not found
+DEBUG 2024-02-15 17:18:16.148 [https-jsse-nio-8443-exec-9] [DispatcherServlet:1131] - Completed 404 NOT_FOUND
+DEBUG 2024-02-15 17:18:16.148 [https-jsse-nio-8443-exec-9] [DispatcherServlet:91] - "ERROR" dispatch for GET "/ims/error", parameters={}
+DEBUG 2024-02-15 17:18:16.148 [https-jsse-nio-8443-exec-9] [RequestMappingHandlerMapping:515] - Mapped to org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController#error(HttpServletRequest)
+DEBUG 2024-02-15 17:18:16.149 [https-jsse-nio-8443-exec-9] [AbstractDAO:15] - 	 QueryId  	:  auth.AuthCheck
+DEBUG 2024-02-15 17:18:16.149 [https-jsse-nio-8443-exec-9] [SqlSessionUtils:49] - Creating a new SqlSession
+DEBUG 2024-02-15 17:18:16.149 [https-jsse-nio-8443-exec-9] [SqlSessionUtils:49] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@33832185] was not registered for synchronization because synchronization is not active
+DEBUG 2024-02-15 17:18:16.149 [https-jsse-nio-8443-exec-9] [DataSourceUtils:115] - Fetching JDBC Connection from DataSource
+DEBUG 2024-02-15 17:18:16.149 [https-jsse-nio-8443-exec-9] [SpringManagedTransaction:49] - JDBC Connection [HikariProxyConnection@101606104 wrapping net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@12f4b81c] will not be managed by Spring
+DEBUG 2024-02-15 17:18:16.150 [https-jsse-nio-8443-exec-9] [AuthCheck:137] - ==>  Preparing: CALL USP_Cmm_AuthCheck(?, ?)
+DEBUG 2024-02-15 17:18:16.150 [https-jsse-nio-8443-exec-9] [AuthCheck:137] - ==> Parameters: /ims/error(String), 1000(String)
+DEBUG 2024-02-15 17:18:16.150 [https-jsse-nio-8443-exec-9] [sqlonly:223] -  com.zaxxer.hikari.pool.ProxyPreparedStatement.execute(ProxyPreparedStatement.java:44)
+1. CALL USP_Cmm_AuthCheck('/ims/error', '1000')
+
+DEBUG 2024-02-15 17:18:16.153 [https-jsse-nio-8443-exec-9] [AuthCheck:137] - <==      Total: 1
+DEBUG 2024-02-15 17:18:16.154 [https-jsse-nio-8443-exec-9] [AuthCheck:137] - <==    Updates: 0
+DEBUG 2024-02-15 17:18:16.154 [https-jsse-nio-8443-exec-9] [SqlSessionUtils:49] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@33832185]
+DEBUG 2024-02-15 17:18:16.154 [https-jsse-nio-8443-exec-9] [LoggerInterceptor:18] - ==================== BEGIN ====================
+DEBUG 2024-02-15 17:18:16.154 [https-jsse-nio-8443-exec-9] [LoggerInterceptor:19] - Request URI ===> /ims/error
+DEBUG 2024-02-15 17:18:16.155 [https-jsse-nio-8443-exec-9] [HttpEntityMethodProcessor:255] - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/json, application/*+json]
+DEBUG 2024-02-15 17:18:16.155 [https-jsse-nio-8443-exec-9] [HttpEntityMethodProcessor:91] - Writing [{timestamp=Thu Feb 15 17:18:16 KST 2024, status=404, error=Not Found, message=No message available,  (truncated)...]
+DEBUG 2024-02-15 17:18:16.156 [https-jsse-nio-8443-exec-9] [LoggerInterceptor:27] - ==================== END ======================
+DEBUG 2024-02-15 17:18:16.156 [https-jsse-nio-8443-exec-9] [DispatcherServlet:1127] - Exiting from "ERROR" dispatch, status 404
+DEBUG 2024-02-15 17:18:16.158 [https-jsse-nio-8443-exec-10] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:16.276 [https-jsse-nio-8443-exec-8] [DispatcherServlet:91] - GET "/ims/js/datagrid/datatables/pdfmake.js.map", parameters={}
+DEBUG 2024-02-15 17:18:16.278 [https-jsse-nio-8443-exec-8] [SimpleUrlHandlerMapping:515] - Mapped to ResourceHttpRequestHandler [class path resource [META-INF/resources/], class path resource [resources/], class path resource [static/], class path resource [public/], ServletContext resource [/]]
+DEBUG 2024-02-15 17:18:16.279 [https-jsse-nio-8443-exec-8] [ResourceHttpRequestHandler:525] - Resource not found
+DEBUG 2024-02-15 17:18:16.279 [https-jsse-nio-8443-exec-8] [DispatcherServlet:1131] - Completed 404 NOT_FOUND
+DEBUG 2024-02-15 17:18:16.280 [https-jsse-nio-8443-exec-8] [DispatcherServlet:91] - "ERROR" dispatch for GET "/ims/error", parameters={}
+DEBUG 2024-02-15 17:18:16.280 [https-jsse-nio-8443-exec-8] [RequestMappingHandlerMapping:515] - Mapped to org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController#error(HttpServletRequest)
+DEBUG 2024-02-15 17:18:16.280 [https-jsse-nio-8443-exec-8] [AbstractDAO:15] - 	 QueryId  	:  auth.AuthCheck
+DEBUG 2024-02-15 17:18:16.281 [https-jsse-nio-8443-exec-8] [SqlSessionUtils:49] - Creating a new SqlSession
+DEBUG 2024-02-15 17:18:16.281 [https-jsse-nio-8443-exec-8] [SqlSessionUtils:49] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@c3e7197] was not registered for synchronization because synchronization is not active
+DEBUG 2024-02-15 17:18:16.281 [https-jsse-nio-8443-exec-8] [DataSourceUtils:115] - Fetching JDBC Connection from DataSource
+DEBUG 2024-02-15 17:18:16.281 [https-jsse-nio-8443-exec-8] [SpringManagedTransaction:49] - JDBC Connection [HikariProxyConnection@151620938 wrapping net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@12f4b81c] will not be managed by Spring
+DEBUG 2024-02-15 17:18:16.282 [https-jsse-nio-8443-exec-8] [AuthCheck:137] - ==>  Preparing: CALL USP_Cmm_AuthCheck(?, ?)
+DEBUG 2024-02-15 17:18:16.282 [https-jsse-nio-8443-exec-8] [AuthCheck:137] - ==> Parameters: /ims/error(String), 1000(String)
+DEBUG 2024-02-15 17:18:16.283 [https-jsse-nio-8443-exec-8] [sqlonly:223] -  com.zaxxer.hikari.pool.ProxyPreparedStatement.execute(ProxyPreparedStatement.java:44)
+1. CALL USP_Cmm_AuthCheck('/ims/error', '1000')
+
+DEBUG 2024-02-15 17:18:16.284 [https-jsse-nio-8443-exec-8] [AuthCheck:137] - <==      Total: 1
+DEBUG 2024-02-15 17:18:16.285 [https-jsse-nio-8443-exec-8] [AuthCheck:137] - <==    Updates: 0
+DEBUG 2024-02-15 17:18:16.285 [https-jsse-nio-8443-exec-8] [SqlSessionUtils:49] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@c3e7197]
+DEBUG 2024-02-15 17:18:16.285 [https-jsse-nio-8443-exec-8] [LoggerInterceptor:18] - ==================== BEGIN ====================
+DEBUG 2024-02-15 17:18:16.285 [https-jsse-nio-8443-exec-8] [LoggerInterceptor:19] - Request URI ===> /ims/error
+DEBUG 2024-02-15 17:18:16.286 [https-jsse-nio-8443-exec-8] [HttpEntityMethodProcessor:255] - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/json, application/*+json]
+DEBUG 2024-02-15 17:18:16.287 [https-jsse-nio-8443-exec-8] [HttpEntityMethodProcessor:91] - Writing [{timestamp=Thu Feb 15 17:18:16 KST 2024, status=404, error=Not Found, message=No message available,  (truncated)...]
+DEBUG 2024-02-15 17:18:16.287 [https-jsse-nio-8443-exec-8] [LoggerInterceptor:27] - ==================== END ======================
+DEBUG 2024-02-15 17:18:16.287 [https-jsse-nio-8443-exec-8] [DispatcherServlet:1127] - Exiting from "ERROR" dispatch, status 404
+DEBUG 2024-02-15 17:18:16.399 [https-jsse-nio-8443-exec-2] [DispatcherServlet:91] - POST "/ims/cmm/ajax/usergroup/list", parameters={}
+DEBUG 2024-02-15 17:18:16.399 [https-jsse-nio-8443-exec-2] [RequestMappingHandlerMapping:515] - Mapped to com.vdc.ims.controller.CmmRestApiController#getUserGroup(CommandMap, HttpSession, HttpServletRequest)
+DEBUG 2024-02-15 17:18:16.400 [https-jsse-nio-8443-exec-2] [LoggerInterceptor:18] - ==================== BEGIN ====================
+DEBUG 2024-02-15 17:18:16.400 [https-jsse-nio-8443-exec-2] [LoggerInterceptor:19] - Request URI ===> /ims/cmm/ajax/usergroup/list
+DEBUG 2024-02-15 17:18:16.400 [https-jsse-nio-8443-exec-2] [AbstractDAO:15] - 	 QueryId  	:  cmmRestApi.getUserGroup
+DEBUG 2024-02-15 17:18:16.400 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - Creating a new SqlSession
+DEBUG 2024-02-15 17:18:16.401 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@28b32799] was not registered for synchronization because synchronization is not active
+DEBUG 2024-02-15 17:18:16.401 [https-jsse-nio-8443-exec-2] [DataSourceUtils:115] - Fetching JDBC Connection from DataSource
+DEBUG 2024-02-15 17:18:16.401 [https-jsse-nio-8443-exec-2] [sqlonly:223] -  com.zaxxer.hikari.pool.PoolBase.isConnectionAlive(PoolBase.java:169)
+11. select getdate() as MSSQL
+
+DEBUG 2024-02-15 17:18:16.404 [https-jsse-nio-8443-exec-2] [SpringManagedTransaction:49] - JDBC Connection [HikariProxyConnection@657602285 wrapping net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@7df284e9] will not be managed by Spring
+DEBUG 2024-02-15 17:18:16.404 [https-jsse-nio-8443-exec-2] [getUserGroup:137] - ==>  Preparing: EXEC IMS.dbo.usp_get_group_user ?
+DEBUG 2024-02-15 17:18:16.405 [https-jsse-nio-8443-exec-2] [getUserGroup:137] - ==> Parameters: 1000(String)
+DEBUG 2024-02-15 17:18:16.406 [https-jsse-nio-8443-exec-2] [sqlonly:223] -  com.zaxxer.hikari.pool.ProxyPreparedStatement.execute(ProxyPreparedStatement.java:44)
+11. EXEC IMS.dbo.usp_get_group_user '1000'
+
+DEBUG 2024-02-15 17:18:16.411 [https-jsse-nio-8443-exec-2] [getUserGroup:137] - <==      Total: 57
+DEBUG 2024-02-15 17:18:16.412 [https-jsse-nio-8443-exec-2] [SqlSessionUtils:49] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@28b32799]
+DEBUG 2024-02-15 17:18:16.413 [https-jsse-nio-8443-exec-2] [LoggerInterceptor:27] - ==================== END ======================
+DEBUG 2024-02-15 17:18:16.413 [https-jsse-nio-8443-exec-2] [ContentNegotiatingViewResolver:349] - Selected '*/*' given [*/*]
+DEBUG 2024-02-15 17:18:16.413 [https-jsse-nio-8443-exec-2] [MappingJackson2JsonView:309] - View name 'jsonView', model {userGroup=[{order_no=0, part_depth=1, spart_code=0, mpart_code=0, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=유비케어_본사}, {order_no=0, part_depth=2, spart_code=0, mpart_code=410, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=01_고객지원유닛(의사랑)}, {order_no=0, part_depth=3, spart_code=411, mpart_code=410, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=의원서비스1팀}, {order_no=0, part_depth=3, spart_code=412, mpart_code=410, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=의원서비스2팀}, {order_no=0, part_depth=3, spart_code=415, mpart_code=410, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=의원서비스3팀}, {order_no=0, part_depth=3, spart_code=515, mpart_code=410, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=고객관리팀}, {part_depth=2, spart_code=0, mpart_code=500, bpart_code=1000, use_yn=1, business_code=1, part_name=02_약국사업유닛(유팜)}, {part_depth=3, spart_code=510, mpart_code=500, bpart_code=1000, use_yn=1, business_code=1, delete_day=180, part_name=약국서비스팀}, {part_depth=3, spart_code=511, mpart_code=500, bpart_code=1000, use_yn=1, business_code=1, delete_day=180, part_name=약국품질팀}, {order_no=0, part_depth=2, spart_code=0, mpart_code=610, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=05_초음파사업팀}, {order_no=0, part_depth=3, spart_code=611, mpart_code=610, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=초음파사업팀}, {order_no=0, part_depth=2, spart_code=0, mpart_code=710, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=03_이비즈사업팀}, {order_no=0, part_depth=3, spart_code=711, mpart_code=710, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=이비즈사업팀}, {order_no=0, part_depth=2, spart_code=0, mpart_code=810, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=04_PACs팀}, {order_no=0, part_depth=3, spart_code=811, mpart_code=810, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=PACs팀}, {order_no=0, part_depth=2, spart_code=0, mpart_code=910, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=06_영업관리팀}, {order_no=0, part_depth=3, spart_code=911, mpart_code=910, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=영업관리팀}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1110, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=10_데이터팀}, {order_no=0, part_depth=3, spart_code=1111, mpart_code=1110, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=데이터기획팀}, {order_no=0, part_depth=3, spart_code=2222, mpart_code=1110, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=데이타사업팀}, {order_no=0, part_depth=2, spart_code=0, mpart_code=9999, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=관리자}, {order_no=0, part_depth=3, spart_code=9999, mpart_code=9999, bpart_code=1000, use_yn=1, business_code=1, delete_day=0, part_name=관리자그룹}, {order_no=0, part_depth=1, spart_code=0, mpart_code=0, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=유비케어_지부}, {order_no=0, part_depth=2, spart_code=0, mpart_code=110, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=01_강남메디패스}, {order_no=0, part_depth=3, spart_code=111, mpart_code=110, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=강남메디패스}, {order_no=0, part_depth=2, spart_code=0, mpart_code=210, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=02_동원메디텍}, {order_no=0, part_depth=3, spart_code=211, mpart_code=210, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=동원메디텍}, {order_no=0, part_depth=2, spart_code=0, mpart_code=310, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=03_두리메디컴}, {order_no=0, part_depth=3, spart_code=311, mpart_code=310, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=두리메디컴}, {order_no=0, part_depth=2, spart_code=0, mpart_code=410, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=04_디라인}, {order_no=0, part_depth=3, spart_code=411, mpart_code=410, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=디라인}, {order_no=0, part_depth=2, spart_code=0, mpart_code=510, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=05_메디네트}, {order_no=0, part_depth=3, spart_code=511, mpart_code=510, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=메디네트}, {order_no=0, part_depth=2, spart_code=0, mpart_code=610, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=06_메디케어}, {order_no=0, part_depth=3, spart_code=611, mpart_code=610, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=메디케어}, {order_no=0, part_depth=2, spart_code=0, mpart_code=710, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=07_비즈현메디칼}, {order_no=0, part_depth=3, spart_code=711, mpart_code=710, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=비즈현메디칼}, {order_no=0, part_depth=2, spart_code=0, mpart_code=810, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=08_세일메디넷}, {order_no=0, part_depth=3, spart_code=811, mpart_code=810, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=세일메디넷}, {order_no=0, part_depth=2, spart_code=0, mpart_code=910, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=09_씨제이넷}, {order_no=0, part_depth=3, spart_code=911, mpart_code=910, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=씨제이넷}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1010, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=10_에버넷}, {order_no=0, part_depth=3, spart_code=1011, mpart_code=1010, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=에버넷}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1110, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=11_엠베이스}, {order_no=0, part_depth=3, spart_code=1111, mpart_code=1110, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=엠베이스}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1210, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=12_이안메드}, {order_no=0, part_depth=3, spart_code=1211, mpart_code=1210, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=이안메드}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1310, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=13_이오넷}, {order_no=0, part_depth=3, spart_code=1311, mpart_code=1310, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=이오넷}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1410, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=14_프로비즈넷}, {order_no=0, part_depth=3, spart_code=1411, mpart_code=1410, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=프로비즈넷}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1610, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=16_M-NET}, {order_no=0, part_depth=3, spart_code=1611, mpart_code=1610, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=M-NET}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1710, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=17_UB-Net}, {order_no=0, part_depth=3, spart_code=1711, mpart_code=1710, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=UB-Net}, {order_no=0, part_depth=2, spart_code=0, mpart_code=1810, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=18_올데이팜}, {order_no=0, part_depth=3, spart_code=1811, mpart_code=1810, bpart_code=2000, use_yn=1, business_code=1, delete_day=0, part_name=올데이팜}]}
+DEBUG 2024-02-15 17:18:16.415 [https-jsse-nio-8443-exec-2] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:16.460 [File Watcher] [Restarter:249] - Restarting application
+DEBUG 2024-02-15 17:18:16.460 [Thread-11] [Restarter:305] - Stopping application
+DEBUG 2024-02-15 17:18:16.461 [Thread-11] [AnnotationConfigServletWebServerApplicationContext:1048] - Closing org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@7a9a1da4, started on Thu Feb 15 17:17:35 KST 2024
+DEBUG 2024-02-15 17:18:16.461 [Thread-11] [PropertySourcesPropertyResolver:115] - Found key 'spring.liveBeansView.mbeanDomain' in PropertySource 'systemProperties' with value of type String
+DEBUG 2024-02-15 17:18:16.463 [Thread-11] [DefaultLifecycleProcessor:365] - Stopping beans in phase 2147483647
+DEBUG 2024-02-15 17:18:16.464 [Thread-11] [DefaultLifecycleProcessor:238] - Bean 'webServerGracefulShutdown' completed its stop procedure
+DEBUG 2024-02-15 17:18:16.464 [Thread-11] [DefaultLifecycleProcessor:365] - Stopping beans in phase 2147483646
+DEBUG 2024-02-15 17:18:16.559 [https-jsse-nio-8443-exec-7] [DispatcherServlet:91] - GET "/ims/cmm/hist/rec/loginhisttot/", parameters={}
+DEBUG 2024-02-15 17:18:16.559 [https-jsse-nio-8443-exec-7] [RequestMappingHandlerMapping:515] - Mapped to com.vdc.ims.controller.CmmEtcController#LoginHistCount(CommandMap, HttpSession, HttpServletRequest)
+DEBUG 2024-02-15 17:18:16.559 [https-jsse-nio-8443-exec-7] [AbstractDAO:15] - 	 QueryId  	:  auth.AuthCheck
+DEBUG 2024-02-15 17:18:16.559 [https-jsse-nio-8443-exec-7] [SqlSessionUtils:49] - Creating a new SqlSession
+DEBUG 2024-02-15 17:18:16.560 [https-jsse-nio-8443-exec-7] [SqlSessionUtils:49] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@466e0519] was not registered for synchronization because synchronization is not active
+DEBUG 2024-02-15 17:18:16.560 [https-jsse-nio-8443-exec-7] [DataSourceUtils:115] - Fetching JDBC Connection from DataSource
+DEBUG 2024-02-15 17:18:16.560 [https-jsse-nio-8443-exec-7] [SpringManagedTransaction:49] - JDBC Connection [HikariProxyConnection@185622537 wrapping net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@12f4b81c] will not be managed by Spring
+DEBUG 2024-02-15 17:18:16.560 [https-jsse-nio-8443-exec-7] [AuthCheck:137] - ==>  Preparing: CALL USP_Cmm_AuthCheck(?, ?)
+DEBUG 2024-02-15 17:18:16.561 [https-jsse-nio-8443-exec-7] [AuthCheck:137] - ==> Parameters: /ims/cmm/hist/rec/loginhisttot/(String), 1000(String)
+DEBUG 2024-02-15 17:18:16.562 [https-jsse-nio-8443-exec-7] [sqlonly:223] -  com.zaxxer.hikari.pool.ProxyPreparedStatement.execute(ProxyPreparedStatement.java:44)
+1. CALL USP_Cmm_AuthCheck('/ims/cmm/hist/rec/loginhisttot/', '1000')
+
+DEBUG 2024-02-15 17:18:16.563 [https-jsse-nio-8443-exec-7] [AuthCheck:137] - <==      Total: 1
+DEBUG 2024-02-15 17:18:16.564 [https-jsse-nio-8443-exec-7] [AuthCheck:137] - <==    Updates: 0
+DEBUG 2024-02-15 17:18:16.564 [https-jsse-nio-8443-exec-7] [SqlSessionUtils:49] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@466e0519]
+DEBUG 2024-02-15 17:18:16.564 [https-jsse-nio-8443-exec-7] [LoggerInterceptor:18] - ==================== BEGIN ====================
+DEBUG 2024-02-15 17:18:16.565 [https-jsse-nio-8443-exec-7] [LoggerInterceptor:19] - Request URI ===> /ims/cmm/hist/rec/loginhisttot/
+DEBUG 2024-02-15 17:18:16.565 [https-jsse-nio-8443-exec-7] [LoggerInterceptor:27] - ==================== END ======================
+DEBUG 2024-02-15 17:18:16.565 [https-jsse-nio-8443-exec-7] [AbstractDAO:15] - 	 QueryId  	:  cmmEtc.getMenu
+DEBUG 2024-02-15 17:18:16.565 [https-jsse-nio-8443-exec-7] [SqlSessionUtils:49] - Creating a new SqlSession
+DEBUG 2024-02-15 17:18:16.565 [https-jsse-nio-8443-exec-7] [SqlSessionUtils:49] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@6f5ddeb8] was not registered for synchronization because synchronization is not active
+DEBUG 2024-02-15 17:18:16.566 [https-jsse-nio-8443-exec-7] [DataSourceUtils:115] - Fetching JDBC Connection from DataSource
+DEBUG 2024-02-15 17:18:16.566 [https-jsse-nio-8443-exec-7] [SpringManagedTransaction:49] - JDBC Connection [HikariProxyConnection@680678525 wrapping net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@12f4b81c] will not be managed by Spring
+DEBUG 2024-02-15 17:18:16.566 [https-jsse-nio-8443-exec-7] [getMenu:137] - ==>  Preparing: CALL USP_Cmm_Menu_S_New(?, ?)
+DEBUG 2024-02-15 17:18:16.567 [https-jsse-nio-8443-exec-7] [getMenu:137] - ==> Parameters: 1000(String), /ims/cmm/hist/rec/loginhisttot/(String)
+DEBUG 2024-02-15 17:18:16.567 [https-jsse-nio-8443-exec-7] [sqlonly:223] -  com.zaxxer.hikari.pool.ProxyPreparedStatement.execute(ProxyPreparedStatement.java:44)
+1. CALL USP_Cmm_Menu_S_New('1000', '/ims/cmm/hist/rec/loginhisttot/')
+
+DEBUG 2024-02-15 17:18:16.811 [https-jsse-nio-8443-exec-7] [getMenu:137] - <==      Total: 79
+DEBUG 2024-02-15 17:18:16.812 [https-jsse-nio-8443-exec-7] [getMenu:137] - <==    Updates: 81
+DEBUG 2024-02-15 17:18:16.812 [https-jsse-nio-8443-exec-7] [SqlSessionUtils:49] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@6f5ddeb8]
+DEBUG 2024-02-15 17:18:16.813 [https-jsse-nio-8443-exec-7] [ContentNegotiatingViewResolver:349] - Selected 'text/html' given [text/html, application/xhtml+xml, image/avif, image/webp, image/apng, application/xml;q=0.9, application/signed-exchange;v=b3;q=0.7, */*;q=0.8]
+DEBUG 2024-02-15 17:18:16.838 [https-jsse-nio-8443-exec-7] [DispatcherServlet:1131] - Completed 200 OK
+DEBUG 2024-02-15 17:18:16.942 [Thread-11] [DefaultLifecycleProcessor:238] - Bean 'webServerStartStop' completed its stop procedure
+DEBUG 2024-02-15 17:18:16.942 [Thread-11] [AnnotationMBeanExporter:452] - Unregistering JMX-exposed beans on shutdown
+DEBUG 2024-02-15 17:18:16.943 [Thread-11] [AnnotationMBeanExporter:186] - Unregistering JMX-exposed beans
+INFO  2024-02-15 17:18:16.943 [Thread-11] [ThreadPoolTaskExecutor:218] - Shutting down ExecutorService 'applicationTaskExecutor'
+INFO  2024-02-15 17:18:16.943 [Thread-11] [ThreadPoolTaskScheduler:218] - Shutting down ExecutorService 'scheduler'
+DEBUG 2024-02-15 17:18:16.944 [Thread-11] [PoolingHttpClientConnectionManager:411] - Connection manager is shutting down
+DEBUG 2024-02-15 17:18:16.944 [Thread-11] [PoolingHttpClientConnectionManager:434] - Connection manager shut down
+INFO  2024-02-15 17:18:16.945 [Thread-11] [HikariDataSource:350] - HikariPool-1 - Shutdown initiated...
+DEBUG 2024-02-15 17:18:16.945 [Thread-11] [HikariPool:421] - HikariPool-1 - Before shutdown stats (total=10, active=0, idle=10, waiting=0)
+DEBUG 2024-02-15 17:18:16.946 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@12f4b81c: (connection evicted)
+DEBUG 2024-02-15 17:18:16.947 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@563264ab: (connection evicted)
+DEBUG 2024-02-15 17:18:16.947 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@7ed640c: (connection evicted)
+DEBUG 2024-02-15 17:18:16.948 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@61bee1f8: (connection evicted)
+DEBUG 2024-02-15 17:18:16.948 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@11f317fe: (connection evicted)
+DEBUG 2024-02-15 17:18:16.948 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@54213e57: (connection evicted)
+DEBUG 2024-02-15 17:18:16.948 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@3880eddb: (connection evicted)
+DEBUG 2024-02-15 17:18:16.948 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@2ea76a12: (connection evicted)
+DEBUG 2024-02-15 17:18:16.948 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@2762c4df: (connection evicted)
+DEBUG 2024-02-15 17:18:16.948 [HikariPool-1 connection closer] [PoolBase:134] - HikariPool-1 - Closing connection net.sf.log4jdbc.sql.jdbcapi.ConnectionSpy@7a6c85e2: (connection evicted)
+DEBUG 2024-02-15 17:18:16.948 [Thread-11] [HikariPool:421] - HikariPool-1 - After shutdown stats (total=0, active=0, idle=0, waiting=0)
+INFO  2024-02-15 17:18:16.948 [Thread-11] [HikariDataSource:352] - HikariPool-1 - Shutdown completed.
+DEBUG 2024-02-15 17:18:17.117 [Thread-11] [Restarter:85] - Created RestartClassLoader org.springframework.boot.devtools.restart.classloader.RestartClassLoader@6f2996f6
+DEBUG 2024-02-15 17:18:17.117 [Thread-11] [Restarter:281] - Starting application com.vdc.ims.ImsApplication with URLs [file:/C:/Users/82106/IdeaProjects/%ec%8b%a4%eb%ac%b4/ims_ubcare/ims_ubcare/build/classes/java/main/, file:/C:/Users/82106/IdeaProjects/%ec%8b%a4%eb%ac%b4/ims_ubcare/ims_ubcare/build/resources/main/]

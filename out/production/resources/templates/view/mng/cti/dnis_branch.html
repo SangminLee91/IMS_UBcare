@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+    <script type="text/javascript">
+        let SELECTED_ROW = "";
+        $(document).ready(function() {
+
+            // Dnis info
+            const getDnis = function() {
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/cmm/dnis/list",
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    $("._dnis option:not(option:eq(0))").remove();
+                    $.each(data.dnis, function (i, item) {
+                        $("._dnis").append($('<option>', { value: item.Dnis, text: item.Desc }));
+                    });
+                });
+            }
+
+            // Dept info
+            const getDept = function() {
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/cmm/dept/list",
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    $("._dept option:not(option:eq(0))").remove();
+                    $.each(data.dept, function (i, item) {
+                        $("._dept").append($('<option>', { value: item.Dept_No, text: item.Path_Dept_Nm }));
+                    });
+                });
+            }
+
+            // Dept info
+            const getDiv = function() {
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/cmm/div/list",
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    $("._div option:not(option:eq(0))").remove();
+                    $.each(data.div, function (i, item) {
+                        $("._div").append($('<option>', { value: item.Dept, text: item.Dept_Nm }));
+                    });
+                });
+            }
+
+            const table_dnis = $('#dt_dnis_branch').DataTable({
+                ajax: {
+                    url: CONTEXT_PATH+"/mng/cti/dnis_branch/list",
+                    dataSrc: "list"
+                },
+                columns: [
+                    { "data": "Dnis" },
+                    { "data": "Dept_No" },
+                    { "data": "Dept_Nm" },
+                    { "data": "Branch_Code" },
+                    { "data": "Cmm_Dtl_Code_Nm" },
+                    { "data": "Div_Code" },
+                    { "data": "Div_Nm" }
+                ],
+                columnDefs: [
+                    {  "targets": [1, 3, 5], "visible": false, className: "never", "searchable": false }
+                ],
+                ordering: false,
+                searching: true,
+                scrollY: "536px",
+                scrollCollapse: true,
+                stateSave: false
+            });
+            table_dnis.on('select', function(e, dt, type, indexes){
+                SELECTED_ROW = table_dnis.row(indexes).data();
+            }).on('deselect', function(){
+                SELECTED_ROW = "";
+            });
+
+            //Add Modal Open
+            $('#add').on('show.bs.modal', function () {
+                $("._dnis").val("");
+                $("._dept").val("");
+            });
+
+            //Add
+            $("#addfrm").submit(function(e){
+
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/cti/dnis_branch/add",
+                    data: {
+                        Dnis: $("#add_Dnis").val()
+                        , Dept_No: $("#add_DeptNo").val()
+                        , Div: $("#add_Div").val()
+                    },
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function () { // function (data)
+                    $('#dt_dnis_branch').DataTable().ajax.reload();
+                });
+
+                e.preventDefault();
+
+                //form 초기화
+                $("#add_DeptNo").val("");
+                $("#add_Dnis").val("");
+                $("#add_Div").val("");
+
+                SELECTED_ROW = "";
+
+                $('#add').modal('hide');
+            });
+
+            //Edit Click
+            $("._BtnEdit").click(function(){
+                if(SELECTED_ROW === "")
+                {
+                    alert("수정할 항목을 선택하세요.");
+                    return false;
+                }
+
+                $('#edt').modal('show');
+            });
+
+            //Edit Modal Open
+            $('#edt').on('show.bs.modal', function () {
+                $("#edt_Dnis").val(SELECTED_ROW.Dnis);
+                $("#edt_DeptNo").val(SELECTED_ROW.Dept_No);
+                $("#edt_Div").val(SELECTED_ROW.Div_Code);
+            });
+
+            $("#edtfrm").submit(function(e){
+                //Save
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/cti/dnis_branch/edt",
+                    data: {
+                        Dnis: $("#edt_Dnis").val()
+                        , Dept_No: $("#edt_DeptNo").val()
+                        , Div: $("#edt_Div").val()
+                    },
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function () { // function (data)
+                    $('#dt_dnis_branch').DataTable().ajax.reload();
+                });
+
+                e.preventDefault();
+
+                SELECTED_ROW = "";
+                $('#edt').modal('hide');
+
+            });
+
+            //Del Btn Click
+            $("._BtnDel").click(function(){
+                if(SELECTED_ROW === "")
+                {
+                    alert("삭제할 항목을 선택하세요.");
+                    return false;
+                }
+
+                if(confirm("["+SELECTED_ROW.Cmm_Dtl_Code_Nm +"] 를(을) 삭제 하시겠습니까?"))
+                {
+                    $.ajax({
+                        method: "POST",
+                        url: CONTEXT_PATH+"/mng/cti/dnis_branch/del",
+                        data: {
+                            Dnis : SELECTED_ROW.Dnis
+                        },
+                        error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                    }).done(function () { // function (data)
+                        $('#dt_dnis_branch').DataTable().ajax.reload();
+                    });
+
+                    SELECTED_ROW = "";
+                }
+                else
+                {
+                    return false;
+                }
+            });
+
+            getDnis();
+            getDept();
+            getDiv();
+
+        });
+
+    </script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+    <i class="subheader-icon fal fa-window"></i> 대리점 DNIS 관리
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+    <div class="panel">
+        <div class="panel-hdr">
+            <h2></h2>
+            <div class="panel-toolbar">
+                <button class="btn btn-xs btn-dark _BtnAdd" data-toggle="modal" data-target="#add" data-backdrop="static">Add</button>
+                <button class="btn btn-xs btn-dark ml-1 _BtnEdit" data-target="#edt" data-backdrop="static">Edit</button>
+                <button class="btn btn-xs btn-dark ml-1 _BtnDel">Delete</button>
+            </div>
+        </div>
+        <div class="panel-container show">
+            <div class="panel-content">
+                <table id="dt_dnis_branch" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+                    <thead class="thead-themed">
+                    <tr class="text-center">
+                        <th>DNIS</th>
+                        <th class="hide">Dept No</th>
+                        <th>부서 명</th>
+                        <th class="hide">Branch Code</th>
+                        <th>Branch Name</th>
+                        <th class="hide">Div Code</th>
+                        <th>구분</th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="add" class="modal" aria-hidden="true" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">정보 추가</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true"><i class="fal fa-times"></i></span>
+                    </button>
+                </div>
+                <form name="addfrm" id="addfrm" method="post">
+                    <div class="modal-body">
+
+                        <div class="form-group">
+                            <div class="input-group input-group-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text width-76px">DNIS</span>
+                                </div>
+                                <select class="form-control _dnis" id="add_Dnis" required>
+                                    <option value="" disabled selected hidden> - DNIS 선택 - </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="input-group input-group-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text width-76px">부서</span>
+                                </div>
+                                <select class="form-control _dept" id="add_DeptNo" required>
+                                    <option value="" disabled selected hidden> - 부서 선택 - </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="input-group input-group-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text width-76px">구분</span>
+                                </div>
+                                <select class="form-control _div" id="add_Div">
+                                    <option value="" disabled selected hidden> - 구분 선택 - </option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-xs btn-dark _btnadd">Save</button>
+                        <button type="button" class="btn btn-xs btn-dark" data-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="edt" class="modal" aria-hidden="true" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">정보 수정</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true"><i class="fal fa-times"></i></span>
+                    </button>
+                </div>
+                <form name="edtfrm" id="edtfrm" method="post">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <div class="input-group input-group-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text width-76px">DNIS</span>
+                                </div>
+                                <select class="form-control _dnis" id="edt_Dnis" disabled>
+                                    <option value="" disabled selected hidden> - DNIS 선택 - </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="input-group input-group-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text width-76px">부서</span>
+                                </div>
+                                <select class="form-control _dept" id="edt_DeptNo" required>
+                                    <option value="" disabled selected hidden> - 부서 선택 - </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="input-group input-group-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text width-76px">구분</span>
+                                </div>
+                                <select class="form-control _div" id="edt_Div">
+                                    <option value="" disabled selected hidden> - 구분 선택 - </option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-xs btn-dark _btnEdt">Save</button>
+                        <button type="button" class="btn btn-xs btn-dark" data-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</main>
+</html>
+
+
+

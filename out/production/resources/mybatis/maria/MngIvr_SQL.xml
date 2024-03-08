@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mngIvr">
+	<!-- 음원 관리 TB_PROMPT START -->
+	  	<!-- 음원 목록 -->
+		<select id="VoiceList" parameterType="hashmap" resultType="hashmap">
+	    	CALL USP_Mng_Ivr_Voice_S()
+		</select>
+
+	  	<!-- 음원 serviceID 검사 -->
+		<select id="ServiceIDCheck" parameterType="hashmap" resultType="hashmap">
+	    	CALL USP_Mng_Ivr_Voice_ServiceID_S(#{ServiceID})
+		</select>
+
+		<!-- 서비스 안내 음원 insert -->
+		<insert id="ServiceFileAdd" parameterType="hashmap">
+	   		<!-- CALL USP_Mng_Ivr_Voice_I #{svcId}, #{FILE_NAME}, #{svcInfo}, #{_EMP_NO}, #{ORIGINAL_FILE_NAME}  -->
+	   		CALL USP_Mng_Ivr_Voice_I(#{SC_PROMPT}, #{FILE_NAME}, #{svcInfo}, #{_EMP_NO}, #{ORIGINAL_FILE_NAME})
+		</insert>
+		<!-- 서비스 안내 음원 delete -->
+		<update id="ServiceFileDel" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_Voice_D(IFNULL(#{SEQ},''), #{_EMP_NO})
+		</update>
+		<!-- 서비스 안내 음원 설명 수정 -->
+		<update id="ServiceDescUpdate" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_Voice_Desc_U(IFNULL(#{svcSeq},''), #{_EMP_NO}, #{svcInfo}, #{FILE_NAME})
+		</update>
+		<!-- 서비스 안내 음원 파일 및 설명 수정 -->
+		<update id="ServiceFileUpdate" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_Voice_File_U(IFNULL(#{svcSeq},''), #{_EMP_NO}, #{svcInfo}, #{FILE_NAME}, #{ORIGINAL_FILE_NAME})
+		</update>
+
+		<select id="getMaxPrompt" parameterType="hashmap" resultType="hashmap">
+			CALL USP_Mng_Ivr_Voice_Max_Prompt_S();
+		</select>
+
+	<!-- 음원 관리 TB_PROMPT END-->
+
+	<!-- 공휴일 관리 Mnt_Ivr_HolidaySet START -->
+		<select id="HolidaySetList" parameterType="hashmap" resultType="hashmap">
+	    	CALL USP_Mng_Ivr_HolidaySet_S(#{_EMP_NO})
+		</select>
+
+		<select id="HolidayList" parameterType="hashmap" resultType="hashmap">
+	    	CALL USP_Mng_Ivr_Holiday_S(#{HD_Code})
+		</select>
+
+		<insert id="HolidaySetAdd" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_HolidaySet_I(IFNULL(#{HD_Code_Nm},''), #{Dept_No})
+		</insert>
+		<update id="HolidaySetUpdate" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_HolidaySet_U(IFNULL(#{HD_Code},''), #{HD_Code_Nm}, #{Dept_No})
+		</update>
+		<update id="HolidaySetDel" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_HolidaySet_D(IFNULL(#{HD_Code},''))
+		</update>
+
+		<insert id="HolidayAdd" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_Holiday_I(IFNULL(#{HD_Code},''),#{HD_Nm}, #{HD_Date}, #{HD_TimeStart}, #{HD_TimeEnd}, IFNULL(#{HD_AnuallyYN},''), IFNULL(#{HD_PromptYN},''), #{HD_Prompt})
+		</insert>
+		<update id="HolidayUpdate" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_Holiday_U(IFNULL(#{HD_Seq},''),#{HD_Nm}, #{HD_Date}, #{HD_TimeStart}, #{HD_TimeEnd}, IFNULL(#{HD_AnuallyYN},''), IFNULL(#{HD_PromptYN},''), #{HD_Prompt})
+		</update>
+		<delete id="HolidayDel" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_Holiday_D(IFNULL(#{HD_Seq},''))
+		</delete>
+	<!-- 공휴일 관리 Mnt_Ivr_HolidaySet END -->
+
+	<!-- 근무시간 관리 Mnt_Ivr_Workhour START -->
+		<select id="WorkhourSetList" parameterType="hashmap" resultType="hashmap">
+	    	CALL USP_Mng_Ivr_WorkhourSet_S(#{_EMP_NO})
+		</select>
+
+		<insert id="WorkhourSetAdd" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_WorkhourSet_I(#{WH_Code_Nm}, #{Dept_No}, #{HD_Code, jdbcType=INTEGER})
+		</insert>
+		<update id="WorkhourSetUpdate" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_WorkhourSet_U(IFNULL(#{WH_Code},''), #{WH_Code_Nm}, #{Dept_No}, #{HD_Code, jdbcType=INTEGER})
+		</update>
+		<update id="WorkhourSetDel" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_WorkhourSet_D(IFNULL(#{WH_Code},''))
+		</update>
+
+		<select id="WorkhourList" parameterType="hashmap" resultType="hashmap">
+	    	CALL USP_Mng_Ivr_Workhour_S(IFNULL(#{WH_Code},0))
+		</select>
+
+		<insert id="WorkhourAdd" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_Workhour_I(IFNULL(#{WH_Code},''),IFNULL(#{WH_Type},''),#{WH_START},#{WH_END},IFNULL(#{WH_LUNCH_YN},''),#{WH_LUNCH_START},#{WH_LUNCH_END},IFNULL(#{EARLY_BIRD_YN},''),#{EARLY_BIRD_START},#{EARLY_BIRD_END})
+		</insert>
+		<update id="WorkhourUpdate" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_Workhour_U(IFNULL(#{WH_Seq},''),IFNULL(#{WH_Type},''),#{WH_START},#{WH_END},IFNULL(#{WH_LUNCH_YN},''),#{WH_LUNCH_START},#{WH_LUNCH_END},IFNULL(#{EARLY_BIRD_YN},''),#{EARLY_BIRD_START},#{EARLY_BIRD_END})
+		</update>
+
+		<update id="WorkhourDel" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_Workhour_D(IFNULL(#{WH_Seq},''))
+		</update>
+	<!-- 근무시간 관리 Mnt_Ivr_Workhour END -->
+
+	<!-- 공지 관리 Mnt_Ivr_Notice START -->
+		<select id="NoticeList" parameterType="hashmap" resultType="hashmap">
+			CALL USP_Mng_Ivr_Notice_S(#{_EMP_NO})
+		</select>
+		<insert id="NoticeAdd" parameterType="hashmap">
+			CALL USP_Mng_Ivr_Notice_I(#{Dept_No,jdbcType=INTEGER},#{NT_NAME},#{NT_SERVICE_SDATE},#{NT_SERVICE_EDATE},1,0,#{NT_tts_SDate},#{NT_tts_STime},#{NT_tts_EDate},#{NT_tts_ETime},#{NT_PROMPT},#{NT_PROMPT_END},'NONE')
+		</insert>
+		<update id="NoticeUpdate" parameterType="hashmap">
+			CALL USP_Mng_Ivr_Notice_U(#{NT_Code,jdbcType=INTEGER},#{Dept_No,jdbcType=INTEGER},#{NT_NAME},#{NT_SERVICE_SDATE},#{NT_SERVICE_EDATE},1,0,#{NT_tts_SDate},#{NT_tts_STime},#{NT_tts_EDate},#{NT_tts_ETime},#{NT_PROMPT},#{NT_PROMPT_END},'NONE')
+		</update>
+		<update id="NoticeDel" parameterType="hashmap">
+			CALL USP_Mng_Ivr_Notice_D(#{NT_Code, jdbcType=INTEGER})
+		</update>
+	<!-- 공지 관리 Mnt_Ivr_Notice END -->
+
+	<!-- 라우트 관리 Mnt_Ivr_Route START -->
+		<select id="RouteList" parameterType="hashmap" resultType="hashmap">
+	    	CALL USP_Mng_Ivr_Route_S()
+		</select>
+		<insert id="RouteAdd" parameterType="hashmap">
+		<!--
+	   		CALL USP_Mng_Ivr_Route_I(
+	   		#{RT_ROUTENAME}
+	   		,#{RT_ROUTE_GROUPSEQ}
+	   		,#{RT_ROUTE_DEPTNO}
+	   		,#{RT_ROUTENUM}
+	   		,#{RT_PROMPT}
+	   		,NULLIF(#{RT_HDSET},'')
+	   		,NULLIF(#{RT_WHSET},'')
+	   		,#{RT_CALLBACK})
+	   	 -->
+	   		CALL USP_Mng_Ivr_Route_I(
+	   		#{RT_ROUTENAME}
+	   		,#{RT_ROUTENUM}
+	   		,#{RT_PROMPT}
+	   		,IFNULL(#{RT_HDSET},'')
+	   		,IFNULL(#{RT_WHSET},'')
+	   		)
+		</insert>
+		<update id="RouteUpdate" parameterType="hashmap">
+		<!--
+	   		CALL USP_Mng_Ivr_Route_U(
+	   		NULLIF(#{RT_ROUTE},'')
+	   		,#{RT_ROUTENAME}
+	   		,#{RT_ROUTE_GROUPSEQ}
+	   		,#{RT_ROUTE_DEPTNO}
+	   		,#{RT_ROUTENUM}
+	   		,#{RT_PROMPT}
+	   		,NULLIF(#{RT_HDSET},'')
+	   		,NULLIF(#{RT_WHSET},'')
+	   		,#{RT_CALLBACK})
+	   	 -->
+	   		CALL USP_Mng_Ivr_Route_U(
+	   		IFNULL(#{RT_ROUTE},'')
+	   		,#{RT_ROUTENAME}
+	   		,#{RT_ROUTENUM}
+	   		,#{RT_PROMPT}
+	   		,IFNULL(#{RT_HDSET},'')
+	   		,IFNULL(#{RT_WHSET},'')
+	   		)
+		</update>
+		<update id="RouteDel" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_Route_D(IFNULL(#{RT_ROUTE},''))
+		</update>
+	<!-- 라우트 관리 Mnt_Ivr_Route END -->
+
+	<!-- 메뉴 관리 Mnt_Ivr_MenuSet START -->
+		<select id="MenuSetList" parameterType="hashmap" resultType="hashmap">
+	    	CALL USP_Mng_Ivr_MenuSet_S()
+		</select>
+
+		<select id="MenuList" parameterType="hashmap" resultType="hashmap">
+	    	CALL USP_Mng_Ivr_Menu_S(IFNULL(#{SC_MENU},''))
+		</select>
+
+		<insert id="MenuSetAdd" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_MenuSet_I(#{SC_MENUNAME}, #{SC_PROMPT}, #{SC_DIGIT})
+		</insert>
+
+		<update id="MenuSetUpdate" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_MenuSet_U(IFNULL(#{SC_MENU},''), #{SC_MENUNAME}, #{SC_PROMPT}, #{SC_DIGIT})
+		</update>
+		<update id="MenuSetDel" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_MenuSet_D(IFNULL(#{SC_MENU},''))
+		</update>
+
+		<insert id="MenuAdd" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_Menu_I(IFNULL(#{SC_MENU},''),#{SC_DIGIT}, IFNULL(#{SC_NEXT},''), IFNULL(#{SC_NEXTNAME},''), IFNULL(#{SC_NOTI_YN},''), IFNULL(#{SC_NOTI},''))
+		</insert>
+		<update id="MenuUpdate" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_Menu_U(IFNULL(#{SC_MENU},''),#{SC_DIGIT}, IFNULL(#{SC_NEXT},''), IFNULL(#{SC_NEXTNAME},''), IFNULL(#{SC_NOTI_YN},''), IFNULL(#{SC_NOTI},''))
+		</update>
+		<delete id="MenuDel" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_Menu_D(IFNULL(#{SC_MENU},''),#{SC_DIGIT})
+		</delete>
+	<!-- 메뉴 관리 Mnt_Ivr_MenuSet END -->
+
+
+	<!-- 시나리오 관리 Mnt_Ivr_Scenario START -->
+		<select id="ScenarioList" parameterType="hashmap" resultType="hashmap">
+	    	CALL USP_Mng_Ivr_Scenario_S(#{_EMP_NO})
+		</select>
+		<insert id="ScenarioAdd" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_Scenario_I(IFNULL(#{Dept_No},''),#{SC_NAME},IFNULL(#{SC_NOTI_YN},''),#{SC_NOTI},#{SC_NEXT},#{SC_NEXT_TARGET},IFNULL(#{SC_PROMPT_YN},''),#{SC_PROMPT})
+		</insert>
+		<update id="ScenarioUpdate" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_Scenario_U(IFNULL(#{SC_CODE},''),IFNULL(#{Dept_No},''),#{SC_NAME},IFNULL(#{SC_NOTI_YN},''), IFNULL(#{SC_NOTI},''),IFNULL(#{SC_NEXT},''),#{SC_NEXT_TARGET},IFNULL(#{SC_PROMPT_YN},''),#{SC_PROMPT})
+		</update>
+		<update id="ScenarioDel" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_Scenario_D(IFNULL(#{SC_CODE},''))
+		</update>
+	<!-- 시나리오 관리 Mnt_Ivr_Scenario END -->
+
+	<!-- DNIS 관리 Mnt_Ivr_DNIS START -->
+		<select id="DNISList" parameterType="hashmap" resultType="hashmap">
+	    	CALL USP_Mng_Ivr_DNIS_S()
+		</select>
+		<insert id="DNISAdd" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_DNIS_I(#{DNIS_NAME},#{DNIS_NUMBER},#{DNIS_SERVICE}, IFNULL(#{DNIS_SC_CODE},''))
+		</insert>
+		<update id="DNISUpdate" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_DNIS_U(IFNULL(#{DNIS_CODE},''),#{DNIS_NAME},#{DNIS_NUMBER},#{DNIS_SERVICE},IFNULL(#{DNIS_SC_CODE},''))
+		</update>
+		<update id="DNISDel" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_DNIS_D(IFNULL(#{DNIS_CODE},''))
+		</update>
+	<!-- DNIS 관리 Mnt_Ivr_DNIS END -->
+
+
+	<!-- 블랙리스트 -->
+
+		<select id="getBlackList" parameterType="hashmap" resultType="hashmap">
+	    	CALL USP_Mng_Ivr_Black_S()
+		</select>
+		<insert id="addBlackList" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_Black_I(#{BL_TELNO},#{BL_DESC})
+		</insert>
+		<update id="delBlackList" parameterType="hashmap">
+	   		CALL USP_Mng_Ivr_Black_D(#{BL_SEQUENCE})
+		</update>
+
+
+
+
+	<!-- 20210623 신규 추가 Tree관련 -->
+	<!-- 시나리오 관리 Mnt_Ivr_Scenario_New START -->
+	<select id="ScenarioNewGet" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_Scenario_New_S(#{_EMP_NO},#{SC_CODE})
+	</select>
+	<select id="ScenarioNewGetLast" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_Scenario_New_GetLast_S(#{_EMP_NO})
+	</select>
+	<select id="ScenarioNewList" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioAll_New_S(#{_EMP_NO})
+	</select>
+	<select id="ScenarioNewListSlim" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioAll_New_Slim_S(#{_EMP_NO})
+	</select>
+	<insert id="ScenarioNewAdd" parameterType="hashmap">
+		CALL USP_Mng_Ivr_Scenario_New_I(#{Dept_No,jdbcType=INTEGER},#{SC_NAME},#{SC_PROMPT},#{SC_PROMPT2},#{SC_WORKHOUR},#{SC_NOTI_YN,jdbcType=INTEGER},#{SC_END_YN,jdbcType=INTEGER},#{SC_NOTI},#{SC_NOTI_SDATE},#{SC_NOTI_STIME},#{SC_NOTI_EDATE},#{SC_NOTI_ETIME},#{SC_TYPE})
+	</insert>
+	<update id="ScenarioNewUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_Scenario_New_U(#{SC_CODE},#{Dept_No,jdbcType=INTEGER},#{SC_NAME},#{SC_PROMPT},#{SC_PROMPT2},#{SC_WORKHOUR},#{SC_NOTI_YN,jdbcType=INTEGER},#{SC_END_YN,jdbcType=INTEGER},#{SC_NOTI},#{SC_NOTI_SDATE},#{SC_NOTI_STIME},#{SC_NOTI_EDATE},#{SC_NOTI_ETIME},#{SC_TYPE})
+	</update>
+	<update id="ScenarioNewDel" parameterType="hashmap">
+		CALL USP_Mng_Ivr_Scenario_D(#{SC_CODE})
+	</update>
+	<update id="ScenarioNewNextUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_Scenario_New_Next_U(#{SC_CODE},#{SC_NEXT},#{SC_NEXT_TARGET})
+	</update>
+	<update id="ScenarioNewNext50Update" parameterType="hashmap">
+		CALL USP_Mng_Ivr_Scenario_New_Next50_U(#{SC_CODE})
+	</update>
+	<!-- 시나리오 관리 Mnt_Ivr_Scenario_New END -->
+
+	<!-- 시나리오근무시간 START -->
+	<select id="ScenarioWorkhourList" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioWorkhour_S(#{SC_CODE})
+	</select>
+	<select id="ScenarioWorkhourGetlast" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioWorkhour_GetLast_S(#{SC_CODE},#{SC_WORKHOURCODE},#{WH_TYPE},#{WH_KIND})
+	</select>
+	<insert id="ScenarioWorkhourAdd" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioWorkhour_I(#{SC_CODE},#{SC_WORKHOURCODE},#{WH_TYPE},#{WH_KIND},#{SC_PROMPT})
+	</insert>
+	<update id="ScenarioWorkhourUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioWorkhour_U(#{SC_CODE},#{SC_WORKHOURCODE},#{WH_TYPE},#{WH_KIND},#{SC_PROMPT})
+	</update>
+	<update id="ScenarioWorkhourDel" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioWorkhour_D(#{SC_CODE},#{SC_WORKHOURCODE},#{WH_TYPE},#{WH_KIND})
+	</update>
+	<update id="ScenarioWorkhourNextUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioWorkhour_Next_U(#{SC_CODE},#{SC_WORKHOURCODE},#{WH_TYPE},#{WH_KIND},#{SC_NEXT},#{SC_NEXT_TARGET})
+	</update>
+	<update id="ScenarioWorkhourNext50Update" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioWorkhour_Next50_U(#{SC_CODE},#{SC_WORKHOURCODE},#{WH_TYPE},#{WH_KIND})
+	</update>
+	<!-- 시나리오근무시간 END -->
+
+	<!-- 시나리오메뉴 START -->
+	<select id="ScenarioMenuGet" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioMenu_S(#{SC_MENU})
+	</select>
+	<select id="ScenarioMenuGetLast" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioMenu_GetLast_S()
+	</select>
+	<insert id="ScenarioMenuAdd" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioMenu_I(#{SC_MENUNAME},#{SC_PROMPT},#{SC_DIGITERROR},#{SC_DIGITNONE},#{SC_DIGITERRORCOUNT},#{SC_DIGITTERM})
+	</insert>
+	<update id="ScenarioMenuUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioMenu_U(#{SC_MENU},#{SC_MENUNAME},#{SC_PROMPT},#{SC_DIGITERROR},#{SC_DIGITNONE},#{SC_DIGITERRORCOUNT},#{SC_DIGITTERM})
+	</update>
+	<update id="ScenarioMenuDel" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioMenu_D(#{SC_MENU})
+	</update>
+	<!-- 시나리오메뉴 END -->
+
+	<!-- 시나리오메뉴 번호 START -->
+	<select id="ScenarioMenuSubList" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioMenuSub_S(#{SC_MENU})
+	</select>
+	<insert id="ScenarioMenuSubAdd" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioMenuSub_I(#{SC_MENU},#{SC_DIGIT},#{SC_NEXT},#{SC_NEXT_TARGET},IFNULL(#{SC_NOTI_YN},''),#{SC_NOTI},#{SC_NOTI_SDATE},#{SC_NOTI_STIME},#{SC_NOTI_EDATE},#{SC_NOTI_ETIME})
+	</insert>
+	<update id="ScenarioMenuSubUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioMenuSub_U(#{SC_MENU},#{SC_DIGIT},#{SC_NEXT},#{SC_NEXT_TARGET},IFNULL(#{SC_NOTI_YN},''),#{SC_NOTI},#{SC_NOTI_SDATE},#{SC_NOTI_STIME},#{SC_NOTI_EDATE},#{SC_NOTI_ETIME})
+	</update>
+	<update id="ScenarioMenuSubDel" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioMenuSub_D(#{SC_MENU},#{SC_DIGIT})
+	</update>
+	<update id="ScenarioMenuSubNextUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioMenuSub_Next_U(#{SC_MENU},#{SC_DIGIT},#{SC_NEXT},#{SC_NEXT_TARGET})
+	</update>
+	<update id="ScenarioMenuSubNext50Update" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioMenuSub_Next50_U(#{SC_MENU},#{SC_DIGIT})
+	</update>
+	<!-- 시나리오메뉴 번호 END -->
+
+	<!-- 시나리오라우트 START -->
+	<!-- RT_ROUTENUM은 빈값으로 할것이다. -->
+	<select id="ScenarioRouteGet" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioRoute_S(#{RT_ROUTE})
+	</select>
+	<select id="ScenarioRouteList" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioRouteAll_S()
+	</select>
+	<insert id="ScenarioRouteAdd" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioRoute_I(#{RT_ROUTENAME},#{RT_PROMPT},#{RT_PROMPT2},#{RT_ENQUEUE_YN},#{RT_QUEUENAME},#{RT_ENQUEUE_PRIORITY},#{RT_ROUTENUM})
+	</insert>
+	<update id="ScenarioRouteUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioRoute_U(#{RT_ROUTENAME},#{RT_PROMPT},#{RT_PROMPT2},#{RT_ENQUEUE_YN},#{RT_QUEUENAME},#{RT_ENQUEUE_PRIORITY},#{RT_ROUTENUM})
+	</update>
+	<update id="ScenarioRouteDel" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioRoute_D(#{RT_ROUTE})
+	</update>
+	<!-- 시나리오라우트 END -->
+
+	<!-- 시나리오 오버콜 START -->
+	<select id="ScenarioOvercallList" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioOvercall_S(#{RT_ROUTE})
+	</select>
+	<select id="ScenarioOvercallGetLast" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioOvercall_GetLast_S()
+	</select>
+	<insert id="ScenarioOvercallAdd" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioOvercall_I(#{RT_ROUTE},#{OC_SEQUENCE},#{OC_PROMPT},#{SC_NEXT},#{SC_NEXT_TARGET})
+	</insert>
+	<update id="ScenarioOvercallUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioOvercall_U(#{OC_OVERCALL},#{OC_SEQUENCE},#{OC_PROMPT},#{SC_NEXT},#{SC_NEXT_TARGET})
+	</update>
+	<update id="ScenarioOvercallDel" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioOvercall_D(#{OC_OVERCALL})
+	</update>
+	<update id="ScenarioOvercallNextUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioOvercall_Next_U(#{OC_OVERCALL},#{SC_NEXT},#{SC_NEXT_TARGET})
+	</update>
+	<update id="ScenarioOvercallNext50Update" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioOvercall_Next50_U(#{OC_OVERCALL})
+	</update>
+	<!-- 시나리오 오버콜 END -->
+
+	<!-- 시나리오Dtmf START -->
+	<select id="ScenarioDtmfGet" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioDtmf_S(#{SC_DTMF})
+	</select>
+	<select id="ScenarioDtmfGetLast" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioDtmf_GetLast_S()
+	</select>
+	<insert id="ScenarioDtmfAdd" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioDtmf_I(#{SC_DTMFNAME},#{SC_PROMPT},#{SC_DTMFMIN},#{SC_DTMFMAX},#{SC_DIGITERROR},#{SC_DIGITNONE},#{SC_DIGITERRORCOUNT},#{SC_DIGITTERM})
+	</insert>
+	<update id="ScenarioDtmfUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioDtmf_U(#{SC_DTMF},#{SC_DTMFNAME},#{SC_PROMPT},#{SC_DTMFMIN},#{SC_DTMFMAX},#{SC_DIGITERROR},#{SC_DIGITNONE},#{SC_DIGITERRORCOUNT},#{SC_DIGITTERM})
+	</update>
+	<update id="ScenarioDtmfDel" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioDtmf_D(#{SC_DTMF})
+	</update>
+	<update id="ScenarioDtmfNextUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioDtmf_Next_U(#{SC_DTMF},#{SC_NEXT},#{SC_NEXT_TARGET})
+	</update>
+	<update id="ScenarioDtmfNext50Update" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioDtmf_Next50_U(#{SC_DTMF})
+	</update>
+	<!-- 시나리오 END -->
+
+	<!-- 시나리오callback START -->
+	<select id="ScenarioCallbackGet" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioCallback_S(#{SC_CALLBACK})
+	</select>
+	<select id="ScenarioCallbackGetLast" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioCallback_GetLast_S()
+	</select>
+	<insert id="ScenarioCallbackAdd" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioCallback_I(#{SC_CALLBACKNAME},#{SC_PROMPT},#{SC_PROMPT2},#{SC_DTMFMIN},#{SC_DTMFMAX},#{SC_DIGITERROR},#{SC_DIGITNONE},#{SC_DIGITERRORCOUNT},#{SC_DIGITTERM},#{SC_LIMIT})
+	</insert>
+	<update id="ScenarioCallbackUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioCallback_U(#{SC_CALLBACK},#{SC_CALLBACKNAME},#{SC_PROMPT},#{SC_PROMPT2},#{SC_DTMFMIN},#{SC_DTMFMAX},#{SC_DIGITERROR},#{SC_DIGITNONE},#{SC_DIGITERRORCOUNT},#{SC_DIGITTERM},#{SC_LIMIT})
+	</update>
+	<update id="ScenarioCallbackDel" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioCallback_D(#{SC_CALLBACK})
+	</update>
+	<update id="ScenarioCallbackNextUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioCallback_Next_U(#{SC_CALLBACK},#{SC_NEXT},#{SC_NEXT_TARGET})
+	</update>
+	<update id="ScenarioCallbackNext50Update" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioCallback_Next50_U(#{SC_CALLBACK})
+	</update>
+	<!-- 시나리오callback END -->
+
+	<!-- 시나리오notice START -->
+	<select id="ScenarioNoticeGet" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioNotice_S(#{SC_NOTICE})
+	</select>
+	<!-- 시나리오notice END -->
+
+	<!-- new route START -->
+	<select id="RouteNewList" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_Route_New2_S()
+	</select>
+	<insert id="RouteNewAdd" parameterType="hashmap">
+		CALL USP_Mng_Ivr_Route_New_I(
+			#{RT_ROUTENAME}
+			,#{RT_ENQUEUE_YN}
+			,#{RT_QUEUENAME}
+			,#{RT_ENQUEUE_PRIORITY}
+			,#{RT_PROMPT}
+			,#{RT_PROMPT2}
+			)
+	</insert>
+	<update id="RouteNewUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_Route_New_U(
+			#{RT_ROUTE}
+			,#{RT_ROUTENAME}
+			,#{RT_ENQUEUE_YN}
+			,#{RT_QUEUENAME}
+			,#{RT_ENQUEUE_PRIORITY}
+			,#{RT_PROMPT}
+			,#{RT_PROMPT2}
+			)
+	</update>
+	<!-- new route END -->
+
+	<!-- new Emergency START -->
+	<update id="RouteEmergencyUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioRoute_EMGR_U(#{RT_CODES},#{RT_NOTI_YN},#{RT_END_YN},#{RT_NOTI},#{RT_NOTI_SDATE},#{RT_NOTI_STIME},#{RT_NOTI_EDATE},#{RT_NOTI_ETIME})
+	</update>
+
+	<update id="ScenarioEmergencyUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_Scenario_New_EMGR_U(#{SC_CODES},#{SC_NOTI_YN},#{SC_END_YN},#{SC_NOTI},#{SC_NOTI_SDATE},#{SC_NOTI_STIME},#{SC_NOTI_EDATE},#{SC_NOTI_ETIME})
+	</update>
+	<!-- new Emergency END -->
+
+
+	<!-- new callback batch START -->
+	<select id="CallbackList" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioCallbackAll_S()
+	</select>
+
+	<update id="CallbackBatchUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioCallback_Batch_U(#{SC_CALLBACKS},#{SC_LIMIT})
+	</update>
+	<!-- new callback batch END -->
+
+	<!-- menu sub notice delete START -->
+	<insert id="ScenarioMenuSubSlimAdd" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioMenuSub_Slim_I(#{SC_MENU},#{SC_DIGIT},#{SC_NEXT},#{SC_NEXT_TARGET})
+	</insert>
+	<update id="ScenarioMenuSubSlimUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioMenuSub_Slim_U(#{SC_MENU},#{SC_DIGIT},#{SC_NEXT},#{SC_NEXT_TARGET})
+	</update>
+	<!-- menu sub notice delete END -->
+
+	<!-- scenario list load by dept code START -->
+	<select id="ScenarioNewListSlimByDept" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioAll_New_Slim_Dept_S(#{_EMP_NO}, #{DEPTS})
+	</select>
+	<!-- scenario list load by dept code END -->
+
+	<!-- 20210916 추가 : 긴급 라우팅 포워드 추가 -->
+	<!-- new Emergency Forward START 기존의 긴급 공지에 추가적으로 포워딩 번호를 넣어야함 ROUTENUM을 사용할 것임-->
+	<update id="RouteEmergencyForwardUpdate" parameterType="hashmap">
+		CALL USP_Mng_Ivr_ScenarioRoute_EMGR_Forward_U(#{RT_CODES},#{RT_NOTI_YN},#{RT_END_YN},#{RT_NOTI},#{RT_NOTI_SDATE},#{RT_NOTI_STIME},#{RT_NOTI_EDATE},#{RT_NOTI_ETIME},#{RT_ROUTENUM})
+	</update>
+	<!-- new Emergency Forward END -->
+
+</mapper>

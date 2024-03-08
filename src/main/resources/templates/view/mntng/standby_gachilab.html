@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+
+	<script type="text/javascript">
+	$(document).ready(function() {
+
+		let getQueRData = function() {
+
+			$.ajax({
+				method: "POST",
+				url: "<c:url value='/api/mntng/OSCCRealtimeQueueGrant.do'/>",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+
+				var html, vwText, PATH_NUM, PATH_NM, CNT;
+
+				html ='';
+				$.each(data.RTQueue, function (i, item) {
+					vwText = '';
+
+					PATH_NUM = item.PATH_NUM
+					PATH_NM = item.PATH_NM
+					CNT = item.CNT
+
+					vwText = PATH_NUM+' / '+PATH_NM +' <br> <span class="h1">'+ CNT+'</span>';
+
+					html +='<div class="col-xs-12 col-sm-4 col-md-2">';
+					html +='	<div class="alert alert-primary" role="alert">';
+					html +='		<strong>'+vwText+'</strong>';
+					html +='	</div>';
+					html +='</div>';
+				});
+				$("._cntnt").html("").append(html);
+			});
+		}
+
+		getQueRData();
+		setInterval(getQueRData, 5000);
+	});
+	</script>
+
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+	<ol class="breadcrumb page-breadcrumb">
+		<li class="breadcrumb-item"><a href="javascript:void(0);">Home</a></li>
+		<li class="breadcrumb-item">모니터링</li>
+		<li class="breadcrumb-item active">대기콜 모니터링</li>
+		<li class="position-absolute pos-top pos-right d-none d-sm-block"><span class="js-get-date"></span></li>
+	</ol>
+	
+	
+	<div id="content">
+		<div class="row _cntnt"></div>
+	</div>
+	
+	
+	
+</main>		
+

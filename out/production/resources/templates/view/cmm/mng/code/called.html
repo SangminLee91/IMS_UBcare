@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	let SELECTED_ROW = "";
+	$(document).ready(function() {
+		const table = $('#dt_basic').DataTable({
+			ajax: {
+				url: CONTEXT_PATH+"/code/called/list",
+				dataSrc: "Code"
+			},
+			columns: [
+				{ "data": "Seq" },
+				{ "data": "Called_Key" },
+				{ "data": "resourcenum" },
+				{ "data": "CalledNumber" },
+				{ "data": "Desc" },
+				{ "data": "Use_Stat" },
+				{ "data": "Use_Stat_Nm" }
+			],
+			columnDefs: [
+				{  "targets": [0, 1, 5, 6], "visible": false},
+				{  "targets": [0, 1, 5, 6], "searchable": false}
+			],
+			searching: true,
+			ordering: true,
+			scrollY: "536px",
+			scrollCollapse: true
+		});
+		table.on('select', function(e, dt, type, indexes){
+			SELECTED_ROW = table.row(indexes).data();
+		}).on('deselect', function(){
+			SELECTED_ROW = "";
+		});
+
+
+
+		const getResources = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/code/ifx/monitoredresources/list",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$(".resources_key option:not(option:eq(0))").remove();
+				$.each(data.Monitoredresources, function (i, item) {
+					$(".resources_key").append($('<option>', { value: item.resourcekey, text: item.resourcenum }));
+				});
+			});
+		}
+
+		// $('.resources_key').SumoSelect({
+		// 	placeholder: 'OSCC Monitoredresources',
+		// 	search : true,
+		// 	forceCustomRendering: true
+		// });
+
+
+		getResources();
+
+
+
+		//Add Modal Open
+		$('#Add').on('show.bs.modal', function () {
+			// let num = $('#add_Que_Code option').length;
+			// for(let i=0; i<num; i++){
+			//   $("._usestat")[0].sumo.unSelectItem(i);
+			// }
+		});
+
+		//Add
+		$("#addfrm").submit(function(e){
+			//Save
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/code/called/add",
+				data: {
+					Called_Key: $("#add_Called_Key").val()
+					, CalledNumber: $("#add_CalledNumber").val()
+					, Desc: $("#add_Desc").val()
+					, Use_Stat: $("#add_Use_Stat").val()
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function () { // function (data)
+				$('#dt_basic').DataTable().ajax.reload();
+			});
+
+			e.preventDefault();
+			SELECTED_ROW = "";
+
+			$("add_Called_Key").val("");
+			//$("#add_CalledNumber").val("");
+			$("#add_Desc").val("");
+			$("#add_Use_Stat").val("");
+
+			$('#Add').modal('hide');
+		});
+
+
+		//Edit Btn Click
+		$("._BtnEdit").click(function(){
+			if(SELECTED_ROW === "")
+			{
+				alert("수정할 대상을 선택하세요.");
+				return false;
+			}
+
+			$('#Edit').modal('show');
+		});
+
+		//Edit Modal Open
+		$('#Edit').on('show.bs.modal', function () {
+			$("#edt_Seq").val(SELECTED_ROW.Seq);
+			$("#edt_Called_Key").val(SELECTED_ROW.Called_Key);
+			$("#edt_CalledNumber").val(SELECTED_ROW.CalledNumber);
+			$("#edt_Desc").val(SELECTED_ROW.Desc);
+			$("#edt_Use_Stat").val(SELECTED_ROW.Use_Stat);
+
+			//$("#edt_Use_Stat")[0].sumo.reload();
+
+		});
+		$("#edtfrm").submit(function(e){
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/code/called/edit",
+				data: {
+					Seq : $("#edt_Seq").val()
+					, Called_Key: $("#edt_Called_Key").val()
+					, CalledNumber: $("#edt_CalledNumber").val()
+					, Desc: $("#edt_Desc").val()
+					, Use_Stat: $("#edt_Use_Stat").val()
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function () { // function (data)
+				$('#dt_basic').DataTable().ajax.reload();
+			});
+
+			e.preventDefault();
+
+			SELECTED_ROW = "";
+
+			$('#Edit').modal('hide');
+
+		});
+
+
+		//Del Btn Click
+		$("._BtnDel").click(function(){
+			if(SELECTED_ROW === "")
+			{
+				alert("삭제할 대상을 선택하세요.");
+				return false;
+			}
+
+			if(confirm("["+SELECTED_ROW.CalledNumber +"] 를(을) 삭제 하시겠습니까?"))
+			{
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/code/called/del",
+					data: { Seq : SELECTED_ROW.Seq },
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function () { // function (data)
+					$('#dt_basic').DataTable().ajax.reload();
+				});
+
+				SELECTED_ROW = "";
+			}
+			else
+			{
+				return false;
+			}
+		});
+
+		// $('._usestat').SumoSelect({
+		// 	placeholder: '사용여부',
+		// 	forceCustomRendering: true
+		// });
+
+	});
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 대표번호 정보(CalledNumber)
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			<div class="panel-toolbar">
+				<button class="btn btn-xs btn-dark _BtnAdd" data-toggle="modal" data-target="#Add" data-backdrop="static">Add</button>
+				<button class="btn btn-xs btn-dark ml-1 _BtnEdit" data-target="#Edt" data-backdrop="static">Edit</button>
+				<button class="btn btn-xs btn-dark ml-1 _BtnDel">Delete</button>
+			</div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+						<tr class="text-center">
+							<th>Seq</th>
+							<th>Resource Key</th>
+							<th>Resource num</th>
+							<th>대표번호</th>
+							<th>설명</th>
+							<th>Use_Stat</th>
+							<th>사용 여부</th>
+						</tr>
+					</thead>
+				</table>		
+			</div>
+		</div>
+	</div>
+
+	<div class="modal" id="Add" role="dialog" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content animated " >
+				<div class="modal-header cursor-move">
+					<h4 class="modal-title">CalledNumber Add</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="addfrm" id="addfrm" method="post">
+					<div class="modal-body">
+
+
+						<div class="form-group">
+							<div class="input-group input-group-sm">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Oscc ResourceKey</span>
+								</div>
+								<select class="form-control resources_key" id="add_Called_Key" placeholder="OSCC Monitoredresources" required oninvalid="this.setCustomValidity('OSCC Resource를 선택하세요.')" oninput="this.setCustomValidity('')">
+									<option value="">OSCC Monitoredresources</option>
+								</select>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<div class="input-group input-group-sm">
+								<div class="input-group-prepend">
+									<span class="input-group-text">대표 번호</span>
+								</div>
+								<input type="text" id="add_CalledNumber" placeholder="대표 번호" class="form-control" required oninvalid="this.setCustomValidity('대표 번호를 입력하세요.')" oninput="this.setCustomValidity('')">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="input-group input-group-sm">
+								<div class="input-group-prepend">
+									<span class="input-group-text width-76px">설명</span>
+								</div>
+								<input type="text" id="add_Desc" placeholder="설명" class="form-control">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="input-group input-group-sm">
+								<div class="input-group-prepend">
+									<span class="input-group-text">사용 여부</span>
+								</div>
+								<select class="form-control _usestat" id="add_Use_Stat">
+									<option value="1" selected>사용</option>
+									<option value="0">사용 안함</option>
+								</select>
+							</div>
+						</div>
+					</div>
+
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-xs btn-dark _BtnSave">Save</button>
+						<button type="button" class="btn btn-xs btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal" id="Edit" role="dialog" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content animated " >
+				<div class="modal-header cursor-move">
+					<h4 class="modal-title">CalledNumber Edit</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+
+				<form name="edtfrm" id="edtfrm" method="post">
+					<div class="modal-body">
+						<input type="hidden" name="edt_Seq" id="edt_Seq">
+
+						<div class="form-group">
+							<div class="input-group input-group-sm">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Oscc ResourceKey</span>
+								</div>
+								<select class="form-control resources_key" id="edt_Called_Key" required oninvalid="this.setCustomValidity('OSCC Resource를 선택하세요.')" oninput="this.setCustomValidity('')">
+									<option value="">OSCC Monitoredresources</option>
+								</select>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<div class="input-group input-group-sm">
+								<div class="input-group-prepend">
+									<span class="input-group-text">대표 번호</span>
+								</div>
+								<input type="text" id="edt_CalledNumber" placeholder="대표 번호" class="form-control" required oninvalid="this.setCustomValidity('대표 번호를 입력하세요.')" oninput="this.setCustomValidity('')">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="input-group input-group-sm">
+								<div class="input-group-prepend">
+									<span class="input-group-text width-76px">설명</span>
+								</div>
+								<input type="text" id="edt_Desc" placeholder="설명" class="form-control">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="input-group input-group-sm">
+								<div class="input-group-prepend">
+									<span class="input-group-text">사용 여부</span>
+								</div>
+								<select class="form-control _usestat" id="edt_Use_Stat">
+									<option value="1">사용</option>
+									<option value="0">사용 안함</option>
+								</select>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-xs btn-dark">Save</button>
+						<button type=button class="btn btn-xs btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+</main>
+
+</html>

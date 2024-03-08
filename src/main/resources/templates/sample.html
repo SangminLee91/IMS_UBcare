@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $.ajax({
+                method: "POST",
+                url: "/sample2",
+                data: {
+                    a: "1000"
+                }
+            }).done(function (data) {
+                console.log(data);
+            });
+        });
+
+    </script>
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+    <div class="subheader">
+        <h1 class="subheader-title">
+            <i class='subheader-icon fal fa-phone-office'></i> 내선 : <span class='fw-300'>Extention</span>
+        </h1>
+    </div>
+
+</main>
+</html>

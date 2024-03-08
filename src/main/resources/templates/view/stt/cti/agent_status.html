@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+	<link rel="stylesheet" th:href="@{/css/formplugins/bootstrap-timepicker/bootstrap-timepicker.css}">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script th:src="@{/js/formplugins/bootstrap-timepicker/bootstrap-timepicker.min.js}"></script>
+
+	<script type="text/javascript">
+	$(document).ready(function() {
+		let jsonEmp = null;
+		//부서
+		const getDept = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/cmm/ajax/dept/list",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$.each(data.Dept, function (i, item) {
+					$(".sel_dept").append($('<option>', { value: item.Dept_No, text: item.Dept_Nm }));
+				});
+
+				$('.sel_dept').multiselect({
+					includeFilterClearBtn: false,
+					enableFiltering: true,
+					includeSelectAllOption: true,
+					selectAllText: '전체선택',
+					nonSelectedText: '부 서',
+					allSelectedText: '전체 선택됨',
+					buttonWidth: '100%',
+					maxHeight: 400,
+					buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+				});
+
+			});
+
+		}
+
+		//사원
+		const getEmp = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/cmm/ajax/emp/list",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				jsonEmp = data.Emp;
+				$(".sel_emp option").remove();
+				makeEmp(data.Emp);
+			});
+		}
+
+		const makeEmp = function(data)
+		{
+			//$(".sel_emp option").remove();
+			$.each(data, function (i, item) {
+				$(".sel_emp").append($('<option>', { value: item.Agent_Key, text: item.Emp_Nm +' ['+item.userid+']' }));
+			});
+
+			$('.sel_emp').multiselect({
+				includeFilterClearBtn: false,
+				enableFiltering: true,
+				includeSelectAllOption: true,
+				selectAllText: '전체선택',
+				nonSelectedText: '상담원이름',
+				allSelectedText: '전체 선택됨',
+				buttonWidth: '100%',
+				maxHeight: 400,
+				buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+			});
+			$('.sel_emp').multiselect('rebuild');
+		}
+
+		//부서 변경시 해당부서 사원만 노출
+		$(".sel_dept").change(function(){
+			$(".sel_emp option").remove();
+			let data = jsonEmp;
+
+			if($(this).val() != "")
+			{
+				for(let i = 0; i < $(this).val().length; i++)
+				{
+					let val_Dept_No = $(this).val()[i];
+					data = jsonEmp.filter(function(val) { //선택된 부서의 사원만 필터
+						return (val.Dept_No == val_Dept_No);
+					});
+					makeEmp(data);
+				}
+			}
+			else
+			{
+				makeEmp(data);
+			}
+
+		});
+
+		const table = $('#dt_basic').DataTable({
+			data:[],
+			columns: [
+				{ "data": "RecordTimestamp" },
+				{ "data": "Emp_Nm" },
+				{ "data": "User_Id" },
+				{ "data": "Dept_Nm" },
+				{ "data": "LogonTime" },
+				{ "data": "IdleDur" },
+				{ "data": "AwayDur" },
+				{ "data": "BusyDur" },
+				{ "data": "TotalOtherTime" }
+				// ,{ "data": "PostProcessingTime" }
+			],
+			searching: false,
+			iDisplayLength: 20,
+			bPaginate: true
+		});
+
+		//Excel Btn
+		const buttons = new $.fn.dataTable.Buttons(table, {
+			 buttons: [
+			 {
+				  extend: 'excelHtml5',
+				  text: '<i class="fal fa-file-excel-o"></i> Excel',
+				  title: '상담원 상태_'+getSimpleToday(),
+				  className: 'btn-xs btn-dark',
+				  exportOptions: {
+					modifier: {
+					  page: 'all'
+					},
+					columns: ':visible'
+				  },
+				  customize: function ( xlsx ){
+					  let sheet = xlsx.xl.worksheets['sheet1.xml'];
+					  $('row c', sheet).attr( 's', '25' ); //boder
+				  }
+				}
+			]
+		}).container().appendTo($('#buttons'));
+
+
+		$('._time').timepicker({
+			defaultTime: "",
+			showMeridian: false, //24시간
+			icons: {
+				up: "fal fa-caret-up",
+				down: "fal fa-caret-down"
+			}
+		});
+
+
+		//검색Btn
+		$("._searchGo").click(function(){
+
+			let Dept_No = $(".sel_dept").val().toString().replace(/,/gi, "|"); // , => | 로 replace처리
+			let Agent_Key = $(".sel_emp").val().toString().replace(/,/gi, "|");
+			let Search_Type = $("._searchType:checked").val()
+			let sDate = $("#sdate").val();
+			let eDate = $("#edate").val();
+			let sTime = $("#stime").val();
+			let eTime = $("#etime").val();
+
+			if(Agent_Key != "" ) Dept_No = ""; //상담원 선택시 부서정보는 날린다!!
+
+			$(".dataTables_processing").css("display","block");
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/stt/cti/agent/status/stat",
+				data: {
+						Dept_No: Dept_No
+						, Agent_Key: Agent_Key
+						, Search_Type: Search_Type
+						, sDate: sDate
+						, eDate: eDate
+						, sTime: sTime
+						, eTime: eTime
+				},error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				table.clear().draw();
+				table.rows.add(data.Stt).draw();
+				$(".dataTables_processing").css("display","none");
+			});
+		})
+
+		getDept();
+		getEmp();
+
+		$("#sdate").val(getToday()); //오늘날짜 기본
+		$("#edate").val(getToday()); //오늘날짜 기본
+
+	});
+	</script>
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 상담원 상태
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			 <div id="buttons" class="btn-group"></div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+
+				<div class="form-row">
+					<div class="col-md mb-2">
+						<label class="form-label d-none">부서</label>
+						<select multiple="multiple" class="sel_dept form-control"></select>
+					</div>
+					<div class="col-md mb-2">
+						<label class="form-label d-none">상담원</label>
+						<select multiple="multiple" class="sel_emp form-control"></select>
+					</div>
+					<div class="col-md mb-2">
+						<label class="form-label d-none">&nbsp;</label>
+							<div class="frame-wrap pt-2">
+								<div class="custom-control custom-radio custom-control-inline">
+									<input type="radio" class="_searchType custom-control-input" id="rdo_month" name="searchType" value="4">
+									<label class="custom-control-label" for="rdo_month">월별</label>
+								</div>
+								<div class="custom-control custom-radio custom-control-inline">
+									<input type="radio" class="_searchType custom-control-input" id="rdo_day" name="searchType" value="2" checked="">
+									<label class="custom-control-label" for="rdo_day">일별</label>
+								</div>
+								<div class="custom-control custom-radio custom-control-inline">
+									<input type="radio" class="_searchType custom-control-input" id="rdo_hour" name="searchType" value="1">
+									<label class="custom-control-label" for="rdo_hour">시간별</label>
+								</div>
+								<div class="custom-control custom-radio custom-control-inline">
+									<input type="radio" class="_searchType custom-control-input" id="rdo_time" name="searchType" value="0">
+									<label class="custom-control-label" for="rdo_time">15분별</label>
+								</div>
+							</div>
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="col-md">
+						<label class="form-label d-none">날짜</label>
+						<div class="input-daterange input-group">
+							<input type="text" class="form-control datepicker" name="sdate" id="sdate" placeholder="시작일자">
+							<div class="input-group-append input-group-prepend">
+								<span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>
+							</div>
+							<input type="text" class="form-control datepicker" name="edate" id="edate" placeholder="종료일자">
+						</div>
+					</div>
+					<div class="col-md">
+						<label class="form-label d-none">시간</label>
+						<div class="input-daterange input-group">
+							<input class="_time form-control" type="text" name="stime" id="stime" placeholder="시작 시간"  value="09:00">
+							<div class="input-group-append input-group-prepend">
+								<span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>
+							</div>
+							<input class="_time form-control" type="text" name="etime" id="etime" placeholder="종료 시간" value="19:00">
+						</div>
+					</div>
+					<div class="col-md">
+						<label class="form-label d-none ">&nbsp;</label>
+						<button class="btn btn-sm btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span class="">Search</span></button>
+					</div>
+				</div>
+				
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+						<tr>
+							<th rowspan="2" class="text-center">날짜</th>
+							<th rowspan="2" class="text-center">상담원명</th>
+							<th rowspan="2" class="text-center">상담원ID</th>
+							<th rowspan="2" class="text-center">부서</th>
+							<th colspan="6" class="text-center border-bottom-0">총시간</th>
+						</tr>
+						<tr>
+							<th class="text-center">로그온</th>
+							<th class="text-center">대기</th>
+							<th class="text-center">이석</th>
+							<th class="text-center">작업</th>
+							<th class="text-center">기타</th>
+<!--							<th class="text-center">후처리</th>-->
+						</tr>
+					</thead>
+				</table>	
+					
+			</div>
+		</div>
+	</div>
+	
+</main>	
+</html>

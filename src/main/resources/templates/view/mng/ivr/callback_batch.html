@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+		let SELECT_ROW = "";
+
+		$(document).ready(function() {
+			const dt_batch_callback = $('#batch_callback_sel_grid').DataTable({
+				ajax: {
+					url: CONTEXT_PATH+"/mng/ivr/scenariocallbackllist",
+					dataSrc: "Callback"
+				},
+				columns: [
+					{ "data": "SC_CALLBACK" }, //0
+					{ "data": "SC_CALLBACKNAME" },
+					{ "data": "SC_PROMPT_NM" }, //2
+					{ "data": "SC_PROMPT2_NM" },
+					{ "data": "SC_DIGITERROR_NM" },
+					{ "data": "SC_DIGITNONE_NM" }, //5
+					{ "data": "SC_DTMFMIN" },
+					{ "data": "SC_DTMFMAX" },
+					{ "data": "SC_DIGITERRORCOUNT" }, //8
+					{ "data": "SC_DIGITTERM" },
+					{ "data": "SC_LIMIT" }
+				],
+				columnDefs: [
+					{
+						targets: [0],
+						visible: false,
+						searchable: false
+					}
+				],
+				searching: false,
+				ordering: true,
+				scrollY: "650px",
+				scrollCollapse: true
+			});
+
+			dt_batch_callback.on('select', function(e, dt, type, indexes){
+				console.log('=====>>> callback code : '+dt_batch_callback.row(indexes).data().SC_CALLBACK);
+				SELECT_ROW=dt_batch_callback.row(indexes).data();
+				console.log(indexes);
+				let sel_codes='';
+				for(let i=0; i<indexes.length; i++){
+					if(i!=0){
+						sel_codes+='|';
+					}
+					sel_codes+=dt_batch_callback.row(i).data().SC_CALLBACK;
+				}
+				console.log(sel_codes);
+			}).on('deselect', function(){
+				console.log('=====>>> callback code : 0');
+				SELECT_ROW="";
+			});
+
+			//일괄설정 클릭
+			$("._BtnBatch").click(function(){
+				if(SELECT_ROW == "")
+				{
+					alert("일괄설정할 시나리오를 선택하세요.");
+					return false;
+				}
+				$("#_cb_limit").val(10);
+				$('#modal-batch').modal('show');
+			});
+
+			//일괄설정 설정
+			$("#batchfrm").submit(function(e){
+				if(SELECT_ROW == "")
+				{
+					alert("일괄설정할 콜백을 선택하세요.");
+					return false;
+				}
+
+				var sel_datas=dt_batch_callback.rows({ selected: true }).data();
+				var sel_codes='';
+
+				console.log(sel_datas);
+
+				for(var i=0; i<sel_datas.length; i++){
+					if(i!=0){
+						sel_codes+="|";
+					}
+					sel_codes+=sel_datas[i].SC_CALLBACK;
+				}
+				console.log("SC_CALLBACKS -->"+sel_codes);
+				console.log("SC_LIMIT -->"+$("#_cb_limit").val());
+
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/scenariocallbackbatch",
+					data: {
+						SC_CALLBACKS: sel_codes,
+						SC_LIMIT: $("#_cb_limit").val()
+					},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function () {
+					$('#batch_callback_sel_grid').DataTable().ajax.reload();
+				});
+
+				e.preventDefault();
+				$('#modal-batch').modal('hide');
+			});
+		});
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 콜백 일괄 설정
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			<div class="panel-toolbar">
+				<button class="btn btn-xs btn-dark _BtnBatch" data-backdrop="static">일괄 설정</button>
+			</div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+				<table id="batch_callback_sel_grid" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+					<tr>
+						<th colspan="2" class="text-center border-bottom-0">정보</th>
+						<th colspan="4" class="text-center border-bottom-0">음원</th>
+						<th colspan="5" class="text-center border-bottom-0">설정</th>
+					</tr>
+					<tr>
+						<th class="table-tr-bottom-0">일련번호</th>
+						<th class="table-tr-bottom-0">콜백이름</th>
+						<th class="table-tr-bottom-0">음원1</th>
+						<th class="table-tr-bottom-0">음원2</th>
+						<th class="table-tr-bottom-0">에러</th>
+						<th class="table-tr-bottom-0">입력없음</th>
+						<th class="table-tr-bottom-0">최소입력길이</th>
+						<th class="table-tr-bottom-0">최대입력길이</th>
+						<th class="table-tr-bottom-0">오류카운트</th>
+						<th class="table-tr-bottom-0">입력대기시간</th>
+						<th class="table-tr-bottom-0">콜백제한갯수</th>
+					</tr>
+					</thead>
+				</table>
+
+			</div>
+		</div>
+	</div>
+
+	<div id="modal-batch" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">콜백 일괄 설정</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="batchfrm" id="batchfrm" method="post">
+					<div class="modal-body">
+						<div class="form-group">
+							<label>콜밸 제한 갯수</label>
+							<input id="_cb_limit" type="text" placeholder="콜백 처리 제한 갯수를 입력하세요" class="form-control" required>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-dark" id="btnbatch">Apply</button>
+						<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</main>
+</html>

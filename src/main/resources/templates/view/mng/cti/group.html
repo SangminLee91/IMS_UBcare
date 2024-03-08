@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	let SELECTED_ROW = "";
+	$(document).ready(function() {
+		//IFX VirtualGroups
+		const getVgroups = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/code/ifx/groups/list",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$("._vgroups option:not(option:eq(0))").remove();
+				$.each(data.Groups, function (i, item) {
+					$("._vgroups").append($('<option>', { value: item.virtualgroupkey, text: item.virtualgroupname }));
+				});
+				$("._vgroups")[0].sumo.reload();
+				$("._vgroups")[1].sumo.reload();
+			});
+		}
+
+		$('._vgroups').SumoSelect({
+			placeholder: 'Virtual Group Key',
+			search : true,
+			forceCustomRendering: true
+		});
+
+
+		//Grid
+		const table_group = $('#dt_group').DataTable({
+			ajax: {
+				url: CONTEXT_PATH+"/mng/cti/group/list",
+				dataSrc: "Group"
+			},
+			columns: [
+				{ "data": "Group_Seq" },
+				{ "data": "Dept_No" },
+				{ "data": "Dept_Nm" },
+				{ "data": "Group_Nm" },
+				{ "data": "Group_Desc"},
+				{ "data": "Group_Key" },
+				{ "data": "virtualgroupname" }
+			],
+			columnDefs: [
+				{  "targets": [0, 1, 2, 5], "visible": false, className: "never", "searchable": false }
+			],
+			searching: true,
+			ordering: true,
+			scrollY: "536px",
+			scrollCollapse: true
+		});
+		table_group.on('select', function(e, dt, type, indexes){
+			SELECTED_ROW = table_group.row(indexes).data();
+		}).on('deselect', function(){
+			SELECTED_ROW = "";
+		});
+
+		//부서정보 ajax
+		const getDept = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/cmm/ajax/total/dept/list",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$("._dept option:not(option:eq(0))").remove();
+				$.each(data.Dept, function (i, item) {
+					$("._dept").append($('<option>', { value: item.Dept_No, text: item.Dept_Nm }));
+				});
+				$("._dept")[0].sumo.reload();
+				$("._dept")[1].sumo.reload();
+			});
+		}
+
+
+		//저장
+		//Add Modal Open
+		$('#add').on('show.bs.modal', function (e) {
+			$("#add_Dept_No").val("");
+			$("#add_Group_Nm").val("");
+			//$("#add_Group_Desc").val("");
+			$("#add_Group_Key").val("");
+
+			let obj = [];
+			$('#add_Dept_No option:selected').each(function () {
+				obj.push($(this).index());
+			});
+
+			for (let i = 0; i < obj.length; i++) {
+				$('._dept')[0].sumo.unSelectItem(obj[i]);
+			}
+
+			obj = [];
+			$('#add_Group_Key option:selected').each(function () {
+				obj.push($(this).index());
+			});
+			for(let i=0; i < $('#add_Group_Key option').length; i++){
+			  $("._vgroups")[0].sumo.unSelectItem(i);
+			}
+
+		});
+
+		//Add
+		$("#addfrm").submit(function(e){
+			//var Emp_No = $("#add_Emp_No").val().toString().replace(/,/gi, "|"); // , => | 로 replace처리
+			let Emp_No = "";
+
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mng/cti/group/add",
+				data: {
+					Dept_No: $("#add_Dept_No").val()
+					, Group_Nm: $("#add_Group_Nm").val()
+					//, Group_Desc: $("#add_Group_Desc").val()
+					, Group_Key: $("#add_Group_Key").val()
+					, Emp_No : Emp_No
+					},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$('#dt_group').DataTable().ajax.reload();
+			});
+
+			e.preventDefault();
+			$('#add').modal('hide');
+		});
+
+		//수정
+		//Edit Btn Click
+		$("._BtnEdit").click(function(){
+			if(SELECTED_ROW == "")
+			{
+				alert("수정할 대상을 선택하세요.");
+				return false;
+			}
+
+			$('#edt').modal('show');
+		});
+
+		//Edit Modal Open
+		$('#edt').on('show.bs.modal', function (e) {
+			$("#edt_Dept_No").val(SELECTED_ROW.Dept_No);
+			$("#edt_Group_Nm").val(SELECTED_ROW.Group_Nm);
+			//$("#edt_Group_Desc").val(SELECTED_ROW.Group_Desc);
+			$("#edt_Group_Key").val(SELECTED_ROW.Group_Key);
+
+			$("#edt_Group_Key")[0].sumo.reload();
+
+			let obj = [];
+			$('#edt_Emp_No option:selected').each(function () {
+				obj.push($(this).index());
+			});
+			for (let i = 0; i < obj.length; i++) {
+				$('._dept')[1].sumo.unSelectItem(obj[i]);
+			}
+
+		});
+
+		$("#edtfrm").submit(function(e){
+			let Emp_No = "";
+
+			//Save
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mng/cti/group/edit",
+				data: {
+					Group_Seq: SELECTED_ROW.Group_Seq
+					, Dept_No: $("#edt_Dept_No").val()
+					, Group_Nm: $("#edt_Group_Nm").val()
+					//, Group_Desc: $("#edt_Group_Desc").val()
+					, Group_Key: $("#edt_Group_Key").val()
+					, Emp_No : Emp_No
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$('#dt_group').DataTable().ajax.reload();
+			});
+
+			e.preventDefault();
+
+			SELECTED_ROW = "";
+			$('#edt').modal('hide');
+
+		});
+
+		//삭제
+		$("._BtnDel").click(function(){
+			if(SELECTED_ROW == "")
+			{
+				alert("삭제할 대상을 선택하세요.");
+				return false;
+			}
+
+			if(confirm("["+SELECTED_ROW.Group_Nm +"] 을 삭제 하시겠습니까?\nOSCC에는 삭제되지 않습니다."))
+			{
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/cti/group/del",
+					data: {
+						Group_Seq : SELECTED_ROW.Group_Seq
+					},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					$('#dt_group').DataTable().ajax.reload();
+				});
+
+				SELECTED_ROW = "";
+			}
+			else
+			{
+				return false;
+			}
+		});
+
+		$('._dept').SumoSelect({
+			placeholder: '부서',
+			search : true,
+			forceCustomRendering: true
+		});
+
+		getDept();
+		getVgroups();
+	});
+
+
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 그룹 정보
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			<div class="panel-toolbar">
+				<button class="btn btn-xs btn-dark _BtnAdd" data-toggle="modal" data-target="#add" data-backdrop="static">Add</button>
+				<button class="btn btn-xs btn-dark ml-1 _BtnEdit" data-target="#edt" data-backdrop="static">Edit</button>
+				<button class="btn btn-xs btn-dark ml-1 _BtnDel">Delete</button>
+			</div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+				<table id="dt_group" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+						<tr>
+							<th>Group_Seq</th>
+							<th>Dept_No</th>
+							<th>부서명</th>
+							<th>그룹명</th>
+							<th>설명</th>
+							<th width="150">Group Key(OSCC)</th>
+							<th>OSCC 그룹명</th>
+						</tr>
+					</thead>
+				</table>		
+			</div>
+		</div>
+	</div>
+
+
+	<div id="add" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">그룹 추가</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="addfrm" id="addfrm" method="post">
+					<div class="modal-body">
+						<div class="form-group">
+							<label>부서</label>
+							<select class="_dept hide" id="add_Dept_No" required oninvalid="this.setCustomValidity('그룹이 속한 부서를 선택하세요.')" oninput="this.setCustomValidity('')">
+								<option value="">부서 선택</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>그룹명</label>
+							<input type="text" id="add_Group_Nm" placeholder="그룹명" class="form-control" required oninvalid="this.setCustomValidity('그룹명을 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>Group Key(OSCC)</label>
+							<!-- <input type="text" id="add_Group_Key" placeholder="Group Key (OSCC)" class="form-control" > --> <!-- required oninvalid="this.setCustomValidity('OSCC 그룹 Key 값을 입력하세요.')" oninput="this.setCustomValidity('')" -->
+							<select class="_vgroups hide" id="add_Group_Key">
+								<option value="">Virtual Group Key</option>
+							</select>
+
+						</div>
+
+					</div>
+
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-xs btn-dark">Save</button>
+						<button type="button" class="btn btn-xs btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div id="edt" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">그룹 수정</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="edtfrm" id="edtfrm" method="post">
+					<div class="modal-body">
+						<div class="form-group">
+							<label>부서</label>
+							<select class="form-control _dept hide" id="edt_Dept_No" required oninvalid="this.setCustomValidity('그룹이 속한 부서를 선택하세요.')" oninput="this.setCustomValidity('')">
+								<option value="">부서 선택</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>그룹명</label>
+							<input type="text" id="edt_Group_Nm" placeholder="그룹명" class="form-control" required oninvalid="this.setCustomValidity('그룹명을 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>Group Key(OSCC)</label>
+							<select class="_vgroups hide" id="edt_Group_Key">
+								<option value="">Virtual Group Key</option>
+							</select>
+
+							<!-- <input type="text" id="edt_Group_Key" placeholder="Group Key (OSCC)" class="form-control"> --> <!--  required oninvalid="this.setCustomValidity('OSCC 그룹 Key 값을 입력하세요.')" oninput="this.setCustomValidity('')" -->
+
+						</div>
+
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-xs btn-dark">Save</button>
+						<button type="button" class="btn btn-xs btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+</main>
+
+</html>
+
+

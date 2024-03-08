@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	$(document).ready(function() {
+		const table = $('#dt_basic').DataTable({
+			processing: true,
+			data:[],
+			columns: [
+				{ "data": "DT" },
+				{ "data": "SERVICE_NAME" },
+				{ "data": "RECEIVE_CNT" },
+				{ "data": "AGENT_CNT" },
+				{ "data": "TRANS_CNT" }
+			],
+			iDisplayLength: 20,
+			bPaginate: true,
+			searching: false
+		});
+
+		//Excel Btn
+		const buttons = new $.fn.dataTable.Buttons(table, {
+			 buttons: [
+			 {
+				  extend: 'excelHtml5',
+				  text: '<i class="fal fa-file-excel-o"></i> Excel',
+				  title: '서비스별통계_'+getSimpleToday(),
+				  className: 'btn btn-xs btn-dark',
+				  exportOptions: {
+					modifier: {
+					  page: 'all'
+					},
+					columns: ':visible'
+				  },
+				  customize: function ( xlsx ){
+					  let sheet = xlsx.xl.worksheets['sheet1.xml'];
+					  $('row c', sheet).attr( 's', '25' ); //boder
+				  }
+				}
+			]
+		}).container().appendTo($('#buttons'));
+
+		//서비스목록 가져오기
+		const getServicelist = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mng/cti/group/grant/list",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$.each(data.Group, function (i, item) {
+					$("#servicelist").append($('<option>', { value: item.Group_Seq, text: item.Group_Nm }));
+				});
+
+				$('#servicelist').multiselect({
+					includeFilterClearBtn: false,
+					enableFiltering: true,
+					includeSelectAllOption: true,
+					selectAllText: '전체선택',
+					nonSelectedText: '서비스이름',
+					allSelectedText: '전체 선택됨',
+					buttonWidth: '100%',
+					maxHeight: 400,
+					buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+				});
+			});
+		}
+
+		//검색Btn
+		$("._searchGo").click(function(){
+
+			let sevicelist = $("#servicelist").val().toString().replace(/,/gi, "|"); // , => | 로 replace처리
+			let Srch_Type = $("._searchType:checked").val();
+			let sDate = $("#sdate").val();
+			let eDate = $("#edate").val();
+
+			//console.log('start search!!!');
+			$(".dataTables_processing").css("display","block");
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/stt/ivr/service/stat",
+				data: {
+						servicelist: sevicelist
+						, Srch_Type: Srch_Type
+						, Start_Dt: sDate
+						, End_Dt: eDate
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				table.clear().draw();
+				table.rows.add(data.SrvStat).draw();
+				$(".dataTables_processing").css("display","none");
+			});
+		})
+
+		getServicelist();
+		$("#sdate").val(getToday()); //오늘날짜 기본
+		$("#edate").val(getToday()); //오늘날짜 기본
+
+	});
+	</script>
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 서비스별 통계
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			 <div id="buttons" class="btn-group"></div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+
+				<div class="form-row">
+					<div class="col-md-3">
+						<label class="form-label d-none">부서</label>
+						<select multiple="multiple" id="servicelist"></select>
+					</div>
+					<div class="col-md">
+						<label class="form-label d-none">날짜</label>
+						<div class="input-daterange input-group">
+							<input type="text" class="form-control datepicker" name="sdate" id="sdate" placeholder="시작일자">
+							<div class="input-group-append input-group-prepend">
+								<span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>
+							</div>
+							<input type="text" class="form-control datepicker" name="edate" id="edate" placeholder="종료일자">
+						</div>
+					</div>
+					<div class="col-sm-2">
+						<label class="form-label d-none">&nbsp;</label>
+						<div class="frame-wrap pt-2">
+							<div class="custom-control custom-radio custom-control-inline">
+								<input type="radio" class="_searchType custom-control-input" id="rdo_month" name="searchType" value="0" checked="">
+								<label class="custom-control-label" for="rdo_month">월별</label>
+							</div>
+							<div class="custom-control custom-radio custom-control-inline">
+								<input type="radio" class="_searchType custom-control-input" id="rdo_day" name="searchType" value="1">
+								<label class="custom-control-label" for="rdo_day">일별</label>
+							</div>
+						</div>
+					</div>
+					<div class="col-md">
+						<label class="form-label d-none ">&nbsp;</label>
+						<button class="btn btn-sm btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span class="">Search</span></button>
+					</div>
+				</div>
+
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">				                
+					<tr>
+						<th class="text-center">날짜</th>
+						<th class="text-center">서비스이름</th>
+						<th class="text-center">인입</th>
+						<th class="text-center">상담원연결</th>
+						<th class="text-center">서비스전환</th>
+					</tr>
+					</thead>
+				</table>
+			
+			</div>
+		</div>
+	</div>
+	
+</main>			
+</html>>

@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        layout:decorate="~{layouts/layout}">
+
+<script src="<c:url value='/js/plugin/bootstrap-timepicker/bootstrap-timepicker.min.js'/>"></script>
+
+<!-- 
+모달 스크롤 시
+<style>
+.modal .modal-content{
+overflow:hidden;
+}
+.modal-body{
+max-height: 500px;
+overflow-y:scroll;
+}
+ -->
+</style>
+<script type="text/javascript">
+var SELECT_ROW = "";
+var SELECT_DTL_ROW = "";
+
+$(document).ready(function() {
+	//부서
+	var getDept = function() {
+        $.ajax({
+            method: "POST",
+            url: "<c:url value='/cmm/api/dept.do'/>", 
+			beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+        }).done(function (data) {
+       		$.each(data.Dept, function (i, item) {
+       			$(".sel_dept").append($('<option>', { value: item.Dept_No, text: item.Dept_Nm }));
+     		});
+       		$(".sel_dept")[0].sumo.reload();
+        });
+        
+	}
+	
+	//안내음원
+	var getPrompt = function() {
+        $.ajax({
+            method: "POST",
+            url: "<c:url value='/mng/ivr/voicelist.do'/>", 
+			beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+        }).done(function (data) {
+       		$.each(data.data, function (i, item) {
+       			$(".sel_prompt").append($('<option>', { value: item.SC_PROMPT, text: item.SC_FILENAME }));
+     		});
+       		$(".sel_prompt")[0].sumo.reload();
+       		$(".sel_prompt")[1].sumo.reload();
+        });
+	}
+	
+	//근무시간 종류 : code-8, 1-평일, 2-토요일, 3-일요일, 4-공휴일
+	var getWHType = function() {
+        $.ajax({
+            method: "POST",
+            url: "<c:url value='/api/code/codedtllist.do'/>",
+            data: {
+            	Cmm_Code : 8
+            }, 
+			beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+        }).done(function (data) {
+       		$.each(data.Code, function (i, item) {
+       			$(".sel_whtype").append($('<option>', { value: item.Cmm_Dtl_Code, text: item.Cmm_Dtl_Code_Nm }));
+     		});
+       		$(".sel_whtype")[0].sumo.reload();
+        });
+	}
+	
+	//근무시간 route 종류 : code-9, 1-메뉴, 2-route, 3-콜백, 4-공지, 5-종료
+	var getWHRoute = function() {
+        $.ajax({
+            method: "POST",
+            url: "<c:url value='/api/code/codedtllist.do'/>",
+            data: {
+            	Cmm_Code : 9
+            }, 
+			beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+        }).done(function (data) {
+       		$.each(data.Code, function (i, item) {
+       			$(".sel_whroute").append($('<option>', { value: item.Cmm_Dtl_Code, text: item.Cmm_Dtl_Code_Nm }));
+     		});
+       		$(".sel_whroute")[0].sumo.reload();
+       		$(".sel_whroute")[1].sumo.reload();
+        });
+	}
+	
+	//근무시간 Set Grid
+	
+	//근무시간 Grid
+	$.fn.dataTable.ext.errMode = 'none'; //datatable error disabled
+	var table = $('#whcode_dt').DataTable({
+		"ajax": {
+            "url": "<c:url value='/mng/ivr/workhoursetlist.do'/>",
+            "dataSrc": "WHSet"
+        },
+        "columns": [
+            { "data": "WH_Code" },
+            { "data": "WH_Code_Nm" }
+        ],
+        "columnDefs": [
+            { 
+                "targets": [0],
+                "visible": false,
+                "searchable": false
+            }
+        ],
+        "stateSave": true,
+        "bInfo": false,
+        "searching": true,
+        "bFilter" : false,
+        "bPaginate": false,
+		"autoWidth" : true,
+		"sDom": "<'dt-toolbar'<'col-xs-12 col-sm-12'f><'col-sm-6 col-xs-12 hidden-xs'l>r>t<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'><'col-xs-12 col-sm-6'p>>",
+        "oLanguage": {
+		    "sSearch": '<span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span>',
+		    "sEmptyTable": "데이터가 없습니다",
+		    "sZeroRecords": "검색 결과가 없습니다"
+		}
+	});
+                
+	//근무시간Set 상세 Grid
+	var CmmDtl_dt = $('#whcodedtl_dt').DataTable({
+		"ajax": {
+            "url": "<c:url value='/mng/ivr/workhourlist.do'/>",
+            "dataSrc": "WH",
+            "data": function(d){
+            	d.WH_Code = SELECT_ROW.WH_Code
+            }
+        },
+        "columns": [
+        	{ "data": "WH_Seq"},
+            { "data": "WH_Code" },
+            { "data": "WH_Type" },
+            { "data": "WH_Type_Name" },
+            { "data": "WH_START" },
+            { "data": "WH_END" },5
+            { "data": "WH_LUNCH_YN" },
+            { "data": "WH_LUNCH_START" },
+            { "data": "WH_LUNCH_END" },
+            { "data": "WH_BEFORE_PROMPT" },
+            { "data": "WH_BEFORE_PROMPT_NM" },
+            { "data": "WH_AFTER_PROMPT" },
+            { "data": "WH_AFTER_PROMPT_NM" },
+            { "data": "WH_LUNCH_PROMPT" },
+            { "data": "WH_LUNCH_PROMPT_NM" },
+            { "data": "WH_OUTSERVICE" },
+            { "data": "WH_OUTSERVICE_NAME" },
+            { "data": "WH_OUTSERVICE_TARGET" },
+            { "data": "WH_OUTSERVICE_TARGET_NM" },
+            { "data": "WH_IN_LUNCH" },
+            { "data": "WH_IN_LUNCH_NAME" },
+            { "data": "WH_IN_LUNCH_TARGET" },
+            { "data": "WH_IN_LUNCH_TARGET_NM" }
+        ], 
+        "columnDefs": [
+        	{
+                // The `data` parameter refers to the data for the cell (defined by the
+                // `data` option, which defaults to the column being worked with, in
+                // this case `data: 0`.
+                "render": function ( data, type, row ) {
+                	if(data==0){
+                		return '';
+                	}
+                	else{
+                		return '사용';
+                	}
+                },
+                "targets": 6
+            },
+            { 
+                "targets": [0,1,2,6,9,11,13,15,17,19,21],
+                "visible": false,
+                "searchable": false
+            }
+        ],
+        "bInfo": false,
+        "searching": true,
+        "bFilter" : false,
+        "bPaginate": false,
+		"autoWidth" : true,
+		"sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>t<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'><'col-xs-12 col-sm-6'p>>",
+        "oLanguage": {
+		    "sSearch": '<span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span>',
+		    "sEmptyTable": "데이터가 없습니다",
+		    "sZeroRecords": "검색 결과가 없습니다"
+		}
+	});
+	
+	//Row Click
+    $('#whcode_dt tbody').on('click', 'tr', function () {
+    	SELECT_ROW = "";
+    		
+        if ( $(this).hasClass('selected') ) {
+            $(this).removeClass('selected');
+        }
+        else {
+        	table.$('tr.selected').removeClass('selected');
+            $(this).addClass('selected');
+            
+            var data = table.row(this).data();
+            SELECT_ROW = data;
+        }
+        //상세데이타 재조회
+        $('#whcodedtl_dt').DataTable().ajax.reload();
+        SELECT_DTL_ROW = "";
+    });
+	
+	//근무시간 상세 Row  Click
+    $('#whcodedtl_dt tbody').on('click', 'tr', function () {
+    	SELECT_DTL_ROW = "";
+    		
+        if ( $(this).hasClass('selected') ) {
+            $(this).removeClass('selected');
+        }
+        else {
+        	CmmDtl_dt.$('tr.selected').removeClass('selected');
+            $(this).addClass('selected');
+            
+            var data = CmmDtl_dt.row(this).data();
+            SELECT_DTL_ROW = data;
+        }
+     });
+	
+	//
+	//--------------------------WorkHour Set Manager
+	//
+	//등록처리
+	$("#addSetfrm").submit(function(e){
+	    $.ajax({
+	        method: "POST",
+	        url: "<c:url value='/mng/ivr/workhoursetadd.do'/>",
+	        data: {WH_Code_Nm: $("#addSet_WH_Code_Nm").val(),
+	        	Dept_No:$("#addSet_Dept_No").val()}, 
+			beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	    }).done(function (data) {
+	    	$('#whcode_dt').DataTable().ajax.reload();
+	    });
+	    
+		e.preventDefault();
+		
+		SELECT_ROW = "";
+		$("#addSet_Dept_No").val("")
+		$("#addSet_WH_Code_Nm").val("");
+		$("#addSet_Dept_No")[0].sumo.reload();
+		$('#modal-addset').modal('hide');
+	});
+	//Edit Btn Click
+	$("._BtnEditSet").click(function(){
+		if(SELECT_ROW == "")
+		{
+			alertify.alert("","근무시간 그룹을 선택하세요.");
+			return false;
+		}
+		
+		$("#edtSet_WH_Code").val(SELECT_ROW.WH_Code);
+		$("#edtSet_Dept_No").val(SELECT_ROW.Dept_No);
+		$("#edtSet_WH_Code_Nm").val(SELECT_ROW.WH_Code_Nm);
+		$("#edtSet_Dept_No")[0].sumo.reload();
+		
+		$('#modal-edtset').modal('show');
+	});
+	//수정 처리
+	$("#edtSetfrm").submit(function(e){
+	    $.ajax({
+	        method: "POST",
+	        url: "<c:url value='/mng/ivr/workhoursetedit.do'/>",
+	        data: {WH_Code: $("#edtSet_WH_Code").val(), 
+	        	Dept_No:$("#edtSet_Dept_No").val(),
+	        	WH_Code_Nm: $("#edtSet_WH_Code_Nm").val()}, 
+			beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	    }).done(function (data) {
+	    	$('#whcode_dt').DataTable().ajax.reload();
+	    });
+	    
+		e.preventDefault();
+		SELECT_ROW = "";
+		$('#modal-edtset').modal('hide');
+	});
+	//삭제
+	$("._BtnDelSet").click(function(){
+		if(SELECT_ROW == "")
+		{
+			alertify.alert("","삭제할  그룹을 선택하세요.");
+			return false;
+		}
+		
+		alertify.confirm("근무시간 그룹 삭제", "["+SELECT_ROW.WH_Code_Nm +"] 그룹을 삭제 하시겠습니까?",
+		function(){
+		    $.ajax({
+		        method: "POST",
+		        url: "<c:url value='/mng/ivr/workhoursetdel.do'/>",
+		        data: {WH_Code: SELECT_ROW.WH_Code}, 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+		    }).done(function (data) {
+		    	$('#whcode_dt').DataTable().ajax.reload();
+		    });
+		    
+		    SELECT_ROW = "";
+			alertify.success('Ok');
+		},
+		function(){
+			alertify.error('Cancel');
+		});
+
+
+	});
+	
+	//
+	//---------------------------
+	//
+	
+		//공통코드 상세 등록 Btn
+	$("._BtnAdd").click(function(){
+		if(SELECT_ROW == "")
+		{
+			alertify.alert("","근무시간 그룹을 선택하세요.");
+			return false;
+		}
+
+		$("#add_WH_Code_Nm").val(SELECT_ROW.WH_Code_Nm);
+		$("#add_WH_Type").val("");
+		$("#add_WH_Type")[0].sumo.reload();
+		$("#add_WH_START").val("09:00");
+		$("#add_WH_END").val("18:00");
+		$("#add_WH_LUNCH_YN").val("");
+		$("#add_WH_LUNCH_YN")[0].sumo.reload();
+		$("#add_WH_LUNCH_START").val("12:00");
+		$("#add_WH_LUNCH_END").val("13:00");
+		$("#add_WH_BEFORE_PROMPT").val("");
+		$("#add_WH_BEFORE_PROMPT")[0].sumo.reload();
+		$("#add_WH_AFTER_PROMPT").val("");
+		$("#add_WH_AFTER_PROMPT")[0].sumo.reload();
+		$("#add_WH_OUTSERVICE").val("");
+		$("#add_WH_OUTSERVICE")[0].sumo.reload();
+		$("#add_WH_OUTSERVICE_TARGET").val("");
+		$("#add_WH_OUTSERVICE_CODE").val("");
+		$("#add_WH_OUTSERVICE_CODE")[0].sumo.reload();
+		$("#add_WH_IN_LUNCH").val("");
+		$("#add_WH_IN_LUNCH")[0].sumo.reload();
+		$("#add_WH_IN_LUNCH_TARGET").val("");
+		$("#add_WH_IN_LUNCH_CODE").val("");
+		$("#add_WH_IN_LUNCH_CODE")[0].sumo.reload();
+		
+		//초기값
+		$('.sel_next_target').hide();
+		$('.sel_next_code').hide();
+		$(".sel_next_target").attr( 'disabled', true );
+		$(".sel_next_code").attr( 'disabled', true );
+		$("._sel_lunch").attr( 'disabled', true ); //초기값은 사용안함이다.
+		$('#modal-add').modal('hide');
+	});
+	
+	
+	//등록처리
+	$("#addfrm").submit(function(e){
+		var outsvc_next=Number($("#add_WH_OUTSERVICE").val());
+		var outsvc_nextaction=null;
+		var lcsvc_next=Number($("#add_WH_IN_LUNCH").val());
+		var lcsvc_nextaction=null;
+		
+		switch(outsvc_next){
+		case 1:
+		case 2:
+		case 4:
+			outsvc_nextaction=$("#add_WH_OUTSERVICE_CODE").val();
+			break;
+		default:
+			outsvc_nextaction=$("#add_WH_OUTSERVICE_TARGET").val();
+			break;
+		}
+		
+		switch(lcsvc_next){
+		case 1:
+		case 2:
+		case 4:
+			lcsvc_nextaction=$("#add_WH_IN_LUNCH_CODE").val();
+			break;
+		default:
+			lcsvc_nextaction=$("#add_WH_IN_LUNCH_TARGET").val();
+			break;
+		}
+		
+		
+	    $.ajax({
+	        method: "POST",
+	        url: "<c:url value='/mng/ivr/workhouradd.do'/>",
+	        data: {
+	        	WH_Code: SELECT_ROW.WH_Code,
+	        	WH_Type: $("#add_WH_Type").val(),
+	        	WH_START: $("#add_WH_START").val().replace(/:/gi, ""),
+	        	WH_END: $("#add_WH_END").val().replace(/:/gi, ""),
+	        	WH_LUNCH_YN: $("#add_WH_LUNCH_YN").val(),
+	        	WH_LUNCH_START: $("#add_WH_LUNCH_START").val().replace(/:/gi, ""),
+	        	WH_LUNCH_END: $("#add_WH_LUNCH_END").val().replace(/:/gi, ""),
+	        	WH_BEFORE_PROMPT: $("#add_WH_BEFORE_PROMPT").val().replace(/^\s+|\s+$/g,""),
+	        	WH_AFTER_PROMPT: $("#add_WH_AFTER_PROMPT").val().replace(/^\s+|\s+$/g,""),
+	        	WH_OUTSERVICE: outsvc_next,
+	        	WH_OUTSERVICE_TARGET: outsvc_nextaction,
+	        	WH_IN_LUNCH: lcsvc_next,
+	        	WH_IN_LUNCH_TARGET: lcsvc_nextaction
+        	}, 
+			beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	    }).done(function (data) {
+	    	$('#whcodedtl_dt').DataTable().ajax.reload();
+	    });
+	    
+		e.preventDefault();
+		
+		$('#modal-add').modal('hide');
+	});
+	//근무시간 그룹의 근무시간 Edit Btn Click
+	$("._BtnEdit").click(function(){
+		if(SELECT_DTL_ROW == "")
+		{
+			alertify.alert("","수정할 근무시간을 선택하세요.");
+			return false;
+		}
+
+		if(SELECT_DTL_ROW.WH_LUNCH_YN==1){
+			$("._sel_lunch").attr( 'disabled', false ); //초기값은 사용안함이다.
+		}
+		else{
+			$("._sel_lunch").attr( 'disabled', true ); //초기값은 사용안함이다.
+		}
+
+		$("#edt_WH_Code_Nm").val(SELECT_ROW.WH_Code_Nm);
+		$("#edt_WH_Type").val(SELECT_DTL_ROW.WH_Type);
+		$("#edt_WH_Type")[0].sumo.reload();
+		$("#edt_WH_START").val(SELECT_DTL_ROW.WH_START);
+		$("#edt_WH_END").val(SELECT_DTL_ROW.WH_END);
+		$("#edt_WH_LUNCH_YN").val(SELECT_DTL_ROW.WH_LUNCH_YN);
+		$("#edt_WH_LUNCH_YN")[0].sumo.reload();
+		$("#edt_LUNCH_START").val(SELECT_DTL_ROW.LUNCH_START);
+		$("#edt_WH_LUNCH_END").val(SELECT_DTL_ROW.WH_LUNCH_END);
+		$("#edt_WH_BEFORE_PROMPT").val(SELECT_DTL_ROW.WH_BEFORE_PROMPT);
+		$("#edt_WH_BEFORE_PROMPT")[0].sumo.reload();
+		$("#edt_WH_AFTER_PROMPT").val(SELECT_DTL_ROW.WH_AFTER_PROMPT);
+		$("#edt_WH_AFTER_PROMPT")[0].sumo.reload();
+		
+		$("#edt_WH_OUTSERVICE").val(SELECT_DTL_ROW.WH_OUTSERVICE);
+		$("#edt_WH_OUTSERVICE")[0].sumo.reload();
+		
+		$("#edt_WH_IN_LUNCH").val(SELECT_DTL_ROW.WH_IN_LUNCH);
+		$("#edt_WH_IN_LUNCH")[0].sumo.reload();
+
+		switch(SELECT_DTL_ROW.WH_OUTSERVICE){
+		case 1:
+			$('.sel_next_target').filter('._sel_outservice').hide();
+			$('.sel_next_code').filter('._sel_outservice').show();
+			$('.sel_next_target ').filter('._sel_outservice').attr( 'disabled', true );
+			$('.sel_next_code ').filter('._sel_outservice').attr( 'disabled', false );
+	        $.ajax({
+	            method: "POST",
+	            url: "<c:url value='/mng/ivr/menusetlist.do'/>",
+	            data: {
+	            	Cmm_Code : 9
+	            }, 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	        }).done(function (data) {
+	        	$('.sel_nextcode').filter('._sel_outservice').empty();
+   	       		$.each(data.SCSet, function (i, item) {
+   	       			$('.sel_nextcode').filter('._sel_outservice').append($('<option>', { value: item.SC_MENU, text: item.SC_MENUNAME }));
+   	     		});
+   	       		$('#edt_WH_OUTSERVICE_CODE').val(Number(SELECT_DTL_ROW.WH_OUTSERVICE_TARGET));
+	       		$('.sel_nextcode')[2].sumo.reload();
+	        });
+			break;
+		case 2:
+			$('.sel_next_target').filter('._sel_outservice').hide();
+			$('.sel_next_code').filter('._sel_outservice').show();
+			$('.sel_next_target ').filter('._sel_outservice').attr( 'disabled', true );
+			$('.sel_next_code ').filter('._sel_outservice').attr( 'disabled', false );
+	        $.ajax({
+	            method: "POST",
+	            url: "<c:url value='/mng/ivr/routelist.do'/>",
+	            data: {
+	            	Cmm_Code : 9
+	            }, 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	        }).done(function (data) {
+	        	$('.sel_nextcode').filter('._sel_outservice').empty();
+   	       		$.each(data.Route, function (i, item) {
+   	       			$('.sel_nextcode').filter('._sel_outservice').append($('<option>', { value: item.RT_ROUTE, text: item.RT_ROUTENAME }));
+   	     		});
+   	       		$('#edt_WH_OUTSERVICE_CODE').val(Number(SELECT_DTL_ROW.WH_OUTSERVICE_TARGET));
+	       		$('.sel_nextcode')[2].sumo.reload();
+	        });
+			break;
+		case 4:
+			$('.sel_next_target').filter('._sel_outservice').hide();
+			$('.sel_next_code').filter('._sel_outservice').show();
+			$('.sel_next_target ').filter('._sel_outservice').attr( 'disabled', true );
+			$('.sel_next_code ').filter('._sel_outservice').attr( 'disabled', false );
+	        $.ajax({
+	            method: "POST",
+	            url: "<c:url value='/mng/ivr/noticelist.do'/>",
+	            data: {
+	            	Cmm_Code : 9
+	            }, 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	        }).done(function (data) {
+	        	$('.sel_nextcode').filter('._sel_outservice').empty();
+   	       		$.each(data.Notice, function (i, item) {
+   	       			$('.sel_nextcode').filter('._sel_outservice').append($('<option>', { value: item.NT_Code, text: item.NT_NAME }));
+   	     		});
+   	       		$('#edt_WH_OUTSERVICE_CODE').val(Number(SELECT_DTL_ROW.WH_OUTSERVICE_TARGET));
+	       		$('.sel_nextcode')[2].sumo.reload();
+	        });
+			break;
+		case 3:
+		case 5:
+		case 6:
+			$('.sel_next_target').filter('._sel_outservice').show();
+			$('.sel_next_code').filter('._sel_outservice').hide();
+			$('.sel_next_target').filter('._sel_outservice').attr( 'disabled', false );
+			$('.sel_next_code').filter('._sel_outservice').attr( 'disabled', true );
+			$('#edt_WH_OUTSERVICE_TARGET').val(SELECT_DTL_ROW.WH_OUTSERVICE_TARGET);
+			break;
+		default:
+			$('.sel_next_target').filter('._sel_outservice').hide();
+			$('.sel_next_code').filter('._sel_outservice').hide();
+			$('.sel_next_target').filter('._sel_outservice').attr( 'disabled', true );
+			$('.sel_next_code ').filter('._sel_outservice').attr( 'disabled', true );
+			break;
+		}
+	
+		switch(SELECT_DTL_ROW.WH_IN_LUNCH){
+		case 1:
+			$('.sel_next_target').filter('._sel_lunch').hide();
+			$('.sel_next_code').filter('._sel_lunch').show();
+			$('.sel_next_target ').filter('._sel_lunch').attr( 'disabled', true );
+			$('.sel_next_code ').filter('._sel_lunch').attr( 'disabled', false );
+	        $.ajax({
+	            method: "POST",
+	            url: "<c:url value='/mng/ivr/menusetlist.do'/>",
+	            data: {
+	            	Cmm_Code : 9
+	            }, 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	        }).done(function (data) {
+	        	$('.sel_nextcode').filter('._sel_lunch').empty();
+   	       		$.each(data.SCSet, function (i, item) {
+   	       			$('.sel_nextcode').filter('._sel_lunch').append($('<option>', { value: item.SC_MENU, text: item.SC_MENUNAME }));
+   	     		});
+   	       		$('#edt_WH_IN_LUNCH_CODE').val(Number(SELECT_DTL_ROW.WH_IN_LUNCH_TARGET));
+	       		$('.sel_nextcode')[3].sumo.reload();
+	        });
+			break;
+		case 2:
+			$('.sel_next_target').filter('._sel_lunch').hide();
+			$('.sel_next_code').filter('._sel_lunch').show();
+			$('.sel_next_target ').filter('._sel_lunch').attr( 'disabled', true );
+			$('.sel_next_code ').filter('._sel_lunch').attr( 'disabled', false );
+	        $.ajax({
+	            method: "POST",
+	            url: "<c:url value='/mng/ivr/routelist.do'/>",
+	            data: {
+	            	Cmm_Code : 9
+	            }, 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	        }).done(function (data) {
+	        	$('.sel_nextcode').filter('._sel_lunch').empty();
+   	       		$.each(data.Route, function (i, item) {
+   	       			$('.sel_nextcode').filter('._sel_lunch').append($('<option>', { value: item.RT_ROUTE, text: item.RT_ROUTENAME }));
+   	     		});
+   	       		$('#edt_WH_IN_LUNCH_CODE').val(Number(SELECT_DTL_ROW.WH_IN_LUNCH_TARGET));
+	       		$('.sel_nextcode')[3].sumo.reload();
+	        });
+			break;
+		case 4:
+			$('.sel_next_target').filter('._sel_lunch').hide();
+			$('.sel_next_code').filter('._sel_lunch').show();
+			$('.sel_next_target ').filter('._sel_lunch').attr( 'disabled', true );
+			$('.sel_next_code ').filter('._sel_lunch').attr( 'disabled', false );
+	        $.ajax({
+	            method: "POST",
+	            url: "<c:url value='/mng/ivr/noticelist.do'/>",
+	            data: {
+	            	Cmm_Code : 9
+	            }, 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	        }).done(function (data) {
+	        	$('.sel_nextcode').filter('._sel_lunch').empty();
+   	       		$.each(data.Notice, function (i, item) {
+   	       			$('.sel_nextcode').filter('._sel_lunch').append($('<option>', { value: item.NT_Code, text: item.NT_NAME }));
+   	     		});
+   	       		$('#edt_WH_IN_LUNCH_CODE').val(Number(SELECT_DTL_ROW.WH_IN_LUNCH_TARGET));
+	       		$('.sel_nextcode')[3].sumo.reload();
+	        });
+			break;
+		case 3:
+		case 5:
+		case 6:
+			$('.sel_next_target').filter('._sel_lunch').show();
+			$('.sel_next_code').filter('._sel_lunch').hide();
+			$('.sel_next_target').filter('._sel_lunch').attr( 'disabled', false );
+			$('.sel_next_code').filter('._sel_lunch').attr( 'disabled', true );
+			$('#edt_WH_IN_LUNCH_TARGET').val(SELECT_DTL_ROW.WH_IN_LUNCH_TARGET);
+			break;
+		default:
+			$('.sel_next_target').filter('._sel_lunch').hide();
+			$('.sel_next_code').filter('._sel_lunch').hide();
+			$('.sel_next_target').filter('._sel_lunch').attr( 'disabled', true );
+			$('.sel_next_code ').filter('._sel_lunch').attr( 'disabled', true );
+			break;
+		}
+
+		$('#modal-edt').modal('show');
+	});
+	//수정 처리
+	$("#edtfrm").submit(function(e){
+		var outsvc_next=Number($("#edt_WH_OUTSERVICE").val());
+		var outsvc_nextaction=null;
+		var lcsvc_next=Number($("#edt_WH_IN_LUNCH").val());
+		var lcsvc_nextaction=null;
+		
+		switch(outsvc_next){
+		case 1:
+		case 2:
+		case 4:
+			outsvc_nextaction=$("#edt_WH_OUTSERVICE_CODE").val();
+			break;
+		default:
+			outsvc_nextaction=$("#edt_WH_OUTSERVICE_TARGET").val();
+			break;
+		}
+		
+		switch(lcsvc_next){
+		case 1:
+		case 2:
+		case 4:
+			lcsvc_nextaction=$("#edt_WH_IN_LUNCH_CODE").val();
+			break;
+		default:
+			lcsvc_nextaction=$("#edt_WH_IN_LUNCH_TARGET").val();
+			break;
+		}
+		
+	    $.ajax({
+	        method: "POST",
+	        url: "<c:url value='/mng/ivr/workhouredit.do'/>",
+	        data: {
+	        	WH_Seq: SELECT_DTL_ROW.WH_Seq, 
+	        	WH_Type: $("#edt_WH_Type").val(),
+	        	WH_START: $("#edt_WH_START").val().replace(/:/gi, ""),
+	        	WH_END: $("#edt_WH_END").val().replace(/:/gi, ""),
+	        	WH_LUNCH_YN: $("#edt_WH_LUNCH_YN").val(),
+	        	WH_LUNCH_START: $("#edt_WH_LUNCH_START").val().replace(/:/gi, ""),
+	        	WH_LUNCH_END: $("#edt_WH_LUNCH_END").val().replace(/:/gi, ""),
+	        	WH_BEFORE_PROMPT: $("#edt_WH_BEFORE_PROMPT").val().replace(/^\s+|\s+$/g,""),
+	        	WH_AFTER_PROMPT: $("#edt_WH_AFTER_PROMPT").val().replace(/^\s+|\s+$/g,""),
+	        	WH_OUTSERVICE: outsvc_next,
+	        	WH_OUTSERVICE_TARGET: outsvc_nextaction,
+	        	WH_IN_LUNCH: lcsvc_next,
+	        	WH_IN_LUNCH_TARGET: lcsvc_nextaction
+        	}, 
+			beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	    }).done(function (data) {
+	    	$('#whcodedtl_dt').DataTable().ajax.reload();
+	    });
+	    
+		e.preventDefault();
+		SELECT_DTL_ROW = "";
+		$('#modal-edt').modal('hide');
+	});
+	//삭제
+	$("._BtnDel").click(function(){
+		if(SELECT_DTL_ROW == "")
+		{
+			alertify.alert("","삭제할  근무시간을 선택하세요.");
+			return false;
+		}
+		
+		alertify.confirm("근무시간 삭제", "["+SELECT_DTL_ROW.WH_Type_Name +"] 근무시간을 삭제 하시겠습니까?",
+		function(){
+		    $.ajax({
+		        method: "POST",
+		        url: "<c:url value='/mng/ivr/workhourdel.do'/>",
+		        data: {WH_Seq: SELECT_DTL_ROW.WH_Seq}, 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+		    }).done(function (data) {
+		    	$('#whcodedtl_dt').DataTable().ajax.reload();
+		    });
+		    
+		    SELECT_DTL_ROW = "";
+			alertify.success('Ok');
+		},
+		function(){
+			alertify.error('Cancel');
+		});
+	});
+	
+	$('._lunchyn').on('change', function (e) {
+	    var optionSelected = $("option:selected", this);
+	    var valueSelected = this.value;
+	    if(valueSelected==1){
+	    	$("._sel_lunch").attr( 'disabled', false );
+	    	$("#add_WH_IN_LUNCH")[0].sumo.reload();
+	    	$("#edt_WH_IN_LUNCH")[0].sumo.reload();
+	    	//$("._sel_lunch").prop('required',true);
+	    	//$("._sel_lunch").attr('required',true);
+	    }
+	    else{
+	    	$("._sel_lunch").attr( 'disabled', true );
+	    	$("#add_WH_IN_LUNCH")[0].sumo.reload();
+	    	$("#edt_WH_IN_LUNCH")[0].sumo.reload();
+	    	//$("._sel_lunch").prop('required',false);
+	    	//$("._sel_lunch").attr('required',false);
+	    }
+	});
+	
+	
+	
+	/*****
+	*
+	*/	
+	$('.sel_whroute').filter('._sel_outservice').on('change', function (e) {
+	    var optionSelected = $('option:selected', this);
+	    var valueSelected = Number(this.value);
+		switch(valueSelected){
+		case 1:
+			$('.sel_next_target').filter('._sel_outservice').hide();
+			$('.sel_next_code').filter('._sel_outservice').show();
+			$('.sel_next_target').filter('._sel_outservice').attr( 'disabled', true );
+			$('.sel_next_code').filter('._sel_outservice').attr( 'disabled', false );
+	        $.ajax({
+	            method: "POST",
+	            url: "<c:url value='/mng/ivr/menusetlist.do'/>",
+	            data: {
+	            	Cmm_Code : 9
+	            }, 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	        }).done(function (data) {
+	        	$('.sel_nextcode').filter('._sel_outservice').empty();
+   	       		$.each(data.SCSet, function (i, item) {
+   	       			$('.sel_nextcode').filter('._sel_outservice').append($('<option>', { value: item.SC_MENU, text: item.SC_MENUNAME }));
+   	     		});
+	       		$('.sel_nextcode')[0].sumo.reload();
+	       		$('.sel_nextcode')[2].sumo.reload();
+	        });
+			break;
+		case 2:
+			$('.sel_next_target').filter('._sel_outservice').hide();
+			$('.sel_next_code').filter('._sel_outservice').show();
+			$('.sel_next_target').filter('._sel_outservice').attr( 'disabled', true );
+			$('.sel_next_code').filter('._sel_outservice').attr( 'disabled', false );
+	        $.ajax({
+	            method: "POST",
+	            url: "<c:url value='/mng/ivr/routelist.do'/>",
+	            data: {
+	            	Cmm_Code : 9
+	            }, 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	        }).done(function (data) {
+	        	$('.sel_nextcode').filter('._sel_outservice').empty();
+   	       		$.each(data.Route, function (i, item) {
+   	       			$('.sel_nextcode').filter('._sel_outservice').append($('<option>', { value: item.RT_ROUTE, text: item.RT_ROUTENAME }));
+   	     		});
+	       		$('.sel_nextcode')[0].sumo.reload();
+	       		$('.sel_nextcode')[2].sumo.reload();
+	        });
+			break;
+		case 4:
+			$('.sel_next_target').filter('._sel_outservice').hide();
+			$('.sel_next_code').filter('._sel_outservice').show();
+			$('.sel_next_target').filter('._sel_outservice').attr( 'disabled', true );
+			$('.sel_next_code').filter('._sel_outservice').attr( 'disabled', false );
+	        $.ajax({
+	            method: "POST",
+	            url: "<c:url value='/mng/ivr/noticelist.do'/>",
+	            data: {
+	            	Cmm_Code : 9
+	            }, 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	        }).done(function (data) {
+	        	$('.sel_nextcode').filter('._sel_outservice').empty();
+   	       		$.each(data.Notice, function (i, item) {
+   	       			$('.sel_nextcode').filter('._sel_outservice').append($('<option>', { value: item.NT_Code, text: item.NT_NAME }));
+   	     		});
+	       		$('.sel_nextcode')[0].sumo.reload();
+	       		$('.sel_nextcode')[2].sumo.reload();
+	        });
+			break;
+		case 3:
+		case 5:
+		case 6:
+			$('.sel_next_target').filter('._sel_outservice').show();
+			$('.sel_next_code').filter('._sel_outservice').hide();
+			$('.sel_next_target').filter('._sel_outservice').attr( 'disabled', false );
+			$('.sel_next_code').filter('._sel_outservice').attr( 'disabled', true );
+			break;
+		default:
+			$('.sel_next_target').filter('._sel_outservice').hide();
+			$('.sel_next_code').filter('._sel_outservice').hide();
+			$('.sel_next_target').filter('._sel_outservice').attr( 'disabled', true );
+			$('.sel_next_code').filter('._sel_outservice').attr( 'disabled', true );
+			break;
+		}
+	});
+	
+	$('.sel_whroute').filter('._sel_lunch').on('change', function (e) {
+	    var optionSelected = $('option:selected', this);
+	    var valueSelected = Number(this.value);
+		switch(valueSelected){
+		case 1:
+			$('.sel_next_target').filter('._sel_lunch').hide();
+			$('.sel_next_code').filter('._sel_lunch').show();
+			$('.sel_next_target').filter('._sel_lunch').attr( 'disabled', true );
+			$('.sel_next_code').filter('._sel_lunch').attr( 'disabled', false );
+	        $.ajax({
+	            method: "POST",
+	            url: "<c:url value='/mng/ivr/menusetlist.do'/>",
+	            data: {
+	            	Cmm_Code : 9
+	            }, 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	        }).done(function (data) {
+	        	$('.sel_nextcode').filter('._sel_lunch').empty();
+   	       		$.each(data.SCSet, function (i, item) {
+   	       			$('.sel_nextcode').filter('._sel_lunch').append($('<option>', { value: item.SC_MENU, text: item.SC_MENUNAME }));
+   	     		});
+	       		$(".sel_nextcode")[1].sumo.reload();
+	       		$('.sel_nextcode')[3].sumo.reload();
+	        });
+			break;
+		case 2:
+			$('.sel_next_target').filter('._sel_lunch').hide();
+			$('.sel_next_code').filter('._sel_lunch').show();
+			$('.sel_next_target').filter('._sel_lunch').attr( 'disabled', true );
+			$('.sel_next_code, ._sel_lunch').attr( 'disabled', false );
+	        $.ajax({
+	            method: "POST",
+	            url: "<c:url value='/mng/ivr/routelist.do'/>",
+	            data: {
+	            	Cmm_Code : 9
+	            }, 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	        }).done(function (data) {
+	        	$('.sel_nextcode').filter('._sel_lunch').empty();
+   	       		$.each(data.Route, function (i, item) {
+   	       			$('.sel_nextcode').filter('._sel_lunch').append($('<option>', { value: item.RT_ROUTE, text: item.RT_ROUTENAME }));
+   	     		});
+	       		$(".sel_nextcode")[1].sumo.reload();
+	       		$('.sel_nextcode')[3].sumo.reload();
+	        });
+			break;
+		case 4:
+			$('.sel_next_target').filter('._sel_lunch').hide();
+			$('.sel_next_code').filter('._sel_lunch').show();
+			$('.sel_next_target').filter('._sel_lunch').attr( 'disabled', true );
+			$('.sel_next_code').filter('._sel_lunch').attr( 'disabled', false );
+	        $.ajax({
+	            method: "POST",
+	            url: "<c:url value='/mng/ivr/noticelist.do'/>",
+	            data: {
+	            	Cmm_Code : 9
+	            }, 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	        }).done(function (data) {
+	        	$('.sel_nextcode').filter('._sel_lunch').empty();
+   	       		$.each(data.Notice, function (i, item) {
+   	       			$('.sel_nextcode').filter('._sel_lunch').append($('<option>', { value: item.NT_Code, text: item.NT_NAME }));
+   	     		});
+	       		$('.sel_nextcode')[1].sumo.reload();
+	       		$('.sel_nextcode')[3].sumo.reload();
+	        });
+			break;
+		case 3:
+		case 5:
+		case 6:
+			$('.sel_next_target').filter('._sel_lunch').show();
+			$('.sel_next_code').filter('._sel_lunch').hide();
+			$('.sel_next_target').filter('._sel_lunch').attr( 'disabled', false );
+			$('.sel_next_code').filter('._sel_lunch').attr( 'disabled', true );
+			break;
+		default:
+			$('.sel_next_target').filter('._sel_lunch').hide();
+			$('.sel_next_code').filter('._sel_lunch').hide();
+			$('.sel_next_target').filter('._sel_lunch').attr( 'disabled', true );
+			$('.sel_next_code').filter('._sel_lunch').attr( 'disabled', true );
+			break;
+		}
+	});
+	
+	/*****
+	*
+	*/
+	
+	getDept();
+	getPrompt();
+	getWHType();
+	getWHRoute();
+	
+	$("._sel_lunch").attr( 'disabled', true ); //초기값은 사용안함이다.
+	
+	$('.sel_dept').SumoSelect({ 
+		placeholder: '부서',
+		search : true,
+	    forceCustomRendering: true
+	});
+	
+	$('.sel_prompt').SumoSelect({ 
+		placeholder: '안내음원',
+		search : true,
+	    forceCustomRendering: true
+	});
+	
+	$('.sel_whtype').SumoSelect({ 
+		placeholder: '요일 종류',
+		search : true,
+	    forceCustomRendering: true
+	});
+	
+	$('.sel_whroute').SumoSelect({ 
+		placeholder: '액션 종류',
+		search : true,
+	    forceCustomRendering: true
+	});
+	
+	$('.sel_nextcode').SumoSelect({ 
+		placeholder: '액션 실행',
+		search : true,
+	    forceCustomRendering: true
+	});
+	
+
+	$('._lunchyn').SumoSelect({ 
+		placeholder: '점심시간 사용여부',
+	    forceCustomRendering: true
+	});
+	
+	$('._time').timepicker({
+		defaultTime: "",
+		showMeridian: false //24시간
+	});
+	
+	//초기값
+	$('.sel_next_target').hide();
+	$('.sel_next_code').hide();
+	$(".sel_next_target").attr( 'disabled', true );
+	$(".sel_next_code").attr( 'disabled', true );
+	
+});
+</script>
+
+
+<!-- MAIN PANEL -->
+<div id="main" role="main">
+
+	<div id="ribbon">
+		<ol class="breadcrumb">
+			<li>Home</li><li>운영관리</li><li>시간관리</li><li>근무시간 관리</li>
+		</ol>
+	</div>
+	<!-- CONTENT -->
+	<div id="content">
+
+		<section id="widget-grid">
+			<div class="row">
+
+
+				<article class="col-sm-12 col-md-12 col-lg-3">
+				<div class="jarviswidget" id="wid-id-0"
+					data-widget-togglebutton="false"
+					data-widget-deletebutton="false" 
+					data-widget-editbutton="false"
+					data-widget-colorbutton="false"
+					data-widget-fullscreenbutton="false">
+					<header>
+						<span class="widget-icon"> <i class="fa fa-table"></i> </span>
+						<h2>근무시간 그룹</h2>
+						<div class="widget-toolbar">
+							<div class="btn-group">
+								<button class="btn btn-xs btn-default _BtnDelSet"><span class="fa fa-trash-o"></span> </button>
+							</div>
+						</div>				
+						<div class="widget-toolbar">
+							<div class="btn-group">
+								<button class="btn btn-xs btn-default _BtnAddSet" data-toggle="modal" data-target="#modal-addset" ><span class="fa fa-plus"></span></button>
+								<button class="btn btn-xs btn-default _BtnEditSet"><span class="fa fa-pencil"></span> </button>
+							</div>
+						</div>
+					</header>
+					<div>
+
+						<div class="widget-body no-padding">
+				
+		            		<table id="whcode_dt" class="table table-striped table-bordered table-hover" width="100%" style="margin-top: 0px!important;">
+		            			<thead>
+		            			<tr>
+		            			    <th data-class="expand">그룹 번호</th>
+		            				<th>그룹 명</th>
+		            			</tr>
+		            			</thead>
+		            		</table>
+		            		
+						</div>
+					</div>	
+						
+				</div>
+				</article>
+			
+			
+				<article class="col-sm-12 col-md-12 col-lg-9">
+				<div class="jarviswidget" id="wid-id-0"
+					data-widget-togglebutton="false"
+					data-widget-deletebutton="false" 
+					data-widget-editbutton="false"
+					data-widget-colorbutton="false"
+					data-widget-fullscreenbutton="false">
+					<header>
+						<span class="widget-icon"> <i class="fa fa-table"></i> </span>
+						<h2>근무시간</h2>
+						<div class="widget-toolbar">
+							<div class="btn-group">
+								<button class="btn btn-xs btn-default _BtnDel"><span class="fa fa-trash-o"></span> </button>
+							</div>
+						</div>				
+						<div class="widget-toolbar">
+							<div class="btn-group">
+								<button class="btn btn-xs btn-default _BtnAdd" data-toggle="modal" data-target="#modal-add" ><span class="fa fa-plus"></span></button>
+								<button class="btn btn-xs btn-default _BtnEdit"><span class="fa fa-pencil"></span> </button>
+							</div>
+						</div>
+					</header>
+					<div>
+
+						<div class="widget-body no-padding">
+				
+		            		<table id="whcodedtl_dt" class="table table-striped table-bordered table-hover" width="100%" style="margin-top: 0px!important;">
+		            			<thead>
+								<tr>
+									<th colspan="6" class="text-center">기본 근무시간 정보</th>
+									<th colspan="3" class="text-center">점심시간 정보</th>
+									<th colspan="6" class="text-center">음원 정보</th>
+									<th colspan="4" class="text-center">근무외시간 서비스</th>
+									<th colspan="4" class="text-center">점심시간 서비스</th>
+								</tr>
+		            			<tr>
+		            			    <th data-class="expand">일련번호</th>
+		            			    <th>그룹번호</th>
+		            				<th>종류 번호</th>
+		            				<th>종류</th>
+		            				<th>시작</th>
+		            				<th>종료</th>
+		            				<th>사용</th>
+		            				<th>시작</th>
+		            				<th>종료</th>
+		            				<th>근무시간 이전ID</th>
+		            				<th>근무시간 이전</th>
+		            				<th>근무시간 이후ID</th>
+		            				<th>근무시간 이후</th>
+		            				<th>점심시간 ID</th>
+		            				<th>점심시간</th>
+		            				<th>번호</th>
+		            				<th>이름</th>
+		            				<th>대상</th>
+		            				<th>대상 번호</th>
+	            					<th>번호</th>
+		            				<th>이름</th>
+		            				<th>대상</th>
+		            				<th>대상 번호</th>
+		            			</tr>
+		            			</thead>
+		            		</table>
+		            		
+						</div>
+					</div>	
+						
+				</div>
+				</article>
+			</div>
+		</section>
+	</div>
+	<!-- END  CONTENT -->
+
+</div>
+<!-- END PANEL -->
+<div id="modal-add" class="modal" aria-hidden="true" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">근무시간 추가</h4>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true"><i class="fal fa-times"></i></span>
+				</button>
+            </div>
+            <form name="addfrm" id="addfrm" method="post">
+            <div class="modal-body">
+				<div class="form-group">
+					<label>근무시간 그룹 명</label> 
+					<input id="add_WH_Code_Nm" type="text" class="form-control" value="" readonly>
+				</div>
+				<div class="form-group">			
+					<label>근무시간 종류</label> 
+					<select class="form-control sel_whtype" id="add_WH_Type" required>
+						<option value="">종류</option>
+					</select>	
+				</div>  
+				<div class="form-group">
+					<label>근무시간</label>
+					<i class="icon-append fa fa-clock-o"></i>
+					<div class="row">
+						<div class="col-md-6">
+							<input class="_time form-control" type="text" name="WH_START" id="add_WH_START" placeholder="시작 시간"  value="09:00" required>
+						</div>			
+						<div class="col-md-6">
+							<input class="_time form-control" type="text" name="WH_END" id="add_WH_END" placeholder="종료 시간" value="18:00" required>
+						</div>	
+					</div>
+				</div>
+				<div class="form-group">
+					<label>점심시간 사용 여부</label>
+					<select class="form-control _lunchyn" id="add_WH_LUNCH_YN" required>
+						<option value="0">사용 안함</option>
+						<option value="1">사용</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<label>점심시간</label>
+					<i class="icon-append fa fa-clock-o"></i>
+					<div class="row">
+						<div class="col-md-6">
+							<input class="_time form-control _sel_lunch" type="text" name="WH_LUNCH_START" id="add_WH_LUNCH_START" placeholder="시작 시간"  value="12:00">
+						</div>			
+						<div class="col-md-6">
+							<input class="_time form-control _sel_lunch" type="text" name="WH_LUNCH_END" id="add_WH_LUNCH_END" placeholder="종료 시간" value="13:00">
+						</div>	
+					</div>
+				</div>
+            	<div class="form-group">	
+        			<label>근무시간 이전 안내 음원 선택</label> 
+					<select class="form-control sel_prompt" id="add_WH_BEFORE_PROMPT" required>
+						<option value="">음원</option>
+					</select>	
+				</div>
+            	<div class="form-group">	
+        			<label>근무시간 이후 안내 음원 선택</label> 
+					<select class="form-control sel_prompt" id="add_WH_AFTER_PROMPT" required>
+						<option value="">음원</option>
+					</select>	
+				</div>
+
+				<div class="form-group">			
+					<label>근무외시간 액션</label> 
+					<select class="form-control sel_whroute _sel_outservice" id="add_WH_OUTSERVICE" required>
+						<option value="">종류</option>
+					</select>
+				</div>
+				
+				<div class="form-group sel_next_target _sel_outservice">			
+					<label>근무외시간 액션 선택</label>
+					<input id="add_WH_OUTSERVICE_TARGET" name="WH_OUTSERVICE_TARGET" type="text" class="form-control" oninvalid="this.setCustomValidity('근무외시간 액션을 선택하세요')" oninput="this.setCustomValidity('')">
+				</div>
+				<div class="form-group sel_next_code _sel_outservice">			
+					<label>근무외시간 액션 선택</label>
+					<select class="form-control sel_nextcode _sel_outservice" name='WH_OUTSERVICE_CODE' id="add_WH_OUTSERVICE_CODE">
+						<option value="">종류</option>
+					</select>	
+				</div>
+				
+				<div class="form-group">			
+					<label>점심시간 액션</label> 
+					<select class="form-control sel_whroute _sel_lunch" id="add_WH_IN_LUNCH">
+						<option value="">종류</option>
+					</select>
+				</div>
+
+				<div class="form-group sel_next_target _sel_lunch">			
+					<label>점심시간 액션 선택</label> 
+					<input id="add_WH_IN_LUNCH_TARGET" name="WH_IN_LUNCH_TARGET" type="text" class="form-control _sel_lunch" oninvalid="this.setCustomValidity('점심시간 액션을 선택하세요')" oninput="this.setCustomValidity('')">
+				</div>
+				<div class="form-group sel_next_code _sel_lunch">			
+					<label>점심시간 액션 선택</label> 
+					<select class="form-control sel_nextcode _sel_lunch" name='WH_IN_LUNCH_CODE' id="add_WH_IN_LUNCH_CODE">
+						<option value="">종류</option>
+					</select>	
+				</div>
+            </div>	
+		
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-info" id="btnadd">저장</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">닫기</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="modal-edt" class="modal" aria-hidden="true" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">근무시간 수정</h4>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true"><i class="fal fa-times"></i></span>
+				</button>
+            </div>
+
+            <form name="edtfrm" id="edtfrm" method="post">
+            	<div class="modal-body">
+					<div class="form-group">
+						<label>근무시간 그룹 명</label> 
+						<input id="edt_WH_Code_Nm" type="text" class="form-control" value="" readonly>
+					</div>
+					<div class="form-group">			
+						<label>근무시간 종류</label> 
+						<select class="form-control sel_whtype" id="edt_WH_Type" required>
+							<option value="">종류</option>
+						</select>	
+					</div>  
+					<div class="form-group">
+						<label>근무시간</label>
+						<i class="icon-append fa fa-clock-o"></i>
+						<div class="row">
+							<div class="col-md-6">
+								<input class="_time form-control" type="text" name="WH_START" id="edt_WH_START" placeholder="시작 시간"  value="09:00" required>
+							</div>			
+							<div class="col-md-6">
+								<input class="_time form-control" type="text" name="WH_END" id="edt_WH_END" placeholder="종료 시간" value="18:00" required>
+							</div>	
+						</div>
+					</div>
+					<div class="form-group">
+						<label>점심시간 사용 여부</label>
+						<select class="form-control _lunchyn" id="edt_WH_LUNCH_YN" required>
+							<option value="0">사용 안함</option>
+							<option value="1">사용</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label>점심시간</label>
+						<i class="icon-append fa fa-clock-o"></i>
+						<div class="row">
+							<div class="col-md-6">
+								<input class="_time form-control _sel_lunch" type="text" name="WH_LUNCH_START" id="edt_WH_LUNCH_START" placeholder="시작 시간"  value="12:00">
+							</div>			
+							<div class="col-md-6">
+								<input class="_time form-control _sel_lunch" type="text" name="WH_LUNCH_END" id="edt_WH_LUNCH_END" placeholder="종료 시간" value="13:00">
+							</div>	
+						</div>
+					</div>
+	            	<div class="form-group">	
+	        			<label>근무시간 이전 안내 음원 선택</label> 
+						<select class="form-control sel_prompt" id="edt_WH_BEFORE_PROMPT" required>
+							<option value="">음원</option>
+						</select>	
+					</div>
+	            	<div class="form-group">	
+	        			<label>근무시간 이후 안내 음원 선택</label> 
+						<select class="form-control sel_prompt" id="edt_WH_AFTER_PROMPT" required>
+							<option value="">음원</option>
+						</select>	
+					</div>
+
+					<div class="form-group">			
+						<label>근무외시간 액션</label> 
+						<select class="form-control sel_whroute _sel_outservice" id="edt_WH_OUTSERVICE" required>
+							<option value="">종류</option>
+						</select>
+					</div>				
+					<div class="form-group sel_next_target _sel_outservice">			
+						<label>근무외시간 액션 선택</label>
+						<input id="edt_WH_OUTSERVICE_TARGET" name="WH_OUTSERVICE_TARGET" type="text" class="form-control" oninvalid="this.setCustomValidity('근무외시간 액션을 선택하세요')" oninput="this.setCustomValidity('')">
+					</div>
+					<div class="form-group sel_next_code _sel_outservice">			
+						<label>근무외시간 액션 선택</label>
+						<select class="form-control sel_nextcode _sel_outservice" name='WH_OUTSERVICE_CODE' id="edt_WH_OUTSERVICE_CODE">
+							<option value="">종류</option>
+						</select>	
+					</div>								
+					<div class="form-group">			
+						<label>점심시간 액션</label> 
+						<select class="form-control sel_whroute _sel_lunch" id="edt_WH_IN_LUNCH">
+							<option value="">종류</option>
+						</select>
+					</div>
+					<div class="form-group sel_next_target _sel_lunch">			
+						<label>점심시간 액션 선택</label> 
+						<input id="edt_WH_IN_LUNCH_TARGET" name="WH_IN_LUNCH_TARGET" type="text" class="form-control _sel_lunch" oninvalid="this.setCustomValidity('점심시간 액션을 선택하세요')" oninput="this.setCustomValidity('')">
+					</div>
+					<div class="form-group sel_next_code _sel_lunch">			
+						<label>점심시간 액션 선택</label> 
+						<select class="form-control sel_nextcode _sel_lunch" name='WH_IN_LUNCH_CODE' id="edt_WH_IN_LUNCH_CODE">
+							<option value="">종류</option>
+						</select>	
+					</div>
+				</div>
+	                <div class="modal-footer">
+	                    <button type="submit" class="btn btn-info" id="btnedt">수정</button>
+	                    <button type="button" class="btn btn-default" data-dismiss="modal">닫기</button>
+	                </div>
+               
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<div id="modal-addset" class="modal" aria-hidden="true" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">근무시간 그룹 추가</h4>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true"><i class="fal fa-times"></i></span>
+				</button>
+            </div>
+            <form name="addSetfrm" id="addSetfrm" method="post">
+            <div class="modal-body">
+            	<div class="form-group">	
+        			<label>사용 부서</label> 
+					<select class="form-control sel_dept" id="addSet_Dept_No" required>
+						<option value="">부서</option>
+					</select>	
+				</div>
+				<div class="form-group">			
+					<label>그룹 명</label> 
+					<input id="addSet_WH_Code_Nm" name="WH_Code_Nm" type="text" class="form-control" required oninvalid="this.setCustomValidity('근무시간 그룹명을 입력하세요.')" oninput="this.setCustomValidity('')">
+				</div>  
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-info" id="btnaddset">저장</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">닫기</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="modal-edtset" class="modal" aria-hidden="true" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">근무시간 그룹 수정</h4>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true"><i class="fal fa-times"></i></span>
+				</button>
+            </div>
+
+            <form name="edtSetfrm" id="edtSetfrm" method="post">
+                <input type="hidden" name="WH_Code" id="edtSet_WH_Code" />
+                <div class="modal-body">
+	            	<div class="form-group">	
+	        			<label>사용 부서</label> 
+						<select class="form-control sel_dept" id="edtSet_Dept_No" required>
+							<option value="">부서</option>
+						</select>	
+					</div>
+					<div class="form-group">
+						<label>그룹 명</label> 
+						<input id="edtSet_WH_Code_Nm" name="WH_Code_Nm" type="text" class="form-control" required oninvalid="this.setCustomValidity('근무시간 그룹명을 입력하세요.')" oninput="this.setCustomValidity('')">
+					</div>  
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info" id="btnedtset">수정</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">닫기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

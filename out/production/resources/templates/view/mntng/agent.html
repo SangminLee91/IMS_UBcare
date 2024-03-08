@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+		function reloadData(){
+			$('#dt_basic').DataTable().ajax.reload();
+		}
+
+		$(document).ready(function() {
+			const table = $('#dt_basic').DataTable({
+				ajax: {
+					url: CONTEXT_PATH+"/mntng/agent/status",
+					dataSrc: "RTUser"
+				},
+				columns: [
+					{ "data": "DepartmentName" },
+					{ "data": "UserName" },
+					{ "data": "UserID" },
+					{ "data": "Extension" },
+					{ "data": "State" },
+					{ "data": "TimeInState" },
+					{ "data": "QueueName" },
+					{ "data": "Handled" },
+					{ "data": "TotalIn" },
+					{ "data": "TotalOut" },
+					{ "data": "TotalLoggedOnTime" },
+					{ "data": "TotalIdleTime" },
+					{ "data": "TotalAwayTime" },
+					{ "data": "TotalBusyTime" },
+					{ "data": "TotalWorkOnTime" }, //14
+					{ "data": "TotalPostProcessingTime" },
+					{ "date": "ContactType" }
+
+				],
+				columnDefs: [
+					{ "targets": [15,16], "visible": false, className: "never"},
+					{ "targets": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14], className: "text-center"},
+					{ orderable: false, targets :[0]},
+					{
+						"render": function ( data, type, row ) {
+							var caption='';
+							switch(data){
+								case 'WORK':
+									caption='작업';
+									break;
+								case 'AWAY':
+									caption='이석';
+									break;
+								case 'CONNECTED':
+									caption='통화중';
+									break;
+								case 'DIALING':
+									caption='다이얼';
+									break;
+								case 'RINGING':
+									caption='벨울림';
+									break;
+								case 'IDLE':
+									caption='대기';
+									break;
+								default:
+									caption=data;
+									break;
+							}
+							return caption;
+						},
+						"targets": 4
+					}
+				],
+				searching: true,
+				ordering: true,
+				select: false,
+				dom:"t",
+				initComplete: function () {
+					this.api().columns().every( function (e) {
+						if(e===0){
+							let column = this;
+							let select = $('<select><option value="">- 부서 전체 -</option></select>')
+									.appendTo( $(column.header()).empty() )
+									.on('change', function () {
+										console.log($(this).val());
+										let val = $.fn.dataTable.util.escapeRegex(
+												$(this).val()
+										);
+										column.search( val ? '^'+val+'$' : '', true, false ).draw();
+									} );
+
+							column.data().unique().sort().each( function ( d, j ) {
+								if(column.search() === '^'+d+'$'){
+									select.append( '<option value="'+d+'" selected="selected">'+d+'</option>' )
+								} else {
+									select.append( '<option value="'+d+'">'+d+'</option>' )
+								}
+
+							} );
+						}
+					} );
+				}
+				/*,
+				scrollY: "600px",
+				scrollCollapse: true/*,
+			createdRow: function ( row, data, index ) {
+				let color = "";
+				let vW_text = "";
+				switch (data.State.toString())
+				{
+					case "알수없음" :
+							//color="#A7EEFF";
+							color="#929292";
+							break;
+					case "대기" :
+							//color="#FFAA28";
+							color="#6eb005";
+							break;
+					case "작업" :
+							//color="#288CFF";
+							color="#eabc13";
+							break;
+					case "이석" :
+							//color="#FFF978";
+							color="#e9001b"
+							break;
+					case "통화중" :
+							//color="#A8F552";
+							color="#ff5ca1";
+							break;
+					case "lineBusy" :
+							//color="#A8F552";
+							color="#fa3c4c";
+							break;
+					case "로그오프" :
+							//color="#FF5A5A";
+							color="#929292";
+							break;
+					case "다이얼" :
+							//color="#7AF67A";
+							color="#fac914";
+							break;
+					case "벨울림" :
+							//color="#7AF67A";
+							color="#ff5ca1";
+							break;
+					case "lineQueue" :
+							//color="#00FFFF";
+							color="#ff5ca1";
+							//ContactType = "";
+							break;
+					case "콜할당" :
+							//color="#00FFFF";
+							color="#ff5ca1";
+							break;
+					case "processing" :
+							//color="#00FFFF";
+							color="#ff5ca1";
+							break;
+					case "보류" :
+							//color="#FF7E9D";
+							color="#ff5ca1";
+							break;
+					case "협의" :
+							//color="#FF7E9D";
+							color="#ff5ca1";
+							break;
+					case "후처리" :
+							//color="#6478FF";
+							color="#ffc300";
+							break;
+					 default:
+							//color = "#e7e7e7";
+							color="#d4a88c";
+							break;
+			 }
+
+
+				if (data.ContactType.toString() !=="") //통화중일경우 in / out / 내선 표시
+				{
+					vW_text = '<i style="background:'+color+'" class="agentstatus"></i>[ '+data.ContactType.toString()+' ] '+data.State.toString();
+				}
+				else
+				{
+					vW_text = '<i style="background:'+color+'" class="agentstatus"></i>'+data.State.toString();
+				}
+
+				$('td', row).eq(4)//.css('background-color',color)
+				.css("font-weight","700")
+				.css("color","#333")
+				.css("font-size","13px")
+				//.addClass("text-center")
+				.html(vW_text);
+
+			}*/
+			});
+
+			setInterval("reloadData()", 5000);
+			$(".dt_basic_filter").addClass("d-none");
+		});
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 상담사별 모니터링
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			<div id="buttons" class="btn-group"></div>
+		</div>
+
+		<div class="panel-container show">
+			<div class="panel-content">
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+					<tr>
+						<th colspan="4" class="border-bottom-0 text-center">상담원 정보</th>
+						<th colspan="4" class="border-bottom-0 text-center">현재상태</th>
+						<th colspan="2" class="border-bottom-0 text-center">총 인아웃</th>
+						<th colspan="6" class="border-bottom-0 text-center">총시간</th>
+					</tr>
+					<tr class="text-center">
+						<th>부서</th>
+						<th>이름</th>
+						<th>아이디</th>
+						<th>내선번호</th>
+
+						<th>상태</th>
+						<th>유지시간</th>
+						<th>큐</th>
+						<th>응대호</th>
+
+						<th>인</th>
+						<th>아웃</th>
+
+						<th>로그온</th>
+						<th>대기</th>
+						<th>이석</th>
+						<th>작업</th>
+						<th>통화</th>
+						<th>후처리</th>
+						<th class="d-none"></th>
+					</tr>
+					</thead>
+				</table>
+
+			</div>
+		</div>
+	</div>
+</main>
+</html>>
+

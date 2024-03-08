@@ -1,0 +1,3360 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+    <link rel="stylesheet" th:href="@{/css/formplugins/bootstrap-timepicker/bootstrap-timepicker.css}">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+    <script th:src="@{/js/bootstrap-treeview.js}"></script>
+    <script th:src="@{/js/formplugins/bootstrap-timepicker/bootstrap-timepicker.min.js}"></script>
+
+    <script type="text/javascript">
+        $(function() {
+            let SCTreeView={};
+            //node datas
+            let SCENARIO_DEFAULT=[]; //SCENARIO_DEFAULT.push({text:item.SC_NAME, dbseq:item.SC_CODE, nodetype:'SC',config:item});
+            //selected node info
+            let SELECT_NODE={};
+            let selId=0;
+
+            /*2021-06-29 곽정근*/
+            $('._time').timepicker({
+                timeFormat: "HH",
+                showMeridian: false, //24시간
+                icons: {
+                    up: "fal fa-caret-up",
+                    down: "fal fa-caret-down"
+                }
+            });
+
+            // display block none 처리
+            const view_panel = function(block_val) {
+                $("._pnl").each(function() {
+                    if(!$(this).hasClass("d-none") ) $(this).addClass("d-none");
+                });
+                $(block_val).removeClass("d-none");
+            };
+            const hide_panel = function(block_val) {
+                $(block_val).addClass("d-none");
+            };
+            const hide_all_panel = function() {
+                $("._pnl").each(function() {
+                    if(!$(this).hasClass("d-none") ) $(this).addClass("d-none");
+                });
+            };
+            //input, select reset
+            const form_reset = function(form_val) {
+                $(form_val).find("form")[0].reset();
+            }
+
+            //근무시간세트
+            const getWorkhourSet = function(){
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/workhour/set/list", //"<c:url value='/mng/ivr/workhoursetlist.do'/>",
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    $.each(data.WHSet, function (i, item) {
+                        $(".sel_workhourset").append($('<option>', { value: item.WH_Code, text: item.WH_Code_Nm }));
+                    });
+                });
+            }
+
+            //안내음원
+            const getPrompt = function() {
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/voice/list",// "<c:url value='/mng/ivr/voicelist.do'/>",
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    $.each(data.data, function (i, item) {
+                        //var pid=item.SC_PROMPT.replace(/^\s+|\s+$/g,"")
+                        $(".sel_prompt").append($('<option>', { value: item.SC_PROMPT, text: item.SC_FILENAME , desc: item.vwSC_DESCRIPTION}));
+                    });
+                });
+            }
+
+            //근무시간 종류-선택한 세트에 해당하는 근무시간 종류 로딩(평일, 주말, 공휴일등)
+            const getWorkhourType = function(code) {
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/workhour/list", //"<c:url value='/mng/ivr/workhourlist.do'/>",
+                    data:{WH_Code:code},
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    console.log('-------------------------------------------]]]]]')
+                    console.log(data);
+                    $(".sel_workhourtype option").remove();
+                    $.each(data.WH, function (i, item) {
+                        //var pid=item.SC_PROMPT.replace(/^\s+|\s+$/g,"")
+                        $(".sel_workhourtype").append($('<option>', { value: item.WH_Type, text: item.WH_Type_Name }));
+                    });
+                });
+            }
+
+            //근무시간 구분-근무시간전, 근무시간후, 근무시간, 점심시간
+            const getWorkhourKind = function(code) {
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/code/cmm/dtl/list", //"<c:url value='/api/code/codedtllist.do'/>",
+                    data:{Cmm_Code:code},
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    $.each(data.Code, function (i, item) {
+                        //var pid=item.SC_PROMPT.replace(/^\s+|\s+$/g,"")
+                        $(".sel_workhourkind").append($('<option>', { value: item.Cmm_Dtl_Code, text: item.Cmm_Dtl_Code_Nm }));
+                    });
+                });
+            }
+
+            //공지불러오기
+            const getNotice = function() {
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/notice/list",// "<c:url value='/mng/ivr/noticelist.do'/>",
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    $.each(data.Notice, function (i, item) {
+                        //var pid=item.SC_PROMPT.replace(/^\s+|\s+$/g,"")
+                        $(".sel_notice").append($('<option>', { value: item.NT_Code, text: item.NT_NAME, desc: item.NT_PROMPT_INFO }));
+                    });
+                });
+            }
+
+            //----SC_NEXT load
+            //시나리오에 따른 서브메뉴 가져오기
+            const tree_getScenarioSubMenu=function(code){
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/scenariomenusublist",
+                    data:{SC_MENU:code},
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    $.each(data.Menusub, function (i, item) {
+                        console.log('-----------------------------------------------');
+                        console.log(item);
+                        let addNodes = [];
+                        addNodes[0] = selId;
+                        addNodes[1] = {node: {nodetype:'MS',text:item.SC_DIGIT,config:item}};
+                        SCTreeView.treeview("addNode", addNodes);
+                    });
+                    SCTreeView.treeview("expandNode", selId);
+                });
+            };
+
+            //시나리오에 따른 메뉴 가져오기
+            const tree_getScenarioMenu=function(code){
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/getscenariomenu",
+                    data:{SC_MENU:code},
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    console.log(data.Menu);
+                    let addNodes = [];
+                    addNodes[0] = selId;
+                    addNodes[1] = {node: {nodetype:'MN',dbseq:data.Menu.SC_MENU,text:data.Menu.SC_MENUNAME,config:data.Menu}};
+                    SCTreeView.treeview("addNode", addNodes);
+                    SCTreeView.treeview("expandNode", selId);
+                });
+            };
+
+            //시나리오에 따른 라우트 OverCall 가져오기
+            const tree_getScenarioOvercall=function(code){
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/scenarioovercalllist",
+                    data:{RT_ROUTE:code},
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    $.each(data.Overcall, function (i, item) {
+                        console.log('-----------------------------------------------');
+                        console.log(item);
+                        let addNodes = [];
+                        addNodes[0] = selId;
+                        addNodes[1] = {node: {nodetype:'OC',text:item.SC_PROMPT_INFO,config:item}};
+                        SCTreeView.treeview("addNode", addNodes);
+                    });
+                    SCTreeView.treeview("expandNode", selId);
+                });
+            };
+
+            //시나리오에 따른 라우트 가져오기
+            const tree_getScenarioRoute=function(code){
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/getscenarioroute",
+                    data:{RT_ROUTE:code},
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    console.log(data.Route);
+                    let addNodes = [];
+                    addNodes[0] = selId;
+                    addNodes[1] = {node: {nodetype:'RT',dbseq:data.Route.RT_ROUTE,text:data.Route.RT_ROUTENAME,config:data.Route}};
+                    SCTreeView.treeview("addNode", addNodes);
+                    SCTreeView.treeview("expandNode", selId);
+                });
+            };
+
+            //시나리오에 따른 시나리오 가져오기
+            const tree_getScenarioScenario=function(code){
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/getscenarionew",
+                    data:{SC_CODE:code},
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    console.log(data.Scenario);
+                    let addNodes = [];
+                    addNodes[0] = selId;
+                    addNodes[1] = {node: {nodetype:'SC',dbseq:data.Scenario.SC_CODE,text:data.Scenario.SC_NAME,config:data.Scenario}};
+                    SCTreeView.treeview("addNode", addNodes);
+                    SCTreeView.treeview("expandNode", selId);
+                });
+            };
+
+            //시나리오에 따른 dtmf 가져오기
+            const tree_getScenarioDtmf=function(code){
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/getscenariodtmf",
+                    data:{SC_DTMF:code},
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    console.log(data.Dtmf);
+                    var addNodes = [];
+                    addNodes[0] = selId;
+                    addNodes[1] = {node: {nodetype:'IN',text:data.Dtmf.SC_DTMFNAME,config:data.Dtmf}};
+                    SCTreeView.treeview("addNode", addNodes);
+                    SCTreeView.treeview("expandNode", selId);
+                });
+            };
+
+            //시나리오에 따른 Callback 가져오기
+            const tree_getScenarioCallback=function(code){
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/getscenariocallback",
+                    data:{SC_CALLBACK:code},
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    console.log(data.Callback);
+                    let addNodes = [];
+                    addNodes[0] = selId;
+                    addNodes[1] = {node: {nodetype:'CB',dbseq:data.Callback.SC_CALLBACK,text:data.Callback.SC_CALLBACKNAME,config:data.Callback}};
+                    SCTreeView.treeview("addNode", addNodes);
+                    SCTreeView.treeview("expandNode", selId);
+                });
+            };
+
+            //시나리오에 따른 Notice 가져오기
+            const tree_getScenarioNotice=function(code){
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/getscenarionotice",
+                    data:{SC_NOTICE:code},
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    console.log(data.Notice);
+                    let addNodes = [];
+                    addNodes[0] = selId;
+                    addNodes[1] = {node: {nodetype:'NT',text:data.Notice.NT_NAME,config:data.Notice}};
+                    SCTreeView.treeview("addNode", addNodes);
+                    SCTreeView.treeview("expandNode", selId);
+                });
+            };
+
+            //시나리오에 따른 근무시간 가져오기
+            const tree_getScenarioWrokhour=function(code){
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/scenarioworkhourlist",
+                    data:{SC_CODE:code},
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    $.each(data.Workhour, function (i, item) {
+                        console.log('-----------------------------------------------');
+                        console.log(item);
+                        var addNodes = [];
+                        addNodes[0] = selId;
+                        addNodes[1] = {node: {nodetype:'WH' ,text:item.WH_TYPE_NM+':'+item.WH_KIND_NM,config:item}};
+                        SCTreeView.treeview("addNode", addNodes);
+                    });
+                    SCTreeView.treeview("expandNode", selId);
+                });
+            };
+
+            //상위 메뉴 재귀호출
+            const tree_getLoopNode=function(text){
+                let addNodes = [];
+                addNodes[0] = selId;
+                addNodes[1] = {node: {nodetype:'US',text:text}};
+                SCTreeView.treeview("addNode", addNodes);
+                SCTreeView.treeview("expandNode", selId);
+            };
+
+            const tree_getParentNodes=function(id, parents){ //상위의 노드를 모두 가져온다.
+                let parent_node=SCTreeView.treeview("getParent", id);
+                parents.push(parent_node);
+                if(parent_node.nodetype!=='SC'){
+                    tree_getParentNodes(parent_node.nodeId, parents);
+                }
+            }
+
+            const tree_getParentRoute=function(id, parents){ //상위의 첫 라우팅 노트를 가져온다.
+                let parent_node=SCTreeView.treeview("getParent", id);
+                parents.push(parent_node);
+                if(parent_node.nodetype!=='RT'){
+                    tree_getParentRoute(parent_node.nodeId, parents);
+                }
+            }
+
+            const tree_getParentNode=function(id, parent){ //상위의 노드를 가져온다.
+                let parent_node=SCTreeView.treeview("getParent", id);
+                parent.push(parent_node);
+            }
+
+            const tree_getParentNodeId=function(id){ //상위의 노드의 아이디를 가져온다.
+                let parent_node=SCTreeView.treeview("getParent", id);
+                return parent_node.nodeId;
+            }
+
+            const tree_getParentDeleteAllChildrenNodes=function(id){ //상위의 노드의 자식들을 삭제한다.
+                let parent_node=SCTreeView.treeview("getParent", id);
+                SCTreeView.treeview("deleteChildrenNode", parent_node.nodeId);
+            }
+
+
+            const tree_getParentDeleteAllChildrenNodesRedraw=function(id){ //상위의 노드의 자식들을 삭제하고 다시 그린다.
+                let parent_node=SCTreeView.treeview("getParent", id);
+                if(parent_node.nodetype=="RO"){
+                    SCENARIO_DEFAULT=[];
+                    tree_getScenario();
+                }
+                else{
+                    SCTreeView.treeview("deleteChildrenNode", parent_node.nodeId);
+                    SCTreeView.treeview("selectNode", parent_node.nodeId);
+                }
+            }
+
+            const tree_getMyDeleteAllChildrenNodesRedraw=function(id){ //상위의 노드의 자식들을 삭제하고 다시 그린다.
+                SCTreeView.treeview("deleteChildrenNode", id);
+                SCTreeView.treeview("unselectNode", id);
+                SCTreeView.treeview("selectNode", id);
+            }
+
+            const tree_parentIsRoot=function(id){
+                let parent_node=SCTreeView.treeview("getParent", id);
+                if(parent_node.nodetype=="RO"){
+                    return true;
+                }
+                else{
+                    return false;
+                }
+            }
+
+            //다음 노드 가져오기
+            const tree_getNextNode=function(sc_next, sc_next_target){
+                if(sc_next===5){
+                    //sc_next 5, sc_next_target 0는 다음 노드가 없음이다.
+                    console.log('sc_next is 5, stop make node');
+                }
+                else{
+                    switch(sc_next){
+                        case 1: //menu
+                            console.log('is not leaf node');
+                            tree_getScenarioMenu(sc_next_target, 1);
+                            break;
+                        case 2: //route
+                            console.log('is not leaf node');
+                            tree_getScenarioRoute(sc_next_target, 2);
+                            break;
+                        case 3: //callback
+                            console.log('is not leaf node');
+                            tree_getScenarioCallback(sc_next_target, 3);
+                            break;
+                        case 4: //notice
+                            console.log('is not leaf node');
+                            tree_getScenarioNotice(sc_next_target, 4);
+                            break;
+                        case 8: //dtmf
+                            console.log('is not leaf node');
+                            tree_getScenarioDtmf(sc_next_target, 8);
+                            break;
+                        case 9: //worktime
+                            console.log('is not leaf node');
+                            tree_getScenarioWrokhour(sc_next_target, 9);
+                            break;
+                        case 11: //overcall ??? 왜 있음?? 오버콜은 라우트 아래에만 매달림.
+                            console.log('is not leaf node');
+                            break;
+                        case 12: //시나리오
+                            console.log('is not leaf node');
+                            tree_getScenarioScenario(sc_next_target,12)
+                            break;
+                        default:
+                            //5-end
+                            //6-sms
+                            //7-agent
+                            //10-transfer
+                            //12-scenario
+                            console.log('is leaf node');
+                            break;
+                    }//end of switch(sc_next)
+                }//end of sc_next!=5
+            }//end of function tree_getnextNode
+
+            //다음 노드 자료 입력하기 : SC_NEXT, SC_NEXT_TARGET
+            const tree_updateSCNEXT=function(type, config, next, next_target){
+                switch(type){
+                    case 'SC':
+                        $.ajax({
+                            method: "POST",
+                            url: CONTEXT_PATH+"/mng/ivr/scenarionewnextedit",
+                            data:{
+                                SC_CODE: config.SC_CODE,
+                                SC_NEXT: next,
+                                SC_NEXT_TARGET: next_target
+                            },
+                            error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                        }).done(function () {
+                            console.log('Scenario : SC_NEXT, SC_NEXT_TARGET UPDATE DONE!!!!!!!!!');
+                        });
+                        break;
+                    case 'WH':
+                        console.log('next:'+next);
+                        console.log('next_target:'+next_target);
+                        $.ajax({
+                            method: "POST",
+                            url: CONTEXT_PATH+"/mng/ivr/scenarioworkhournextedit",
+                            data:{
+                                SC_CODE: config.SC_CODE,
+                                SC_WORKHOURCODE: config.SC_WORKHOURCODE,
+                                WH_TYPE: config.WH_TYPE,
+                                WH_KIND: config.WH_KIND,
+                                SC_NEXT: next,
+                                SC_NEXT_TARGET: next_target
+                            },
+                            error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                        }).done(function () {
+                            console.log('Workhour : SC_NEXT, SC_NEXT_TARGET UPDATE DONE!!!!!!!!!');
+                        });
+                        break;
+                    case 'MS':
+                        $.ajax({
+                            method: "POST",
+                            url: CONTEXT_PATH+"/mng/ivr/scenariomenusubnextedit",
+                            data:{
+                                SC_MENU: config.SC_MENU,
+                                SC_DIGIT: config.SC_DIGIT,
+                                SC_NEXT: next,
+                                SC_NEXT_TARGET: next_target
+                            },
+                            error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                        }).done(function () {
+                            console.log('MenuSub : SC_NEXT, SC_NEXT_TARGET UPDATE DONE!!!!!!!!!');
+                        });
+                        break;
+                    case 'OC':
+                        $.ajax({
+                            method: "POST",
+                            url: CONTEXT_PATH+"/mng/ivr/scenarioovercallnextedit",
+                            data:{
+                                OC_OVERCALL: config.OC_OVERCALL,
+                                SC_NEXT: next,
+                                SC_NEXT_TARGET: next_target
+                            },
+                            error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                        }).done(function () {
+                            console.log('Overcall : SC_NEXT, SC_NEXT_TARGET UPDATE DONE!!!!!!!!!');
+                        });
+                        break;
+                    case 'IN':
+                        $.ajax({
+                            method: "POST",
+                            url: CONTEXT_PATH+"/mng/ivr/scenariodtmfnextedit",
+                            data:{
+                                SC_DTMF: config.SC_DTMF,
+                                SC_NEXT: next,
+                                SC_NEXT_TARGET: next_target
+                            },
+                            error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                        }).done(function () {
+                            console.log('Dtmf : SC_NEXT, SC_NEXT_TARGET UPDATE DONE!!!!!!!!!');
+                        });
+                        break;
+                    case 'CB':
+                        $.ajax({
+                            method: "POST",
+                            url: CONTEXT_PATH+"/mng/ivr/scenariocallbacknextedit",
+                            data:{
+                                SC_CALLBACK: config.SC_CALLBACK,
+                                SC_NEXT: next,
+                                SC_NEXT_TARGET: next_target
+                            },
+                            error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                        }).done(function () {
+                            console.log('Dtmf : SC_NEXT, SC_NEXT_TARGET UPDATE DONE!!!!!!!!!');
+                        });
+                        break;
+                }
+            }
+
+            //시나리오 가져오기
+            const tree_getScenario = function() {
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/scenarionewlist",
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    $.each(data.Scenario, function (i, item) {
+                        SCENARIO_DEFAULT.push({text:item.SC_NAME, dbseq:item.SC_CODE, nodetype:'SC',config:item, icon: "fal fa-headset"});
+                    });
+                    console.log(SCENARIO_DEFAULT);
+
+                    SCTreeView=$('#treeview-selectable').treeview({
+                        //data: defaultData,
+                        //data: [{}]SCENARIO_DEFAULT,
+                        data: [{"text":"시나리오 Tree","nodetype":"RO","nodes":SCENARIO_DEFAULT}], //RO is root
+                        //data : [{text: '시나리오1'}],
+                        expandIcon: 'fal fa-chevron-right',
+                        collapseIcon: 'fal fa-chevron-down',
+                        onNodeSelected: function(event, node) {
+                            console.log(node);
+                            console.log("selected",  node.text);
+                            console.log("selected",  node.nodetype);
+                            SELECT_NODE=node;
+                            selId = node ['nodeId']; // Get node nodeId
+
+                            let query_nodes=[];
+                            let exist_flag=0;
+                            $('._BtnNewSCNode').prop('disabled', true);
+                            switch(node.nodetype){
+                                case 'SC':
+                                    console.log('load scenario workhour');
+
+                                    //00. SC의 경우 시나리오와 시나리오선택 2종류가 있다.
+                                    //    ParentNode가 RO이면 시나리오
+                                    //    ParentNode가 RO가 아니면 시나리오 선택이다.
+                                    if(tree_parentIsRoot(selId)==true){
+                                        //0. 시나리오 판넬 보이기 및 상황 버튼 활성화
+                                        $("._BtnAddSCNode").hide();
+                                        $("._BtnEdtSCNode").show();
+                                        view_panel("._pnl_scenario");
+                                        form_reset("._pnl_scenario");
+                                        //1. SC_NEXT에 맞는 다음 노드 불러오기
+                                        if(typeof node.nodes == 'undefined' || (typeof node.nodes=='object' && node.nodes==null)){
+                                            if(typeof node.config.SC_NEXT !== 'undefined' && typeof node.config.SC_NEXT_TARGET !=='undefined'){
+                                                tree_getNextNode(node.config.SC_NEXT, node.config.SC_NEXT_TARGET);
+                                            }
+                                        }
+                                        //2. 데이터 판넬에 입력하기
+                                        $("#_sc_sccode").val(node.config.SC_CODE);
+                                        $("#_sc_scname").val(node.config.SC_NAME);
+                                        $("#_sc_scumwon1").val(node.config.SC_PROMPT);
+                                        $("#_sc_scumwon1_info").val(node.config.SC_PROMPT_INFO);
+                                        $("#_sc_scumwon2").val(node.config.SC_PROMPT2);
+                                        $("#_sc_scumwon2_info").val(node.config.SC_PROMPT2_INFO);
+                                        //$("#_sc_scnoti_yn").val(node.config.SC_NOTI_YN);
+                                        //$("#_sc_scend_yn").val(node.config.SC_END_YN);
+                                        $("#_sc_scnoti_yn").prop("checked", node.config.SC_NOTI_YN==1?true:false);
+                                        $("#_sc_scend_yn").prop("checked", node.config.SC_END_YN==1?true:false);
+                                        if(node.config.SC_NOTI_YN==1){
+                                            $("#_sc_scnoti").val(node.config.SC_NOTI);
+                                            $("#_sc_scnoti_info").val(node.config.SC_NOTI_INFO);
+                                            $("#_sc_scnoti_startdate").val(node.config.SC_NOTI_SDATE);
+                                            $("#_sc_scnoti_starttime").val(node.config.SC_NOTI_STIME);
+                                            $("#_sc_scnoti_enddate").val(node.config.SC_NOTI_EDATE);
+                                            $("#_sc_scnoti_endtime").val(node.config.SC_NOTI_ETIME);
+                                        }
+                                        if(typeof node.config.SC_WORKHOUR !== 'undefined'){
+                                            $("#_sc_scworkhourset").val(node.config.SC_WORKHOUR);
+                                            getWorkhourType(node.config.SC_WORKHOUR);
+                                            if(node.config.SC_WORKHOUR==0){
+                                                $('._BtnNewWrokhourNode').prop('disabled', true);
+                                            }
+                                            else{
+                                                $('._BtnNewWrokhourNode').prop('disabled', false);
+                                            }
+                                        }else{
+                                            $('._BtnNewWrokhourNode').prop('disabled', true);
+                                        }
+                                    }
+                                    else{
+                                        //시나리오선택
+                                        //0. 시나리오 선택 판넬 보이기 및 상황 버튼 활성화
+                                        $("._BtnAddScenarioNode").hide();
+                                        $("._BtnEdtScenarioNode").show();
+                                        view_panel("._pnl_scenario_select");
+                                        form_reset("._pnl_scenario_select");
+                                        //1. SC_NEXT에 맞는 다음 노드 불러오기
+                                        if(typeof node.nodes == 'undefined' || (typeof node.nodes=='object' && node.nodes==null)){
+                                            if(typeof node.config.SC_NEXT !== 'undefined' && typeof node.config.SC_NEXT_TARGET !=='undefined'){
+                                                tree_getNextNode(node.config.SC_NEXT, node.config.SC_NEXT_TARGET);
+                                            }
+                                        }
+                                        //2. 시나리오 선택 grid에서 데이터 선택하기
+                                    }
+
+                                    break;
+                                case 'WH':
+                                    console.log('load WORKHOUR next action');
+                                    //0. 근무시간 판넬 보이기 및 상황 버튼 활성화
+                                    $("._BtnAddWorkhourNode").hide();
+                                    $("._BtnEdtWorkhourNode").show();
+                                    view_panel("._pnl_workhour");
+                                    form_reset("._pnl_workhour");
+                                    //1. SC_NEXT에 맞는 다음 노드 불러오기
+                                    if(typeof node.nodes == 'undefined' || (typeof node.nodes=='object' && node.nodes==null)){
+                                        if(typeof node.config.SC_NEXT !== 'undefined' && typeof node.config.SC_NEXT_TARGET !=='undefined'){
+                                            tree_getNextNode(node.config.SC_NEXT, node.config.SC_NEXT_TARGET);
+                                        }
+                                    }
+                                    //2. 데이터 판넬에 입력하기
+                                    $("#_wh_sccode").val(node.config.SC_CODE);
+                                    $("#_wh_whcode").val(node.config.SC_WORKHOURCODE);
+                                    $("#_wh_whtype").val(node.config.WH_TYPE);
+                                    $("#_wh_whkind").val(node.config.WH_KIND);
+                                    $("#_wh_whprompt").val(node.config.SC_PROMPT);
+                                    $("#_wh_whprompt_info").val(node.config.SC_PROMPT_INFO);
+                                    break;
+                                case 'MN':
+                                    console.log('load MENU next action');
+                                    //0. 근무시간 판넬 보이기 및 상황 버튼 활성화
+                                    $("._BtnAddMenuNode").hide();
+                                    $("._BtnEdtMenuNode").show();
+                                    view_panel("._pnl_menu");
+                                    form_reset("._pnl_menu");
+                                    //1. SC_NEXT에 맞는 데이터 불러오기
+                                    if(typeof node.nodes == 'undefined' || (typeof node.nodes=='object' && node.nodes==null)){
+                                        tree_getScenarioSubMenu(node.config.SC_MENU);
+                                    }
+                                    //2. 데이터 판넬에 입력하기
+                                    console.log('================================================');
+                                    console.log(node.config);
+                                    console.log('================================================');
+                                    $("#_mn_mncode").val(node.config.SC_MENU);
+                                    $("#_mn_mnname").val(node.config.SC_MENUNAME);
+                                    $("#_mn_mnprompt").val(node.config.SC_PROMPT);
+                                    $("#_mn_mnprompt_info").val(node.config.SC_PROMPT_INFO);
+                                    $("#_mn_mnerrprompt").val(node.config.SC_DIGITERROR);
+                                    $("#_mn_mnerrprompt_info").val(node.config.SC_DIGITERROR_INFO);
+                                    $("#_mn_mnnoneprompt").val(node.config.SC_DIGITNONE);
+                                    $("#_mn_mnnoneprompt_info").val(node.config.SC_DIGITNONE_INFO);
+                                    $("#_mn_mnerrcnt").val(node.config.SC_DIGITERRORCOUNT);
+                                    $("#_mn_mnterm").val(node.config.SC_DIGITTERM);
+                                    break;
+                                case 'MS': //상위가 있음
+                                    console.log('load MENU Sub next action' || node.nodes.length===0);
+                                    tree_getParentNodes(selId,query_nodes);
+
+                                    $("#_ms_msnext option:not(option:eq(0))").remove();
+                                    for(let i=0; i<query_nodes.length; i++){
+                                        console.log(i+":"+query_nodes[i].nodetype+", "+query_nodes[i].text);
+                                        console.log('===============================================================');
+                                        console.log(query_nodes[i]);
+                                        console.log('===============================================================');
+                                        if(query_nodes[i].nodetype==='SC'){
+                                            console.log('db seq:'+query_nodes[i].dbseq);
+                                            $("#_ms_msnext").append($('<option>', { value:"12|"+query_nodes[i].dbseq, text:'시나리오:'+query_nodes[i].text, sc_next:12}));
+                                        }
+                                        else if(query_nodes[i].nodetype==='RT'){
+                                            console.log('db seq:'+query_nodes[i].dbseq);
+                                            $("#_ms_msnext").append($('<option>', { value:"2|"+query_nodes[i].dbseq, text:'라우트:'+query_nodes[i].text, sc_next:2}));
+                                        }
+                                        else if(query_nodes[i].nodetype==='MN'){
+                                            console.log('db seq:'+query_nodes[i].dbseq);
+                                            $("#_ms_msnext").append($('<option>', { value:"1|"+query_nodes[i].dbseq, text:'메뉴:'+query_nodes[i].text, sc_next:1}));
+                                        }
+                                        else if(query_nodes[i].nodetype==='CB'){
+                                            console.log('db seq:'+query_nodes[i].dbseq);//콜백은 3, 콜백실행은 14
+                                            $("#_ms_msnext").append($('<option>', { value:"3|"+query_nodes[i].dbseq, text:'콜백이동:'+query_nodes[i].text, sc_next:14}));
+                                            console.log('db seq:'+query_nodes[i].dbseq);//콜백은 3, 콜백실행은 14
+                                            $("#_ms_msnext").append($('<option>', { value:"14|"+query_nodes[i].dbseq, text:'콜백실행:'+query_nodes[i].text, sc_next:14}));
+                                        }
+                                    }
+
+                                    //0. 근무시간 판넬 보이기 및 상황 버튼 활성화
+                                    $("._BtnAddMenuSubNode").hide();
+                                    $("._BtnEdtMenuSubNode").show();
+                                    view_panel("._pnl_menusub");
+                                    form_reset("._pnl_menusub");
+                                    //1. SC_NEXT에 맞는 데이터 불러오기
+                                    if(typeof node.nodes == 'undefined' || (typeof node.nodes=='object' && node.nodes==null)){
+                                        if(typeof node.config.SC_NEXT !== 'undefined' && typeof node.config.SC_NEXT_TARGET !=='undefined'){
+                                            //서브메뉴의 경우 '#'같은 것은 다시 상위 메뉴로 가는것이다.
+                                            //SC_NEXT의 값이 1이고, SC_NEXT_TARGET의 값이 SC_MENU의 값과 같으면 새로운 노드는 추가하면 안된다.
+                                            //상위에 해당 코드가 있는지 확인 할 것
+                                            for(let i=0; i<query_nodes.length; i++){
+                                                if(typeof query_nodes[i].dbseq!=='undefined' && (query_nodes[i].dbseq===Number(node.config.SC_NEXT_TARGET))){
+                                                    if(query_nodes[i].nodetype==='MN' && node.config.SC_NEXT===1){
+                                                        tree_getLoopNode('상위 메뉴 이동 : '+query_nodes[i].text);
+                                                    }
+                                                    else if(query_nodes[i].nodetype==='RT' && node.config.SC_NEXT===2){
+                                                        tree_getLoopNode('상위 라우트 이동 : '+query_nodes[i].text);
+                                                    }
+                                                    else if(query_nodes[i].nodetype==='CB' && node.config.SC_NEXT===3){
+                                                        tree_getLoopNode('상위 콜백 이동 : '+query_nodes[i].text);
+                                                    }
+                                                    else if(query_nodes[i].nodetype==='CB' && node.config.SC_NEXT===14){
+                                                        tree_getLoopNode('상위 콜백 실행 : '+query_nodes[i].text);
+                                                    }
+                                                    else if(query_nodes[i].nodetype==='SC' && node.config.SC_NEXT===12){
+                                                        tree_getLoopNode('상위 시나리오 이동 : '+query_nodes[i].text);
+                                                    }
+                                                    exist_flag++;
+                                                    break;
+                                                }
+                                            }
+                                            if(exist_flag==0){
+                                                console.log("MENUSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSUUUUUUUUUUUUUUUBBBBBBBBBBBBBBBBBBBBB");
+                                                console.log("MENUSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSUUUUUUUUUUUUUUUBBBBBBBBBBBBBBBBBBBBB");
+                                                console.log("MENUSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSUUUUUUUUUUUUUUUBBBBBBBBBBBBBBBBBBBBB");
+                                                console.log('node.config.SC_NEXT:'+node.config.SC_NEXT+', node.config.SC_NEXT_TARGET:'+node.config.SC_NEXT_TARGET)
+                                                console.log("MENUSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSUUUUUUUUUUUUUUUBBBBBBBBBBBBBBBBBBBBB");
+                                                console.log("MENUSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSUUUUUUUUUUUUUUUBBBBBBBBBBBBBBBBBBBBB");
+                                                console.log("MENUSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSUUUUUUUUUUUUUUUBBBBBBBBBBBBBBBBBBBBB");
+                                                tree_getNextNode(node.config.SC_NEXT, node.config.SC_NEXT_TARGET);
+                                            }
+                                        }
+                                    }
+                                    //2. 데이터 판넬에 입력하기
+                                    $("#_ms_mncode").val(node.config.SC_MENU);
+                                    $("#_ms_msdigit").val(node.config.SC_DIGIT);
+                                    //$("#_ms_msnoti_yn").val(node.config.SC_NOTI_YN);
+                                    $("#_ms_msnoti_yn").prop("checked", node.config.SC_NOTI_YN==1?true:false);
+                                    if(node.config.SC_NOTI_YN==1){
+                                        $("#_ms_msnoti").val(node.config.SC_NOTI);
+                                        $("#_ms_msnoti_startdate").val(node.config.SC_NOTI_SDATE);
+                                        $("#_ms_msnoti_starttime").val(node.config.SC_NOTI_STIME);
+                                        $("#_ms_msnoti_enddate").val(node.config.SC_NOTI_EDATE);
+                                        $("#_ms_msnoti_endtime").val(node.config.SC_NOTI_ETIME);
+                                    }
+                                    //상위에 있다면
+                                    if(exist_flag>0){
+                                        $("#_ms_msnext").val(node.config.SC_NEXT+"|"+node.config.SC_NEXT_TARGET);
+                                    }
+                                    break;
+                                case 'RT':
+                                    console.log('load ROUTE next action');
+                                    //0. 근무시간 판넬 보이기 및 상황 버튼 활성화
+                                    $("._BtnAddRouteNode").hide();
+                                    $("._BtnEdtRouteNode").show();
+                                    view_panel("._pnl_route_select");
+                                    form_reset("._pnl_route_select");
+                                    //1. SC_NEXT에 맞는 데이터 불러오기
+                                    if(typeof node.nodes == 'undefined' || (typeof node.nodes=='object' && node.nodes==null)){
+                                        tree_getScenarioOvercall(node.config.RT_ROUTE);
+                                    }
+                                    //2. 데이터 판넬에 입력하기
+                                    $("#_rt_rtcode").val(node.config.RT_ROUTE);
+                                    console.log('rt_rtcode:'+$("#_rt_rtcode").val());
+                                    break;
+                                case 'OC': //상위이동 가능
+                                    console.log('load Overcall next action');
+
+                                    tree_getParentRoute(selId,query_nodes); //
+
+                                    $("#_oc_ocnext option:not(option:eq(0))").remove();
+                                    console.log('db seq:'+query_nodes[0].dbseq);
+                                    $("#_oc_ocnext").append($('<option>', { value:query_nodes[0].dbseq, text:'라우트:'+query_nodes[0].text, sc_next:2}));
+
+                                    //0. 근무시간 판넬 보이기 및 상황 버튼 활성화
+                                    $("._BtnAddOvercallNode").hide();
+                                    $("._BtnEdtOvercallNode").show();
+                                    view_panel("._pnl_overcall");
+                                    form_reset("._pnl_overcall");
+                                    //1. SC_NEXT에 맞는 데이터 불러오기
+                                    if(typeof node.nodes == 'undefined' || (typeof node.nodes=='object' && node.nodes==null)){
+                                        //OverCall은 상위에 반드시 Route Node가 있다.
+                                        if(typeof node.config.SC_NEXT !== 'undefined' && typeof node.config.SC_NEXT_TARGET !=='undefined'){
+                                            //오버콜의 경우 상위의 라우트를 다시 지정하는 경우가 있다.
+                                            //SC_NEXT의 값이 2이고, SC_NEXT_TARGET의 값(NUMBER로 변환한)이 RT_ROUTE의 값과 같으면 노드를 표시 하지 않는다.
+                                            if(node.config.SC_NEXT!==2 && Number(node.config.SC_NEXT_TARGET)!==node.config.RT_ROUTE){
+                                                tree_getNextNode(node.config.SC_NEXT, node.config.SC_NEXT_TARGET);
+                                            }
+                                            else{
+                                                exist_flag++;
+                                                tree_getLoopNode('상위 라우트 이동: '+query_nodes[0].text);
+                                            }
+                                        }
+                                    }
+                                    //2. 데이터 판넬에 입력하기
+                                    $("#_oc_rtcode").val(node.config.RT_ROUTE);
+                                    $("#_oc_occode").val(node.config.OC_OVERCALL);
+                                    $("#_oc_ocorder").val(node.config.OC_SEQUENCE);
+                                    $("#_oc_ocprompt").val(node.config.OC_PROMPT);
+                                    $("#_oc_ocprompt_info").val(node.config.SC_PROMPT_INFO);
+                                    if(exist_flag>0 || (typeof node.nodes=='object' && node.nodes!=null && node.nodes[0].nodetype==='US')){
+                                        $("#_oc_ocnext").val(Number(node.config.SC_NEXT_TARGET));
+                                    }
+                                    break;
+                                case 'IN':
+                                    console.log('load DTMF next action');
+                                    //0. 근무시간 판넬 보이기 및 상황 버튼 활성화
+                                    $("._BtnAddDTMFNode").hide();
+                                    $("._BtnEdtDTMFNode").show();
+                                    view_panel("._pnl_dtmf");
+                                    form_reset("._pnl_dtmf");
+                                    //1. SC_NEXT에 맞는 데이터 불러오기
+                                    if(typeof node.nodes == 'undefined' || (typeof node.nodes=='object' && node.nodes==null)){
+                                        if(typeof node.config.SC_NEXT !== 'undefined' && typeof node.config.SC_NEXT_TARGET !=='undefined'){
+                                            tree_getNextNode(node.config.SC_NEXT, node.config.SC_NEXT_TARGET);
+                                        }
+                                    }
+                                    //2. 데이터 판넬에 입력하기
+                                    $("#_in_dtmfcode").val(node.config.SC_DTMF);
+                                    $("#_in_dtmfname").val(node.config.SC_DTMFNAME);
+                                    $("#_in_dtmfprompt").val(node.config.SC_PROMPT);
+                                    $("#_in_dtmfprompt_info").val(node.config.SC_PROMPT_INFO);
+                                    $("#_in_dtmfmin").val(node.config.SC_DTMFMIN);
+                                    $("#_in_dtmfmax").val(node.config.SC_DTMFMAX);
+                                    $("#_in_dtmferrprompt").val(node.config.SC_DIGITERROR);
+                                    $("#_in_dtmferrprompt_info").val(node.config.SC_DIGITERROR_INFO);
+                                    $("#_in_dtmfnoneprompt").val(node.config.SC_DIGITNONE);
+                                    $("#_in_dtmfnoneprompt_info").val(node.config.SC_DIGITNONE_INFO);
+                                    $("#_in_dtmferrcnt").val(node.config.SC_DIGITERRORCOUNT);
+                                    $("#_in_dtmfterm").val(node.config.SC_DIGITTERM);
+                                    break;
+                                case 'CB':
+                                    console.log('load CALLBACK next action');
+                                    //0. 근무시간 판넬 보이기 및 상황 버튼 활성화
+                                    $("._BtnAddCallbackNode").hide();
+                                    $("._BtnEdtCallbackNode").show();
+                                    view_panel("._pnl_callback");
+                                    form_reset("._pnl_callback");
+                                    //1. SC_NEXT에 맞는 데이터 불러오기
+                                    //		콜백은 다음 노드가 없이 종료한다. --> 20210703 수정 : 콜백 리미트로 인해 메뉴가 필요해졌다.
+                                    if(typeof node.nodes == 'undefined' || (typeof node.nodes=='object' && node.nodes==null)){
+                                        if(typeof node.config.SC_NEXT !== 'undefined' && typeof node.config.SC_NEXT_TARGET !=='undefined'){
+                                            tree_getNextNode(node.config.SC_NEXT, node.config.SC_NEXT_TARGET);
+                                        }
+                                    }
+
+                                    //2. 데이터 판넬에 입력하기
+                                    $("#_cb_cbcode").val(node.config.SC_CALLBACK);
+                                    $("#_cb_cbname").val(node.config.SC_CALLBACKNAME);
+                                    $("#_cb_cbprompt").val(node.config.SC_PROMPT);
+                                    $("#_cb_cbprompt_info").val(node.config.SC_PROMPT_INFO);
+                                    $("#_cb_cbprompt2").val(node.config.SC_PROMPT2);
+                                    $("#_cb_cbprompt2_info").val(node.config.SC_PROMPT2_INFO);
+                                    $("#_cb_cbmin").val(node.config.SC_DTMFMIN);
+                                    $("#_cb_cbmax").val(node.config.SC_DTMFMAX);
+                                    $("#_cb_cberrprompt").val(node.config.SC_DIGITERROR);
+                                    $("#_cb_cberrprompt_info").val(node.config.SC_DIGITERROR_INFO);
+                                    $("#_cb_cbnoneprompt").val(node.config.SC_DIGITNONE);
+                                    $("#_cb_cbnoneprompt_info").val(node.config.SC_DIGITNONE_INFO);
+                                    $("#_cb_cberrcnt").val(node.config.SC_DIGITERRORCOUNT);
+                                    $("#_cb_cbterm").val(node.config.SC_DIGITTERM);
+                                    $("#_cb_cblimit").val(node.config.SC_LIMIT);
+                                    break;
+                                case 'NT':
+                                    console.log('load NOTICE next action');
+                                    //0. 근무시간 판넬 보이기 및 상황 버튼 활성화
+                                    $("._BtnAddNotiNode").hide();
+                                    $("._BtnEdtNotiNode").show();
+                                    view_panel("._pnl_notice_select");
+                                    form_reset("._pnl_notice_select");
+                                    //1. SC_NEXT에 맞는 데이터 불러오기
+                                    //		공지는 다음 노드가 없이 종료한다.
+                                    //2. 데이터 판넬에 입력하기
+                                    $("#_nt_ntcode").val(node.config.SC_DTMF);
+                                    break;
+                                case 'SS':
+                                    console.log('load Scenario Select next action');
+                                    //0. 근무시간 판넬 보이기 및 상황 버튼 활성화
+                                    $("._BtnAddScenarioNode").hide();
+                                    $("._BtnEdtScenarioNode").show();
+                                    view_panel("._pnl_scenario_select");
+                                    form_reset("._pnl_scenario_select");
+                                    //1. SC_NEXT에 맞는 데이터 불러오기
+                                    //		공지는 다음 노드가 없이 종료한다.
+                                    //2. 데이터 판넬에 입력하기
+                                    $("#_ss_sccode").val(node.config.SC_CODE);
+                                    break;
+                                case 'US': //up menu self call
+                                    console.log('load Up menu self call next action');
+                                    //0. 근무시간 판넬 보이기 및 상황 버튼 활성화
+                                    hide_all_panel();
+                                    //view_panel("._pnl_scenario_select");
+                                    //form_reset("._pnl_notice"); 공지는 grid 선택이다.
+                                    //1. SC_NEXT에 맞는 데이터 불러오기
+                                    //		공지는 다음 노드가 없이 종료한다.
+                                    //2. 데이터 판넬에 입력하기
+                                    break;
+                                case 'RO': //root node
+                                    console.log('load root node action');
+                                    $('._BtnNewSCNode').prop('disabled', false);
+                                    hide_all_panel();
+                                    break;
+                                default:
+                                    console.log('not yet, SC_NEXT - '+node.config.SC_NEXT+', SC_NEXT_TARGET - '+node.config.SC_NEXT_TARGET);
+                                    console.log(typeof node.config.SC_NEXT);
+                            }
+
+                        },
+                        onNodeUnselected: function (event, node) {
+                            console.log("unselected",  node.text);
+
+                        }
+                    });
+                });
+            };
+
+            tree_getScenario();
+
+            const dt_scenario = $('#scenario_sel_grid').DataTable({
+                ajax: {
+                    url: CONTEXT_PATH+"/mng/ivr/scenarionewlist",
+                    dataSrc: "Scenario"
+                },
+                columns: [
+                    { "data": "SC_CODE" },
+                    { "data": "SC_NAME" }
+                ],
+                columnDefs: [{
+                    "targets": [0],
+                    "visible": false,
+                    "searchable": false
+                }],
+                searching: false,
+                ordering: false,
+                scrollY: "700px",
+                scrollCollapse: true,
+            });
+
+            const dt_route = $('#route_sel_grid').DataTable({
+                ajax: {
+                    url: CONTEXT_PATH+"/mng/ivr/routenewlist",
+                    dataSrc: "Route"
+                },
+                columns: [
+                    { "data": "RT_ROUTE" },
+                    { "data": "RT_ROUTENAME" }
+                ],
+                searching: false,
+                ordering: false,
+                scrollY: "700px",
+                scrollCollapse: true,
+                responsive : false,
+                autoWidth : false
+            });
+
+            const dt_notice = $('#notice_sel_grid').DataTable({
+                ajax: {
+                    url: CONTEXT_PATH+"/mng/ivr/notice/list",
+                    dataSrc: "Notice"
+                },
+                columns: [
+                    { "data": "NT_Code" },
+                    { "data": "NT_NAME" }
+                ],"columnDefs": [
+                    {
+                        "targets": [0],
+                        "visible": false,
+                        "searchable": false
+                    }
+                ],
+                searching: false,
+                ordering: false,
+                scrollY: "700px",
+                scrollCollapse: true,
+                responsive : false
+            });
+
+            dt_scenario.on('select', function(e, dt, type, indexes){
+                console.log('=====>>> scenario code : '+dt_scenario.row(indexes).data().SC_CODE);
+                $('#_ss_sccode').val(dt_scenario.row(indexes).data().SC_CODE);
+            }).on('deselect', function(){
+                console.log('=====>>> scenario code : 0');
+                $('#_ss_sccode').val(0);
+            });
+
+            dt_route.on('select', function(e, dt, type, indexes){
+                console.log('=====>>> route code : '+dt_route.row(indexes).data().RT_ROUTE);
+                $('#_rt_rtcode').val(dt_route.row(indexes).data().RT_ROUTE);
+            }).on('deselect', function(){
+                console.log('=====>>> route code : 0');
+                $('#_rt_rtcode').val(0);
+            });
+
+            dt_notice.on('select', function(e, dt, type, indexes){
+                console.log('=====>>> notice code : '+dt_notice.row(indexes).data().NT_Code);
+                $('#_nt_ntcode').val(dt_notice.row(indexes).data().NT_Code);
+            }).on('deselect', function(){
+                console.log('=====>>> notice code : 0');
+                $('#_nt_ntcode').val(0);
+            });
+
+            // Expand/collapse all
+            $('._BtnExpandAll').on('click', function () {
+                console.log('_BtnExpandAll click');
+                SCTreeView.treeview('expandAll',{ levels: 1, silent: false });
+
+
+            });
+
+            $('._BtnCollapseAll').on('click', function () {
+                console.log('_BtnCollapseAll click');
+                SCTreeView.treeview('collapseAll',{ levels: 1, silent: false });
+            });
+
+            /*
+            $('._BtnRemoveSCNode').on('click', function (e) {
+                console.log('_BtnRemoveSCNode click, select node id : '+selId);
+                // delete all child nodes of the current node
+                SCTreeView.treeview("deleteNode", selId);unselectNode
+            });
+            */
+
+            $("._BtnNewSCNode").click(function(){
+                //시나리오 최초 추가시에만 선택 노드를 해제한다.
+                if(selId!==0){
+                    SCTreeView.treeview("unselectNode", selId);
+                    selId=0;
+                }
+                $("._BtnAddSCNode").show();
+                $("._BtnEdtSCNode").hide();
+                view_panel("._pnl_scenario");
+                form_reset("._pnl_scenario");
+            });
+            $("._BtnNewWrokhourNode").click(function(){
+                $("._BtnAddWorkhourNode").show();
+                $("._BtnEdtWorkhourNode").hide();
+                view_panel("._pnl_workhour");
+                form_reset("._pnl_workhour");
+                //이때 workhour 판넬에 sc_code, workhourset code를 넣어줘야 한다.
+                $('#_wh_sccode').val(SELECT_NODE.config.SC_CODE);
+                $('#_wh_whcode').val(SELECT_NODE.config.SC_WORKHOUR);
+            });
+            $("._BtnNewMenuNode").click(function(){
+                $("._BtnAddMenuNode").show();
+                $("._BtnEdtMenuNode").hide();
+                view_panel("._pnl_menu");
+                form_reset("._pnl_menu");
+            });
+            $("._BtnNewMenuSubNode").click(function(){
+                $("._BtnAddMenuSubNode").show();
+                $("._BtnEdtMenuSubNode").hide();
+                view_panel("._pnl_menusub");
+                form_reset("._pnl_menusub");
+                $('#_ms_mncode').val(SELECT_NODE.config.SC_MENU);
+                //상위 이동 관련 select를 만들어 줘야 한다.
+                let sel_nodes=[];
+                sel_nodes.push(SELECT_NODE);
+                tree_getParentNodes(selId,sel_nodes);
+                $("#_ms_msnext option:not(option:eq(0))").remove();
+                for(var i=0; i<sel_nodes.length; i++){
+                    if(sel_nodes[i].nodetype==='SC'){
+                        console.log('db seq:'+sel_nodes[i].dbseq);
+                        $("#_ms_msnext").append($('<option>', { value:"12|"+sel_nodes[i].dbseq, text:'시나리오:'+sel_nodes[i].text, sc_next:12}));
+                    }
+                    else if(sel_nodes[i].nodetype==='RT'){
+                        console.log('db seq:'+sel_nodes[i].dbseq);
+                        $("#_ms_msnext").append($('<option>', { value:"2|"+sel_nodes[i].dbseq, text:'라우트:'+sel_nodes[i].text, sc_next:2}));
+                    }
+                    else if(sel_nodes[i].nodetype==='MN'){
+                        console.log('db seq:'+sel_nodes[i].dbseq);
+                        $("#_ms_msnext").append($('<option>', { value:"1|"+sel_nodes[i].dbseq, text:'메뉴:'+sel_nodes[i].text, sc_next:1}));
+                    }
+                    else if(sel_nodes[i].nodetype==='CB'){
+                        console.log('db seq:'+sel_nodes[i].dbseq);//콜백은 3, 콜백실행은 14
+                        $("#_ms_msnext").append($('<option>', { value:"3|"+sel_nodes[i].dbseq, text:'콜백실행:'+sel_nodes[i].text, sc_next:14}));
+                    }
+                }
+            });
+            $("._BtnNewRouteNode").click(function(){
+                $("._BtnAddRouteNode").show();
+                $("._BtnEdtRouteNode").hide();
+                view_panel("._pnl_route_select");
+                form_reset("._pnl_route_select");
+            });
+            $("._BtnNewOverCallNode").click(function(){
+                $("._BtnAddOvercallNode").show();
+                $("._BtnEdtOvercallNode").hide();
+                view_panel("._pnl_overcall");
+                form_reset("._pnl_overcall");
+                $('#_oc_rtcode').val(SELECT_NODE.config.RT_ROUTE);
+                //상위 라우트 이동 관련 select를 만들어 줘야 한다.
+                $("#_oc_ocnext option:not(option:eq(0))").remove();
+                console.log('db seq:'+SELECT_NODE.dbseq);
+                $("#_oc_ocnext").append($('<option>', { value:SELECT_NODE.dbseq, text:'라우트:'+SELECT_NODE.text, sc_next:2}));
+            });
+            $("._BtnNewScenarioNode").click(function(){
+                $("._BtnAddScenarioNode").show();
+                $("._BtnEdtScenarioNode").hide();
+                view_panel("._pnl_scenario_select");
+                form_reset("._pnl_scenario_select");
+            });
+            $("._BtnNewDTMFNode").click(function(){
+                $("._BtnAddDTMFNode").show();
+                $("._BtnEdtDTMFNode").hide();
+                view_panel("._pnl_dtmf");
+                form_reset("._pnl_dtmf");
+            });
+            $("._BtnNewCallbackNode").click(function(){
+                $("._BtnAddCallbackNode").show();
+                $("._BtnEdtCallbackNode").hide();
+                view_panel("._pnl_callback");
+                form_reset("._pnl_callback");
+            });
+            $("._BtnNewNoticeNode").click(function(){
+                $("._BtnAddNotiNode").show();
+                $("._BtnEdtNotiNode").hide();
+                view_panel("._pnl_notice_select");
+                form_reset("._pnl_notice_select");
+            });
+            /*2021-06-29 곽정근*/
+
+            $("._BtnRemoveSCNode").click(function(){
+                //메시지창 삭제 여부 확인
+                console.log(SELECT_NODE);
+                if(confirm("["+SELECT_NODE.text +"] 시나리오를 삭제 하시겠습니까?")) {
+                    if ($("._BtnAddScenarioNode").is(":hidden")) {
+                        //edit
+                        $.ajax({
+                            method: "POST",
+                            url: CONTEXT_PATH+"/mng/ivr/scenarionewdel",
+                            data: {SC_CODE: SELECT_NODE.config.SC_CODE},
+                            error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                        }).done(function () {
+                            SCTreeView.treeview("deleteNode", selId);
+                            //시나리오가 삭제되면 근무시간도 삭제 되어야 한다. scenarioworkhour
+                            //DB에 쓰레기 값으로 남겨 된다.
+                            //결정해서 DB 프로시져에서 삭제 구현할것
+                        });
+                    }
+                    hide_panel("._pnl_scenario");
+                    form_reset("._pnl_scenario");
+                }
+            });
+            $("._BtnRemoveWHNode").click(function(){
+                //메시지창 삭제 여부 확인
+                console.log(SELECT_NODE);
+                if(confirm("["+SELECT_NODE.text +"] 근무시간시나리오를 삭제 하시겠습니까?")) {
+                    if ($("._BtnAddWorkhourNode").is(":hidden")) {
+                        //edit
+                        $.ajax({
+                            method: "POST",
+                            url: CONTEXT_PATH+"/mng/ivr/scenarioworkhourdel",
+                            data: {
+                                SC_CODE: SELECT_NODE.config.SC_CODE,
+                                SC_WORKHOURCODE:SELECT_NODE.config.SC_WORKHOURCODE,
+                                WH_TYPE:SELECT_NODE.config.WH_TYPE,
+                                WH_KIND:SELECT_NODE.config.WH_KIND
+                            },
+                            error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                        }).done(function () {
+                            SCTreeView.treeview("deleteNode", selId);
+                            //하위 노드를 DB에 쓰레기 값으로 남겨둘지 결정할것
+                            //결정해서 DB 프로시져에서 삭제 구현할것
+                        });
+                    }
+                    hide_panel("._pnl_workhour");
+                    form_reset("._pnl_workhour");
+                }
+                else
+                {
+                    return false;
+                }
+            });
+            $("._BtnRemoveMNNode").click(function(){
+                //메시지창 삭제 여부 확인
+                console.log(SELECT_NODE);
+                if(confirm("["+SELECT_NODE.text +"] 메뉴를 삭제 하시겠습니까?")) {
+                    if ($("._BtnAddMenuNode").is(":hidden")) {
+                        //edit
+                        $.ajax({
+                            method: "POST",
+                            url: CONTEXT_PATH+"/mng/ivr/scenariomenudel",
+                            data: {
+                                SC_MENU: SELECT_NODE.config.SC_MENU
+                            },
+                            error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                        }).done(function () {
+                            //상위 노드의 SC_NEXT, SC_NEXT_TARGET의 값을 변경해 줘야 한다.
+                            let selParentId=tree_getParentNodeId(selId);
+                            let pa_node=SCTreeView.treeview("getNode", selParentId);
+                            console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: remove 11");
+                            tree_updateSCNEXT(pa_node.nodetype, pa_node.config, 5, 0);
+                            pa_node.config.SC_NEXT=5;
+                            pa_node.config.SC_NEXT_TARGET=0;
+                            console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: remove 55");
+                            console.log(pa_node);
+                            SCTreeView.treeview("deleteNode", selId);
+                            //하위 노드를 DB에 쓰레기 값으로 남겨둘지 결정할것
+                            //결정해서 DB 프로시져에서 삭제 구현할것
+                        });
+                    }
+                    hide_panel("._pnl_menu");
+                    form_reset("._pnl_menu");
+                }
+                else
+                {
+                    return false;
+                }
+            });
+            $("._BtnRemoveMSNode").click(function(){
+                //메시지창 삭제 여부 확인 MenuSub와 Overcall은 같은 성격의 node이다. 부모가 sc_next, sc_next_target이 없다.
+                console.log(SELECT_NODE);
+                if(confirm("["+SELECT_NODE.text +"] 메뉴번호를 삭제 하시겠습니까?")) {
+                    if ($("._BtnAddMenuSubNode").is(":hidden")) {
+                        $.ajax({
+                            method: "POST",
+                            url: CONTEXT_PATH+"/mng/ivr/scenariomenusubdel",
+                            data: {
+                                SC_MENU: SELECT_NODE.config.SC_MENU,
+                                SC_DIGIT: SELECT_NODE.config.SC_DIGIT
+                            },
+                            error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                        }).done(function () {
+                            SCTreeView.treeview("deleteNode", selId);
+                            //하위 노드를 DB에 쓰레기 값으로 남겨둘지 결정할것
+                        });
+                    }
+                    hide_panel("._pnl_menusub");
+                    form_reset("._pnl_menusub");
+                }
+                else
+                {
+                    return false;
+                }
+            });
+
+            $("._BtnRemoveSSNode").click(function(){
+                //메시지창 삭제 여부 확인
+                console.log(SELECT_NODE);
+                if(confirm("["+SELECT_NODE.text +"] 시나리오 선택을 취소 하시겠습니까?")) {
+                    if ($("._BtnAddScenarioNode").is(":hidden")) {
+                        //상위 노드의 SC_NEXT, SC_NEXT_TARGET을 5,0 으로 설정한다.
+                        //DB의 내용도 5,0 설정해야 한다.
+                        let selParentId=tree_getParentNodeId(selId);
+                        let pa_node=SCTreeView.treeview("getNode", selParentId);
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: remove 11");
+                        tree_updateSCNEXT(pa_node.nodetype, pa_node.config, 5, 0);
+                        pa_node.config.SC_NEXT=5;
+                        pa_node.config.SC_NEXT_TARGET=0;
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: remove 55");
+                        console.log(pa_node);
+                        SCTreeView.treeview("deleteNode", selId);
+                    }
+                    hide_panel("._pnl_scenario_select");
+                    form_reset("._pnl_scenario_select");
+                }
+                else
+                {
+                    return false;
+                }
+            });
+            $("._BtnRemoveRTNode").click(function(){
+                //메시지창 삭제 여부 확인
+                console.log(SELECT_NODE);
+                if(confirm("["+SELECT_NODE.text +"] 라우트 선택을 취소 하시겠습니까?")) {
+                    if ($("._BtnAddRouteNode").is(":hidden")) {
+                        //상위 노드의 SC_NEXT, SC_NEXT_TARGET을 5,0 으로 설정한다.
+                        //DB의 내용도 5,0 설정해야 한다.
+                        let selParentId = tree_getParentNodeId(selId);
+                        let pa_node = SCTreeView.treeview("getNode", selParentId);
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: remove 11");
+                        tree_updateSCNEXT(pa_node.nodetype, pa_node.config, 5, 0);
+                        pa_node.config.SC_NEXT = 5;
+                        pa_node.config.SC_NEXT_TARGET = 0;
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: remove 55");
+                        console.log(pa_node);
+                        SCTreeView.treeview("deleteNode", selId);
+                    }
+                    hide_panel("._pnl_route_select");
+                    form_reset("._pnl_route_select");
+                }
+                else
+                {
+                    return false;
+                }
+            });
+            $("._BtnRemoveOCNode").click(function(){
+                //메시지창 삭제 여부 확인 MenuSub와 Overcall은 같은 성격의 node이다. 부모가 sc_next, sc_next_target이 없다.
+                console.log(SELECT_NODE);
+                if(confirm("["+SELECT_NODE.text +"] OverCall을 삭제 하시겠습니까?"))
+                {
+                    if ($("._BtnAddOvercallNode").is(":hidden")) {
+                        $.ajax({
+                            method: "POST",
+                            url: CONTEXT_PATH+"/mng/ivr/scenarioovercalldel",
+                            data: {
+                                OC_OVERCALL: SELECT_NODE.config.OC_OVERCALL
+                            },
+                            error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                        }).done(function () {
+                            SCTreeView.treeview("deleteNode", selId);
+                            //하위 노드를 DB에 쓰레기 값으로 남겨둘지 결정할것
+                            //순번을 재정렬 해서 입력해야 하는지 확인 필요
+                        });
+                    }
+                    hide_panel("._pnl_overcall");
+                    form_reset("._pnl_overcall");
+                }
+                else
+                {
+                    return false;
+                }
+            });
+            $("._BtnRemoveINNode").click(function(){
+                //메시지창 삭제 여부 확인
+                console.log(SELECT_NODE);
+                if(confirm("["+SELECT_NODE.text +"] DTMF를 삭제 하시겠습니까?")) {
+                    if ($("._BtnAddDTMFNode").is(":hidden")) {
+                        $.ajax({
+                            method: "POST",
+                            url: CONTEXT_PATH+"/mng/ivr/scenariodtmfdel",
+                            data: {
+                                SC_DTMF: SELECT_NODE.config.SC_DTMF
+                            },
+                            error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                        }).done(function () {
+                            //상위 노드의 SC_NEXT, SC_NEXT_TARGET의 값을 변경해 줘야 한다.
+                            let selParentId=tree_getParentNodeId(selId);
+                            let pa_node=SCTreeView.treeview("getNode", selParentId);
+                            console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: remove 11");
+                            tree_updateSCNEXT(pa_node.nodetype, pa_node.config, 5, 0);
+                            pa_node.config.SC_NEXT=5;
+                            pa_node.config.SC_NEXT_TARGET=0;
+                            console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: remove 55");
+                            console.log(pa_node);
+                            SCTreeView.treeview("deleteNode", selId);
+                            //하위 노드를 DB에 쓰레기 값으로 남겨둘지 결정할것
+                            //결정해서 DB 프로시져에서 삭제 구현할것
+                        });
+                    }
+                    hide_panel("._pnl_dtmf");
+                    form_reset("._pnl_dtmf");
+                }
+                else
+                {
+                    return false;
+                }
+            });
+            $("._BtnRemoveCBNode").click(function(){
+                //메시지창 삭제 여부 확인
+                console.log(SELECT_NODE);
+                if(confirm("["+SELECT_NODE.text +"] Callback을 삭제 하시겠습니까?")) {
+                    if ($("._BtnAddCallbackNode").is(":hidden")) {
+                        $.ajax({
+                            method: "POST",
+                            url: CONTEXT_PATH+"/mng/ivr/scenariocallbackdel",
+                            data: {
+                                SC_CALLBACK: SELECT_NODE.config.SC_CALLBACK
+                            },
+                            error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                        }).done(function () {
+                            //상위 노드의 SC_NEXT, SC_NEXT_TARGET의 값을 변경해 줘야 한다.
+                            let selParentId=tree_getParentNodeId(selId);
+                            let pa_node=SCTreeView.treeview("getNode", selParentId);
+                            console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: remove 11");
+                            tree_updateSCNEXT(pa_node.nodetype, pa_node.config, 5, 0);
+                            pa_node.config.SC_NEXT=5;
+                            pa_node.config.SC_NEXT_TARGET=0;
+                            console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: remove 55");
+                            console.log(pa_node);
+                            SCTreeView.treeview("deleteNode", selId);
+                            //하위 노드를 DB에 쓰레기 값으로 남겨둘지 결정할것
+                            //결정해서 DB 프로시져에서 삭제 구현할것
+                        });
+                    }
+                    hide_panel("._pnl_callback");
+                    form_reset("._pnl_callback");
+                }
+                else
+                {
+                    return false;
+                }
+
+            });
+            $("._BtnRemoveNTNode").click(function(){
+                //메시지창 삭제 여부 확인
+                console.log(SELECT_NODE);
+                if(confirm("["+SELECT_NODE.text +"] 공지 선택을 취소 하시겠습니까?")) {
+                    if ($("._BtnAddNotiNode").is(":hidden")) {
+                        //상위 노드의 SC_NEXT, SC_NEXT_TARGET을 5,0 으로 설정한다.
+                        //DB의 내용도 5,0 설정해야 한다.
+                        let selParentId=tree_getParentNodeId(selId);
+                        let pa_node=SCTreeView.treeview("getNode", selParentId);
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: remove 11");
+                        tree_updateSCNEXT(pa_node.nodetype, pa_node.config, 5, 0);
+                        pa_node.config.SC_NEXT=5;
+                        pa_node.config.SC_NEXT_TARGET=0;
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: remove 55");
+                        console.log(pa_node);
+                        SCTreeView.treeview("deleteNode", selId);
+                    }
+                    hide_panel("._pnl_notice_select");
+                    form_reset("._pnl_notice_select");
+                }
+                else
+                {
+                    return false;
+                }
+            });
+
+            /**
+             * 음원 파일 선택시 음원 내용 출력 - 시작
+             **/
+            $('#_sc_scumwon1').on('change', function () {
+                let descSelected = $("option:selected", this).attr('desc');
+                let valueSelected = this.value;
+                if(valueSelected!=="NONE"){
+                    $("#_sc_scumwon1_info").val(descSelected);
+                }
+                else{
+                    $("#_sc_scumwon1_info").val('');
+                }
+            });
+            $('#_sc_scumwon2').on('change', function () {
+                let descSelected = $("option:selected", this).attr('desc');
+                let valueSelected = this.value;
+                if(valueSelected!=="NONE"){
+                    $("#_sc_scumwon2_info").val(descSelected);
+                }
+                else{
+                    $("#_sc_scumwon2_info").val('');
+                }
+            });
+            $('#_wh_whprompt').on('change', function () {
+                let descSelected = $("option:selected", this).attr('desc');
+                let valueSelected = this.value;
+                if(valueSelected!=="NONE"){
+                    $("#_wh_whprompt_info").val(descSelected);
+                }
+                else{
+                    $("#_wh_whprompt_info").val('');
+                }
+            });
+            $('#_mn_mnprompt').on('change', function () {
+                let descSelected = $("option:selected", this).attr('desc');
+                let valueSelected = this.value;
+                if(valueSelected!=="NONE"){
+                    $("#_mn_mnprompt_info").val(descSelected);
+                }
+                else{
+                    $("#_mn_mnprompt_info").val('');
+                }
+            });
+            $('#_mn_mnerrprompt').on('change', function () {
+                let descSelected = $("option:selected", this).attr('desc');
+                let valueSelected = this.value;
+                if(valueSelected!=="NONE"){
+                    $("#_mn_mnerrprompt_info").val(descSelected);
+                }
+                else{
+                    $("#_mn_mnerrprompt_info").val('');
+                }
+            });
+            $('#_mn_mnnoneprompt').on('change', function () {
+                let descSelected = $("option:selected", this).attr('desc');
+                let valueSelected = this.value;
+                if(valueSelected!=="NONE"){
+                    $("#_mn_mnnoneprompt_info").val(descSelected);
+                }
+                else{
+                    $("#_mn_mnnoneprompt_info").val('');
+                }
+            });
+            $('#_oc_ocprompt').on('change', function () {
+                let descSelected = $("option:selected", this).attr('desc');
+                let valueSelected = this.value;
+                if(valueSelected!=="NONE"){
+                    $("#_oc_ocprompt_info").val(descSelected);
+                }
+                else{
+                    $("#_oc_ocprompt_info").val('');
+                }
+            });
+            $('#_in_dtmfprompt').on('change', function () {
+                let descSelected = $("option:selected", this).attr('desc');
+                let valueSelected = this.value;
+                if(valueSelected!=="NONE"){
+                    $("#_in_dtmfprompt_info").val(descSelected);
+                }
+                else{
+                    $("#_in_dtmfprompt_info").val('');
+                }
+            });
+            $('#_in_dtmferrprompt').on('change', function () {
+                let descSelected = $("option:selected", this).attr('desc');
+                let valueSelected = this.value;
+                if(valueSelected!=="NONE"){
+                    $("#_in_dtmferrprompt_info").val(descSelected);
+                }
+                else{
+                    $("#_in_dtmferrprompt_info").val('');
+                }
+            });
+            $('#_in_dtmfnoneprompt').on('change', function () {
+                let descSelected = $("option:selected", this).attr('desc');
+                let valueSelected = this.value;
+                if(valueSelected!=="NONE"){
+                    $("#_in_dtmfnoneprompt_info").val(descSelected);
+                }
+                else{
+                    $("#_in_dtmfnoneprompt_info").val('');
+                }
+            });
+            $('#_cb_cbprompt').on('change', function () {
+                let descSelected = $("option:selected", this).attr('desc');
+                let valueSelected = this.value;
+                if(valueSelected!=="NONE"){
+                    $("#_cb_cbprompt_info").val(descSelected);
+                }
+                else{
+                    $("#_cb_cbprompt_info").val('');
+                }
+            });
+            $('#_cb_cbprompt2').on('change', function () {
+                let descSelected = $("option:selected", this).attr('desc');
+                let valueSelected = this.value;
+                if(valueSelected!=="NONE"){
+                    $("#_cb_cbprompt2_info").val(descSelected);
+                }
+                else{
+                    $("#_cb_cbprompt2_info").val('');
+                }
+            });
+            $('#_cb_cberrprompt').on('change', function () {
+                let descSelected = $("option:selected", this).attr('desc');
+                let valueSelected = this.value;
+                if(valueSelected!=="NONE"){
+                    $("#_cb_cberrprompt_info").val(descSelected);
+                }
+                else{
+                    $("#_cb_cberrprompt_info").val('');
+                }
+            });
+            $('#_cb_cbnoneprompt').on('change', function () {
+                let descSelected = $("option:selected", this).attr('desc');
+                let valueSelected = this.value;
+                if(valueSelected!=="NONE"){
+                    $("#_cb_cbnoneprompt_info").val(descSelected);
+                }
+                else{
+                    $("#_cb_cbnoneprompt_info").val('');
+                }
+            });
+            $('#_sc_scnoti').on('change', function () {
+                let descSelected = $("option:selected", this).attr('desc');
+                let valueSelected = this.value;
+                if(valueSelected!=="0"){
+                    $("#_sc_scnoti_info").val(descSelected);
+                }
+                else{
+                    $("#_sc_scnoti_info").val('');
+                }
+            });
+            $('#_ms_msnoti').on('change', function () {
+                let descSelected = $("option:selected", this).attr('desc');
+                let valueSelected = this.value;
+                if(valueSelected!=="0"){
+                    $("#_ms_msnoti_info").val(descSelected);
+                }
+                else{
+                    $("#_ms_msnoti_info").val('');
+                }
+            });
+            /**
+             * 음원 파일 선택시 음원 내용 출력 - 종료
+             **/
+
+
+            /**
+             * 추가버튼 - 시작
+             **/
+            $("._BtnAddSCNode").click(function(){
+                console.log('_BtnAddSCNode click');
+                if(SELECT_NODE.nodetype=='RO'){
+                    console.log('Parent as is -> ROOT node');
+                }
+                else{
+                    console.log('Parent as is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                    console.log('Parent to be -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                }
+
+                console.log("_sc_sccode -->"+$("#_sc_sccode").val());
+                console.log("_sc_scname -->"+$("#_sc_scname").val());
+                console.log("_sc_scumwon1 -->"+$("#_sc_scumwon1").val());
+                console.log("_sc_scumwon2 -->"+$("#_sc_scumwon2").val());
+                console.log("_sc_scnoti_yn -->"+($("#_sc_scnoti_yn").prop("checked")==true?1:0));
+                console.log("_sc_scend_yn -->"+($("#_sc_scend_yn").prop("checked")==true?1:0));
+                console.log("_sc_scnoti -->"+$("#_sc_scnoti").val());
+                console.log("_sc_scnoti_startdate -->"+$("#_sc_scnoti_startdate").val());
+                console.log("_sc_scnoti_starttime -->"+$("#_sc_scnoti_starttime").val().replace(/:/gi, ""));
+                console.log("_sc_scnoti_enddate -->"+$("#_sc_scnoti_enddate").val());
+                console.log("_sc_scnoti_endtime -->"+$("#_sc_scnoti_endtime").val().replace(/:/gi, ""));
+                console.log("_sc_scworkhourset -->"+$("#_sc_scworkhourset").val());
+
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/scenarionewadd",
+                    data: {
+                        Dept_No:8,
+                        SC_NAME: $("#_sc_scname").val(),
+                        SC_PROMPT: $("#_sc_scumwon1").val(),
+                        SC_PROMPT2: $("#_sc_scumwon2").val(),
+                        SC_WORKHOUR: $("#_sc_scworkhourset").val(),
+                        SC_NOTI_YN: ($("#_sc_scnoti_yn").prop("checked")==true?1:0),
+                        SC_END_YN: ($("#_sc_scend_yn").prop("checked")==true?1:0),
+                        SC_NOTI: $("#_sc_scnoti").val(),
+                        SC_NOTI_SDATE: $("#_sc_scnoti_startdate").val().replace(/-/gi, ""),
+                        SC_NOTI_STIME: $("#_sc_scnoti_starttime").val().replace(/:/gi, ""),
+                        SC_NOTI_EDATE: $("#_sc_scnoti_enddate").val().replace(/-/gi, ""),
+                        SC_NOTI_ETIME: $("#_sc_scnoti_endtime").val().replace(/:/gi, "")
+                    },
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function () {
+                    //끝나면 해당 노드를 다시 그려야 한다.
+                    $.ajax({
+                        method: "POST",
+                        url: CONTEXT_PATH+"/mng/ivr/getlastscenarionew",
+                        error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                    }).done(function (data) {
+                        console.log(data.Scenario);
+                        let addNodes = [];
+                        addNodes[0] = selId;
+                        addNodes[1] = {node: {nodetype:'SC',dbseq:data.Scenario.SC_CODE,text:data.Scenario.SC_NAME,config:data.Scenario}};
+                        SCTreeView.treeview("addNode", addNodes);
+                        SCTreeView.treeview("expandNode", selId);
+                        hide_all_panel();
+                    });
+                });
+            });
+            $("._BtnAddWorkhourNode").click(function(){
+                console.log('_BtnAddWorkhourNode click');
+                console.log('Parent as is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log('Parent to be -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+
+                console.log("_wh_sccode -->"+$("#_wh_sccode").val());
+                console.log("_wh_whcode -->"+$("#_wh_whcode").val());
+                console.log("_wh_whtype -->"+$("#_wh_whtype").val());
+                console.log("_wh_whkind -->"+$("#_wh_whkind").val());
+                console.log("_wh_whprompt -->"+$("#_wh_whprompt").val());
+
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/scenarioworkhouradd",
+                    data: {
+                        SC_CODE: $("#_wh_sccode").val(),
+                        SC_WORKHOURCODE: $("#_wh_whcode").val(),
+                        WH_TYPE: $("#_wh_whtype").val(),
+                        WH_KIND: $("#_wh_whkind").val(),
+                        SC_PROMPT: $("#_wh_whprompt").val()
+                    },
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function () {
+                    //1.끝나면 해당 노드를 다시 그려야 한다.
+                    $.ajax({
+                        method: "POST",
+                        url: CONTEXT_PATH+"/mng/ivr/getlastscenarioworkhour",
+                        data:{
+                            SC_CODE: $("#_wh_sccode").val(),
+                            SC_WORKHOURCODE: $("#_wh_whcode").val(),
+                            WH_TYPE: $("#_wh_whtype").val(),
+                            WH_KIND: $("#_wh_whkind").val()
+                        },
+                        error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                    }).done(function (data) {
+                        console.log(data.Workhour);
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 11");
+                        let addNodes = [];
+                        addNodes[0] = selId;
+                        addNodes[1] = {node: {nodetype:'WH' ,text:data.Workhour.WH_TYPE_NM+':'+data.Workhour.WH_KIND_NM,config:data.Workhour}};
+                        SCTreeView.treeview("addNode", addNodes);
+                        SCTreeView.treeview("expandNode", selId);
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 22");
+                        hide_all_panel();
+                        //2.SC_NEXT, SC_NEXT_TARGET을 입력 -> 근무시간은 시나리오에서만 나오기 때문에 별도의 판별없이 바로 시나리오 NEXT 수정을 했음
+                        tree_updateSCNEXT(SELECT_NODE.nodetype, SELECT_NODE.config, 9, SELECT_NODE.dbseq);
+                        //아래의 과정이 없으면 내용 수정이 안된다.
+                        let me_node=SCTreeView.treeview("getNode", selId);
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 33");
+                        me_node.config.SC_NEXT=9;
+                        me_node.config.SC_NEXT_TARGET=SELECT_NODE.dbseq;
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 44");
+                        console.log(me_node);
+                    });
+
+                });
+            });
+            $("._BtnAddMenuNode").click(function(){ //menu dosen't have next value
+                console.log('_BtnAddMenuNode click');
+                console.log('Parent as is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log('Parent to be -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+
+                console.log("_mn_mncode -->"+$("#_mn_mncode").val());
+                console.log("_mn_mnname -->"+$("#_mn_mnname").val());
+                console.log("_mn_mnprompt -->"+$("#_mn_mnprompt").val());
+                console.log("_mn_mnerrprompt -->"+$("#_mn_mnerrprompt").val());
+                console.log("_mn_mnnoneprompt -->"+$("#_mn_mnnoneprompt").val());
+                console.log("_mn_mnerrcnt -->"+$("#_mn_mnerrcnt").val());
+                console.log("_mn_mnterm -->"+$("#_mn_mnterm").val());
+
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/scenariomenuadd",
+                    data: {
+                        SC_MENUNAME: $("#_mn_mnname").val(),
+                        SC_PROMPT: $("#_mn_mnprompt").val(),
+                        SC_DIGITERROR: $("#_mn_mnerrprompt").val(),
+                        SC_DIGITNONE: $("#_mn_mnnoneprompt").val(),
+                        SC_DIGITERRORCOUNT: $("#_mn_mnerrcnt").val(),
+                        SC_DIGITTERM: $("#_mn_mnterm").val()
+                    },
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function () {
+                    $.ajax({
+                        method: "POST",
+                        url: CONTEXT_PATH+"/mng/ivr/getlastscenariomenu",
+                        error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                    }).done(function (data) {
+                        console.log(data.Menu);
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 11");
+                        let addNodes = [];
+                        addNodes[0] = selId;
+                        addNodes[1] = {node: {nodetype:'MN' ,text:data.Menu.SC_MENUNAME,config:data.Menu}};
+                        SCTreeView.treeview("addNode", addNodes);
+                        SCTreeView.treeview("expandNode", selId);
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 22");
+                        hide_all_panel();
+                        //2.SC_NEXT, SC_NEXT_TARGET을 입력 -> 근무시간은 시나리오에서만 나오기 때문에 별도의 판별없이 바로 시나리오 NEXT 수정을 했음
+                        tree_updateSCNEXT(SELECT_NODE.nodetype, SELECT_NODE.config, 1, data.Menu.SC_MENU);
+                        //아래의 과정이 없으면 내용 수정이 안된다.
+                        let me_node=SCTreeView.treeview("getNode", selId);
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 33");
+                        me_node.config.SC_NEXT=1;
+                        me_node.config.SC_NEXT_TARGET=data.Menu.SC_MENU;
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 44");
+                        console.log(me_node);
+                    });
+
+                });
+            });
+            $("._BtnAddMenuSubNode").click(function(){ //combo select
+                console.log('_BtnAddMenuSubNode click');
+                console.log('Parent as is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log('Parent to be -> SC_NEXT:'+$("#_ms_msnext option:selected").attr('sc_next')+", SC_NEXT_TARGET:"+$("#_ms_msnext option:selected").val());
+
+                console.log("_ms_mncode -->"+$("#_ms_mncode").val());
+                console.log("_ms_msdigit -->"+$("#_ms_msdigit").val());
+                console.log("_ms_msnoti_yn -->"+($("#_ms_msnoti_yn").prop("checked")==true?1:0));
+                console.log("_ms_msnoti -->"+$("#_ms_msnoti").val());
+                console.log("_ms_msnoti_startdate -->"+$("#_ms_msnoti_startdate").val().replace(/-/gi, ""));
+                console.log("_ms_msnoti_starttime -->"+$("#_ms_msnoti_starttime").val().replace(/:/gi, ""));
+                console.log("_ms_msnoti_enddate -->"+$("#_ms_msnoti_enddate").val().replace(/-/gi, ""));
+                console.log("_ms_msnoti_endtime -->"+$("#_ms_msnoti_endtime").val().replace(/:/gi, ""));
+                //next값이 추가 되어야 한다.
+                //50
+                //기타
+                let val_next=0;
+                let val_next_target;
+                console.log("_ms_msnext -->"+$("#_ms_msnext").val());
+                if($("#_ms_msnext").val()==5){
+                    //console.log("-->NEXT 50");
+                    //Edit와 다르게 ADD이다. 기존것이 없다. 5,0으로 설정
+                    val_next=5;
+                    val_next_target=0;
+                }
+                else{
+                    val_next=$("#_ms_msnext option:selected").attr('sc_next');
+                    val_next_target=$("#_ms_msnext option:selected").val().split('|')[1];
+                }
+
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/scenariomenusubadd",
+                    data: {
+                        SC_MENU: $("#_ms_mncode").val(),
+                        SC_DIGIT: $("#_ms_msdigit").val(),
+                        SC_NEXT: val_next,
+                        SC_NEXT_TARGET: val_next_target,
+                        SC_NOTI_YN: $("#_ms_msnoti_yn").prop("checked")==true?1:0,
+                        SC_NOTI: $("#_ms_msnoti").val(),
+                        SC_NOTI_SDATE: $("#_ms_msnoti_startdate").val().replace(/-/gi, ""),
+                        SC_NOTI_STIME: $("#_ms_msnoti_starttime").val().replace(/:/gi, ""),
+                        SC_NOTI_EDATE: $("#_ms_msnoti_enddate").val().replace(/-/gi, ""),
+                        SC_NOTI_ETIME: $("#_ms_msnoti_endtime").val().replace(/:/gi, "")
+                    },
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function () {
+                    //메뉴의 서브메뉴는 기존과 동일하게 해도 문제 없다. menu와 menusub는 sc_next로 연결된것이 아니다.
+                    tree_getMyDeleteAllChildrenNodesRedraw(selId);
+
+                });
+            });
+            $("._BtnAddScenarioNode").click(function(){ //grid select
+                console.log('_BtnAddScenarioNode click');
+                console.log('Parent as is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log('Parent to be -> SC_NEXT:12, SC_NEXT_TARGET:'+$("#_ss_sccode").val());
+
+                console.log("_ss_sccode -->"+$("#_ss_sccode").val());
+                hide_all_panel();
+                //1.SC_NEXT, SC_NEXT_TARGET을 DB에 입력
+                tree_updateSCNEXT(SELECT_NODE.nodetype, SELECT_NODE.config, 12, $("#_ss_sccode").val());
+                //아래의 과정이 없으면 내용 수정이 안된다.
+                //2.view node update
+                let me_node=SCTreeView.treeview("getNode", selId);
+                console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 333");
+                me_node.config.SC_NEXT=12;
+                me_node.config.SC_NEXT_TARGET=$("#_ss_sccode").val();
+                console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 444");
+                console.log(me_node);
+                //3. unselect, select
+                SCTreeView.treeview("unselectNode", selId);
+                SCTreeView.treeview("selectNode", selId);
+            });
+            $("._BtnAddRouteNode").click(function(){ //grid select //Route dosen't have NEXT value.
+                console.log('_BtnAddRouteNode click');
+                console.log('Parent as is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log('Parent to be -> SC_NEXT:2, SC_NEXT_TARGET:'+$("#_rt_rtcode").val());
+
+                console.log("_rt_rtcode -->"+$("#_rt_rtcode").val());
+                hide_all_panel();
+                //1.SC_NEXT, SC_NEXT_TARGET을 DB에 입력
+                tree_updateSCNEXT(SELECT_NODE.nodetype, SELECT_NODE.config, 2, $("#_rt_rtcode").val());
+                //아래의 과정이 없으면 내용 수정이 안된다.
+                //2.view node update
+                let me_node=SCTreeView.treeview("getNode", selId);
+                console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 333");
+                me_node.config.SC_NEXT=2;
+                me_node.config.SC_NEXT_TARGET=$("#_rt_rtcode").val();
+                console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 444");
+                console.log(me_node);
+                //3. unselect, select
+                SCTreeView.treeview("unselectNode", selId);
+                SCTreeView.treeview("selectNode", selId);
+            });
+            $("._BtnAddOvercallNode").click(function(){ //combo select
+                console.log('_BtnAddOvercallNode click');
+                console.log('Parent as is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log('Parent to be -> SC_NEXT:'+$("#_oc_ocnext option:selected").attr('sc_next')+", SC_NEXT_TARGET:"+$("#_oc_ocnext option:selected").val());
+
+                console.log("_oc_rtcode -->"+$("#_oc_rtcode").val());
+                console.log("_oc_occode -->"+$("#_oc_occode").val());
+                console.log("_oc_ocorder -->"+$("#_oc_ocorder").val());
+                console.log("_oc_ocprompt -->"+$("#_oc_ocprompt").val());
+                //next값이 추가 되어야 한다.
+                //50
+                //기타
+                let val_next=0;
+                let val_next_target;
+                let oc_order=0;
+                console.log("_oc_ocnext -->"+$("#_oc_ocnext").val());
+                if($("#_oc_ocnext").val()==5){
+                    //console.log("-->NEXT 50");
+                    //Add이기 때문에 기존 값이 없다.
+                    val_next=5;
+                    val_next_target=0;
+                }
+                else{
+                    val_next=$("#_oc_ocnext option:selected").attr('sc_next');
+                    val_next_target=$("#_oc_ocnext option:selected").val();
+                }
+                //순번이 필요하며, 현재 노드의 child갯수를 가지고 순번을 입력해 준다.
+                if(typeof SELECT_NODE=='object' && SELECT_NODE.nodes!=null){
+                    oc_order=SELECT_NODE.nodes.length+1;
+                }
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/scenarioovercalladd",
+                    data: {
+                        RT_ROUTE: $("#_oc_rtcode").val(),
+                        OC_SEQUENCE: oc_order,
+                        OC_PROMPT: $("#_oc_ocprompt").val(),
+                        SC_NEXT: val_next,
+                        SC_NEXT_TARGET: val_next_target
+                    },
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function () {
+                    //라우트의 오버콜은는 기존과 동일하게 해도 문제 없다. route와 overcall은 sc_next로 연결된것이 아니다.
+                    tree_getMyDeleteAllChildrenNodesRedraw(selId);
+
+                });
+            });
+            $("._BtnAddDTMFNode").click(function(){
+                console.log('_BtnAddDTMFNode click');
+                console.log('Parent as is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log('Parent to be -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+
+                console.log("_in_dtmfcode -->"+$("#_in_dtmfcode").val());
+                console.log("_in_dtmfname -->"+$("#_in_dtmfname").val());
+                console.log("_in_dtmfprompt -->"+$("#_in_dtmfprompt").val());
+                console.log("_in_dtmfmin -->"+$("#_in_dtmfmin").val());
+                console.log("_in_dtmfmax -->"+$("#_in_dtmfmax").val());
+                console.log("_in_dtmferrprompt -->"+$("#_in_dtmferrprompt").val());
+                console.log("_in_dtmfnoneprompt -->"+$("#_in_dtmfnoneprompt").val());
+                console.log("_in_dtmferrcnt -->"+$("#_in_dtmferrcnt").val());
+                console.log("_in_dtmfterm -->"+$("#_in_dtmfterm").val());
+
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/scenariodtmfadd",
+                    data: {
+                        SC_DTMFNAME: $("#_in_dtmfname").val(),
+                        SC_PROMPT: $("#_in_dtmfprompt").val(),
+                        SC_DTMFMIN: $("#_in_dtmfmin").val(),
+                        SC_DTMFMAX: $("#_in_dtmfmax").val(),
+                        SC_DIGITERROR: $("#_in_dtmferrprompt").val(),
+                        SC_DIGITNONE: $("#_in_dtmfnoneprompt").val(),
+                        SC_DIGITERRORCOUNT: $("#_in_dtmferrcnt").val(),
+                        SC_DIGITTERM: $("#_in_dtmfterm").val()
+                    },
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function () {
+                    //끝나면 해당 노드를 다시 그려야 한다.
+                    $.ajax({
+                        method: "POST",
+                        url: CONTEXT_PATH+"/mng/ivr/getlastscenariodtmf",
+                        beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+                        error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                    }).done(function (data) {
+                        console.log(data.Dtmf);
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 11");
+                        let addNodes = [];
+                        addNodes[0] = selId;
+                        addNodes[1] = {node: {nodetype:'IN' ,text:data.Dtmf.SC_DTMFNAME,config:data.Dtmf}};
+                        SCTreeView.treeview("addNode", addNodes);
+                        SCTreeView.treeview("expandNode", selId);
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 22");
+                        hide_all_panel();
+                        //2.SC_NEXT, SC_NEXT_TARGET을 입력 -> 근무시간은 시나리오에서만 나오기 때문에 별도의 판별없이 바로 시나리오 NEXT 수정을 했음
+                        tree_updateSCNEXT(SELECT_NODE.nodetype, SELECT_NODE.config, 8, data.Dtmf.SC_DTMF);
+                        //아래의 과정이 없으면 내용 수정이 안된다.
+                        let me_node=SCTreeView.treeview("getNode", selId);
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 3300");
+                        me_node.config.SC_NEXT=8;
+                        me_node.config.SC_NEXT_TARGET=data.Dtmf.SC_DTMF;
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 4400");
+                        console.log(me_node);
+                    });
+                });
+            });
+            $("._BtnAddCallbackNode").click(function(){
+                console.log('_BtnAddCallbackNode click');
+                console.log('Parent as is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log('Parent to be -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+
+                console.log("_cb_cbcode -->"+$("#_cb_cbcode").val());
+                console.log("_cb_cbname -->"+$("#_cb_cbname").val());
+                console.log("_cb_cbprompt -->"+$("#_cb_cbprompt").val());
+                console.log("_cb_cbprompt2 -->"+$("#_cb_cbprompt2").val());
+                console.log("_cb_cbmin -->"+$("#_cb_cbmin").val());
+                console.log("_cb_cbmax -->"+$("#_cb_cbmax").val());
+                console.log("_cb_cberrprompt -->"+$("#_cb_cberrprompt").val());
+                console.log("_cb_cbnoneprompt -->"+$("#_cb_cbnoneprompt").val());
+                console.log("_cb_cberrcnt -->"+$("#_cb_cberrcnt").val());
+                console.log("_cb_cbterm -->"+$("#_cb_cbterm").val());
+                console.log("_cb_cblimit -->"+$("#_cb_cblimit").val());
+
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/scenariocallbackadd",
+                    data: {
+                        SC_CALLBACKNAME: $("#_cb_cbname").val(),
+                        SC_PROMPT: $("#_cb_cbprompt").val(),
+                        SC_PROMPT2: $("#_cb_cbprompt2").val(),
+                        SC_DTMFMIN: $("#_cb_cbmin").val(),
+                        SC_DTMFMAX: $("#_cb_cbmax").val(),
+                        SC_DIGITERROR: $("#_cb_cberrprompt").val(),
+                        SC_DIGITNONE: $("#_cb_cbnoneprompt").val(),
+                        SC_DIGITERRORCOUNT: $("#_cb_cberrcnt").val(),
+                        SC_DIGITTERM: $("#_cb_cbterm").val(),
+                        SC_LIMIT: $("#_cb_cblimit").val()
+                    },
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function () {
+                    //끝나면 해당 노드를 다시 그려야 한다.
+                    $.ajax({
+                        method: "POST",
+                        url: CONTEXT_PATH+"/mng/ivr/getlastscenariocallback",
+                        error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                    }).done(function (data) {
+                        console.log(data.Callback);
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 11");
+                        let addNodes = [];
+                        addNodes[0] = selId;
+                        addNodes[1] = {node: {nodetype:'CB' ,text:data.Callback.SC_CALLBACKNAME,config:data.Callback}};
+                        SCTreeView.treeview("addNode", addNodes);
+                        SCTreeView.treeview("expandNode", selId);
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 22");
+                        hide_all_panel();
+                        //2.SC_NEXT, SC_NEXT_TARGET을 입력 -> 근무시간은 시나리오에서만 나오기 때문에 별도의 판별없이 바로 시나리오 NEXT 수정을 했음
+                        tree_updateSCNEXT(SELECT_NODE.nodetype, SELECT_NODE.config, 3, data.Callback.SC_CALLBACK);
+                        //아래의 과정이 없으면 내용 수정이 안된다.
+                        let me_node=SCTreeView.treeview("getNode", selId);
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 33");
+                        me_node.config.SC_NEXT=3;
+                        me_node.config.SC_NEXT_TARGET=data.Callback.SC_CALLBACK;
+                        console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 44");
+                        console.log(me_node);
+                    });
+
+                });
+            });
+            $("._BtnAddNotiNode").click(function(){ //grid select
+                console.log('_BtnAddNotiNode click');
+                console.log('Parent as is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log('Parent to be -> SC_NEXT:4, SC_NEXT_TARGET:'+$("#_nt_ntcode").val());
+
+                console.log("_nt_ntcode -->"+$("#_nt_ntcode").val());
+                hide_all_panel();
+                //1.SC_NEXT, SC_NEXT_TARGET을 DB에 입력
+                tree_updateSCNEXT(SELECT_NODE.nodetype, SELECT_NODE.config, 4, $("#_nt_ntcode").val());
+                //아래의 과정이 없으면 내용 수정이 안된다.
+                //2.view node update
+                let me_node=SCTreeView.treeview("getNode", selId);
+                console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 333");
+                me_node.config.SC_NEXT=4;
+                me_node.config.SC_NEXT_TARGET=$("#_nt_ntcode").val();
+                console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: 444");
+                console.log(me_node);
+                //3. unselect, select
+                SCTreeView.treeview("unselectNode", selId);
+                SCTreeView.treeview("selectNode", selId);
+            });
+            /**
+             * 추가버튼 - 종료
+             **/
+
+            /**
+             * 수정버튼 - 시작
+             **/
+            $("._BtnEdtSCNode").click(function(){
+                console.log('_BtnEdtSCNode click');
+                console.log('As is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log('To be -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log("_sc_sccode -->"+$("#_sc_sccode").val());
+                console.log("_sc_scname -->"+$("#_sc_scname").val());
+                console.log("_sc_scumwon1 -->"+$("#_sc_scumwon1").val());
+                console.log("_sc_scumwon2 -->"+$("#_sc_scumwon2").val());
+                console.log("_sc_scnoti_yn -->"+($("#_sc_scnoti_yn").prop("checked")==true?1:0));
+                console.log("_sc_scend_yn -->"+($("#_sc_scend_yn").prop("checked")==true?1:0));
+                console.log("_sc_scnoti -->"+$("#_sc_scnoti").val());
+                console.log("_sc_scnoti_startdate -->"+$("#_sc_scnoti_startdate").val());
+                console.log("_sc_scnoti_starttime -->"+$("#_sc_scnoti_starttime").val().replace(/:/gi, ""));
+                console.log("_sc_scnoti_enddate -->"+$("#_sc_scnoti_enddate").val());
+                console.log("_sc_scnoti_endtime -->"+$("#_sc_scnoti_endtime").val().replace(/:/gi, ""));
+                console.log("_sc_scworkhourset -->"+$("#_sc_scworkhourset").val());
+
+                //만약 근무시간이 없다가 생긴다던지, 있다가 없어진다면 큰 구조 변경이다. 어떻게 할 것인가?
+                if(SELECT_NODE.config.SC_WORKHOUR!=$("#_sc_scworkhourset").val()){
+                    console.log('CRITICAL : WORKHOUR SCENARIIO CHANGE');
+                }
+
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/scenarionewedit",
+                    data: {
+                        Dept_No:7,
+                        SC_CODE: $("#_sc_sccode").val(),
+                        SC_NAME: $("#_sc_scname").val(),
+                        SC_PROMPT: $("#_sc_scumwon1").val(),
+                        SC_PROMPT2: $("#_sc_scumwon2").val(),
+                        SC_WORKHOUR: $("#_sc_scworkhourset").val(),
+                        SC_NOTI_YN: ($("#_sc_scnoti_yn").prop("checked")==true?1:0),
+                        SC_END_YN: ($("#_sc_scend_yn").prop("checked")==true?1:0),
+                        SC_NOTI: $("#_sc_scnoti").val(),
+                        SC_NOTI_SDATE: $("#_sc_scnoti_startdate").val().replace(/-/gi, ""),
+                        SC_NOTI_STIME: $("#_sc_scnoti_starttime").val().replace(/:/gi, ""),
+                        SC_NOTI_EDATE: $("#_sc_scnoti_enddate").val().replace(/-/gi, ""),
+                        SC_NOTI_ETIME: $("#_sc_scnoti_endtime").val().replace(/:/gi, "")
+                    },
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function () {
+                    //끝나면 해당 노드를 다시 그려야 한다.
+                    tree_getParentDeleteAllChildrenNodesRedraw(selId);
+                    SCTreeView.treeview("selectNode", selId);
+                });
+            });
+            $("._BtnEdtWorkhourNode").click(function(){
+                console.log('_BtnEdtWorkhourNode click');
+                console.log('As is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log('To be -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+
+                console.log("_wh_sccode -->"+$("#_wh_sccode").val());
+                console.log("_wh_whcode -->"+$("#_wh_whcode").val());
+                console.log("_wh_whtype -->"+$("#_wh_whtype").val());
+                console.log("_wh_whkind -->"+$("#_wh_whkind").val());
+                console.log("_wh_whprompt -->"+$("#_wh_whprompt").val());
+
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/scenarioworkhouredit",
+                    data: {
+                        SC_CODE: $("#_wh_sccode").val(),
+                        SC_WORKHOURCODE: $("#_wh_whcode").val(),
+                        WH_TYPE: $("#_wh_whtype").val(),
+                        WH_KIND: $("#_wh_whkind").val(),
+                        SC_PROMPT: $("#_wh_whprompt").val()
+                    },
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function () {
+                    //끝나면 해당 노드를 다시 그려야 한다.
+                    tree_getParentDeleteAllChildrenNodesRedraw(selId);
+                });
+
+            });
+            $("._BtnEdtMenuNode").click(function(){ //Menu dosen't have NEXT value.
+                console.log('_BtnEdtMenuNode click');
+                console.log('As is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log('To be -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+
+                console.log("_mn_mncode -->"+$("#_mn_mncode").val());
+                console.log("_mn_mnname -->"+$("#_mn_mnname").val());
+                console.log("_mn_mnprompt -->"+$("#_mn_mnprompt").val());
+                console.log("_mn_mnerrprompt -->"+$("#_mn_mnerrprompt").val());
+                console.log("_mn_mnnoneprompt -->"+$("#_mn_mnnoneprompt").val());
+                console.log("_mn_mnerrcnt -->"+$("#_mn_mnerrcnt").val());
+                console.log("_mn_mnterm -->"+$("#_mn_mnterm").val());
+
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/scenariomenuedit",
+                    data: {
+                        SC_MENU: $("#_mn_mncode").val(),
+                        SC_MENUNAME: $("#_mn_mnname").val(),
+                        SC_PROMPT: $("#_mn_mnprompt").val(),
+                        SC_DIGITERROR: $("#_mn_mnerrprompt").val(),
+                        SC_DIGITNONE: $("#_mn_mnnoneprompt").val(),
+                        SC_DIGITERRORCOUNT: $("#_mn_mnerrcnt").val(),
+                        SC_DIGITTERM: $("#_mn_mnterm").val()
+                    },
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function () {
+                    //끝나면 해당 노드를 다시 그려야 한다.
+                    tree_getParentDeleteAllChildrenNodesRedraw(selId);
+                });
+            });
+            $("._BtnEdtMenuSubNode").click(function(){ //combo select
+                console.log('_BtnEdtMenuSubNode click');
+                console.log('As is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log('To be -> SC_NEXT:'+$("#_ms_msnext option:selected").attr('sc_next')+", SC_NEXT_TARGET:"+$("#_ms_msnext option:selected").val().split('|')[1]);
+
+                console.log("_ms_mncode -->"+$("#_ms_mncode").val());
+                console.log("_ms_msdigit -->"+$("#_ms_msdigit").val());
+                console.log("_ms_msnoti_yn -->"+($("#_ms_msnoti_yn").prop("checked")==true?1:0));
+                console.log("_ms_msnoti -->"+$("#_ms_msnoti").val());
+                console.log("_ms_msnoti_startdate -->"+$("#_ms_msnoti_startdate").val().replace(/-/gi, ""));
+                console.log("_ms_msnoti_starttime -->"+$("#_ms_msnoti_starttime").val().replace(/:/gi, ""));
+                console.log("_ms_msnoti_enddate -->"+$("#_ms_msnoti_enddate").val().replace(/-/gi, ""));
+                console.log("_ms_msnoti_endtime -->"+$("#_ms_msnoti_endtime").val().replace(/:/gi, ""));
+                //next값이 추가 되어야 한다.
+                //50
+                //기타
+                let val_next=0;
+                let val_next_target;
+                console.log("_ms_msnext -->"+$("#_ms_msnext").val());
+                if($("#_ms_msnext").val()==5){
+                    //console.log("-->NEXT 50");
+                    //이경우에는 기존것을 가져간다.
+                    //기존의 값이 sc_next 5가 아니면 기존것 유지
+                    if(SELECT_NODE.config.SC_NEXT==5){
+                        val_next=5;
+                        val_next_target=0;
+                    }
+                    else{
+                        val_next=SELECT_NODE.config.SC_NEXT;
+                        val_next_target=SELECT_NODE.config.SC_NEXT_TARGET;
+                    }
+                }
+                else{
+                    val_next=$("#_ms_msnext option:selected").attr('sc_next');
+                    val_next_target=$("#_ms_msnext option:selected").val().split('|')[1];
+                }
+
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/scenariomenusubedit",
+                    data: {
+                        SC_MENU: $("#_ms_mncode").val(),
+                        SC_DIGIT: $("#_ms_msdigit").val(),
+                        SC_NEXT: val_next,
+                        SC_NEXT_TARGET: val_next_target,
+                        SC_NOTI_YN: $("#_ms_msnoti_yn").prop("checked")==true?1:0,
+                        SC_NOTI: $("#_ms_msnoti").val(),
+                        SC_NOTI_SDATE: $("#_ms_msnoti_startdate").val().replace(/-/gi, ""),
+                        SC_NOTI_STIME: $("#_ms_msnoti_starttime").val().replace(/:/gi, ""),
+                        SC_NOTI_EDATE: $("#_ms_msnoti_enddate").val().replace(/-/gi, ""),
+                        SC_NOTI_ETIME: $("#_ms_msnoti_endtime").val().replace(/:/gi, "")
+                    },
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function () {
+                    //끝나면 해당 노드를 다시 그려야 한다.
+                    tree_getParentDeleteAllChildrenNodesRedraw(selId);
+                });
+
+            });
+            $("._BtnEdtScenarioNode").click(function(){ //grid select
+                console.log('_BtnEdtScenarioNode click');
+                console.log('As is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log('To be -> SC_NEXT:12, SC_NEXT_TARGET:'+$("#_ss_sccode").val());
+
+                console.log("_ss_sccode -->"+$("#_ss_sccode").val());
+                hide_all_panel();
+                //1. 상위 노드의 SC_NEXT, SC_NEXT_TARGET의 값을 변경해 줘야 한다.
+                let selParentId=tree_getParentNodeId(selId);
+                let pa_node=SCTreeView.treeview("getNode", selParentId);
+                console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: remove 11");
+                //2. db에 해당 내용 적용
+                tree_updateSCNEXT(pa_node.nodetype, pa_node.config, 12, $("#_ss_sccode").val());
+                //3. 현재의 view node에 내용 적용
+                pa_node.config.SC_NEXT=12;
+                pa_node.config.SC_NEXT_TARGET=$("#_ss_sccode").val();
+                console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: remove 55");
+                console.log(pa_node);
+                //4. 끝나면 해당 노드를 다시 그려야 한다.
+                tree_getParentDeleteAllChildrenNodesRedraw(selId);
+            });
+            $("._BtnEdtRouteNode").click(function(){ //grid select //Route dosen't have NEXT value.
+                console.log('_BtnEdtRouteNode click');
+                console.log('As is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log('To be -> SC_NEXT:2, SC_NEXT_TARGET:'+SELECT_NODE.config.SC_NEXT_TARGET);
+
+                console.log("_rt_rtcode -->"+$("#_rt_rtcode").val());
+                hide_all_panel();
+                //1. 상위 노드의 SC_NEXT, SC_NEXT_TARGET의 값을 변경해 줘야 한다.
+                let selParentId=tree_getParentNodeId(selId);
+                let pa_node=SCTreeView.treeview("getNode", selParentId);
+                console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: remove 11");
+                //2. db에 해당 내용 적용
+                tree_updateSCNEXT(pa_node.nodetype, pa_node.config, 2, $("#_rt_rtcode").val());
+                //3. 현재의 view node에 내용 적용
+                pa_node.config.SC_NEXT=2;
+                pa_node.config.SC_NEXT_TARGET=$("#_rt_rtcode").val();
+                console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: remove 55");
+                console.log(pa_node);
+                //4. 끝나면 해당 노드를 다시 그려야 한다.
+                tree_getParentDeleteAllChildrenNodesRedraw(selId);
+            });
+            $("._BtnEdtOvercallNode").click(function(){ //combo select
+                console.log('_BtnEdtOvercallNode click');
+                console.log('As is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log('To be -> SC_NEXT:'+$("#_oc_ocnext option:selected").attr('sc_next')+", SC_NEXT_TARGET:"+$("#_oc_ocnext option:selected").val());
+                console.log("_oc_rtcode -->"+$("#_oc_rtcode").val());
+                console.log("_oc_occode -->"+$("#_oc_occode").val());
+                console.log("_oc_ocorder -->"+$("#_oc_ocorder").val());
+                console.log("_oc_ocprompt -->"+$("#_oc_ocprompt").val());
+                //next값이 추가 되어야 한다.
+                //50
+                //기타
+                let val_next=0;
+                let val_next_target;
+                console.log("_oc_ocnext -->"+$("#_oc_ocnext").val());
+                if($("#_oc_ocnext").val()==5){
+                    //console.log("-->NEXT 50");
+                    //이경우 기존것을 가져갈 수있도록 해야 한다.SSSSSS
+                    //기존의 값이 sc_next 5가 아니면 기존것 유지
+                    if(SELECT_NODE.config.SC_NEXT==5){
+                        val_next=5;
+                        val_next_target=0;
+                    }
+                    else{
+                        val_next=SELECT_NODE.config.SC_NEXT;
+                        val_next_target=SELECT_NODE.config.SC_NEXT_TARGET;
+                    }
+                }
+                else{
+                    val_next=$("#_oc_ocnext option:selected").attr('sc_next');
+                    val_next_target=$("#_oc_ocnext option:selected").val();
+                }
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/scenarioovercalledit",
+                    data: {
+                        OC_OVERCALL: $("#_oc_occode").val(),
+                        OC_SEQUENCE: $("#_oc_ocorder").val(),
+                        OC_PROMPT: $("#_oc_ocprompt").val(),
+                        SC_NEXT: val_next,
+                        SC_NEXT_TARGET: val_next_target
+                    },
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function () {
+                    //끝나면 해당 노드를 다시 그려야 한다.
+                    tree_getParentDeleteAllChildrenNodesRedraw(selId);
+                });
+            });
+            $("._BtnEdtDTMFNode").click(function(){
+                console.log('_BtnEdtDTMFNode click');
+                console.log('As is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log('To be -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+
+                console.log("_in_dtmfcode -->"+$("#_in_dtmfcode").val());
+                console.log("_in_dtmfname -->"+$("#_in_dtmfname").val());
+                console.log("_in_dtmfprompt -->"+$("#_in_dtmfprompt").val());
+                console.log("_in_dtmfmin -->"+$("#_in_dtmfmin").val());
+                console.log("_in_dtmfmax -->"+$("#_in_dtmfmax").val());
+                console.log("_in_dtmferrprompt -->"+$("#_in_dtmferrprompt").val());
+                console.log("_in_dtmfnoneprompt -->"+$("#_in_dtmfnoneprompt").val());
+                console.log("_in_dtmferrcnt -->"+$("#_in_dtmferrcnt").val());
+                console.log("_in_dtmfterm -->"+$("#_in_dtmfterm").val());
+
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/scenariodtmfedit",
+                    data: {
+                        SC_DTMF: $("#_in_dtmfcode").val(),
+                        SC_DTMFNAME: $("#_in_dtmfname").val(),
+                        SC_PROMPT: $("#_in_dtmfprompt").val(),
+                        SC_DTMFMIN: $("#_in_dtmfmin").val(),
+                        SC_DTMFMAX: $("#_in_dtmfmax").val(),
+                        SC_DIGITERROR: $("#_in_dtmferrprompt").val(),
+                        SC_DIGITNONE: $("#_in_dtmfnoneprompt").val(),
+                        SC_DIGITERRORCOUNT: $("#_in_dtmferrcnt").val(),
+                        SC_DIGITTERM: $("#_in_dtmfterm").val()
+                    },
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function () {
+                    //끝나면 해당 노드를 다시 그려야 한다.
+                    tree_getParentDeleteAllChildrenNodesRedraw(selId);
+                });
+            });
+            $("._BtnEdtCallbackNode").click(function(){
+                console.log('_BtnEdtCallbackNode click');
+                console.log('As is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log('To be -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+
+                console.log("_cb_cbcode -->"+$("#_cb_cbcode").val());
+                console.log("_cb_cbname -->"+$("#_cb_cbname").val());
+                console.log("_cb_cbprompt -->"+$("#_cb_cbprompt").val());
+                console.log("_cb_cbprompt2 -->"+$("#_cb_cbprompt2").val());
+                console.log("_cb_cbmin -->"+$("#_cb_cbmin").val());
+                console.log("_cb_cbmax -->"+$("#_cb_cbmax").val());
+                console.log("_cb_cberrprompt -->"+$("#_cb_cberrprompt").val());
+                console.log("_cb_cbnoneprompt -->"+$("#_cb_cbnoneprompt").val());
+                console.log("_cb_cberrcnt -->"+$("#_cb_cberrcnt").val());
+                console.log("_cb_cbterm -->"+$("#_cb_cbterm").val());
+                console.log("_cb_cblimit -->"+$("#_cb_cblimit").val());
+
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/mng/ivr/scenariocallbackedit",
+                    data: {
+                        SC_CALLBACK: $("#_cb_cbcode").val(),
+                        SC_CALLBACKNAME: $("#_cb_cbname").val(),
+                        SC_PROMPT: $("#_cb_cbprompt").val(),
+                        SC_PROMPT2: $("#_cb_cbprompt2").val(),
+                        SC_DTMFMIN: $("#_cb_cbmin").val(),
+                        SC_DTMFMAX: $("#_cb_cbmax").val(),
+                        SC_DIGITERROR: $("#_cb_cberrprompt").val(),
+                        SC_DIGITNONE: $("#_cb_cbnoneprompt").val(),
+                        SC_DIGITERRORCOUNT: $("#_cb_cberrcnt").val(),
+                        SC_DIGITTERM: $("#_cb_cbterm").val(),
+                        SC_LIMIT: $("#_cb_cblimit").val()
+                    },
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function () {
+                    //끝나면 해당 노드를 다시 그려야 한다.
+                    tree_getParentDeleteAllChildrenNodesRedraw(selId);
+                });
+            });
+            $("._BtnEdtNotiNode").click(function(){ //grid select
+                console.log('_BtnEdtNotiNode click');
+                console.log('As is -> SC_NEXT:'+SELECT_NODE.config.SC_NEXT+", SC_NEXT_TARGET:"+SELECT_NODE.config.SC_NEXT_TARGET);
+                console.log('To be -> SC_NEXT:4, SC_NEXT_TARGET:'+SELECT_NODE.config.SC_NEXT_TARGET);
+
+                console.log("_nt_ntcode -->"+$("#_nt_ntcode").val());
+                hide_all_panel();
+                //1. 상위 노드의 SC_NEXT, SC_NEXT_TARGET의 값을 변경해 줘야 한다.
+                let selParentId=tree_getParentNodeId(selId);
+                let pa_node=SCTreeView.treeview("getNode", selParentId);
+                console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: remove 11");
+                //2. db에 해당 내용 적용
+                tree_updateSCNEXT(pa_node.nodetype, pa_node.config, 2, $("#_nt_ntcode").val());
+                //3. 현재의 view node에 내용 적용
+                pa_node.config.SC_NEXT=2;
+                pa_node.config.SC_NEXT_TARGET=$("#_nt_ntcode").val();
+                console.log("::::::::::::::::::::::::::::::::::::::::::::::::::::: remove 55");
+                console.log(pa_node);
+                //4. 끝나면 해당 노드를 다시 그려야 한다.
+                tree_getParentDeleteAllChildrenNodesRedraw(selId);
+            });
+            /**
+             * 수정버튼 - 종료
+             **/
+
+            getWorkhourSet();
+            getPrompt();
+            getNotice();
+            getWorkhourKind(18); //18번 근무시간구분 코드
+
+            //Tree 스크롤
+            $('#treeview-selectable').slimScroll(
+            {
+                position: 'right',
+                height: '770px',
+                railVisible: true,
+                alwaysVisible: true
+            });
+        });
+    </script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+    <i class="subheader-icon fal fa-window"></i> IVR 관리
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+    <div class="row">
+        <div class="col-xl-6"><!-- Start div col-xl-6 01 -->
+            <div class="panel">
+                <div class="panel-hdr">
+                    <h2>
+                        &nbsp; <span class="fw-300"><i>&nbsp;</i></span>
+                    </h2>
+                    <div class="panel-toolbar">
+                        <button class="btn btn-xs btn-dark ml-1 _BtnExpandAll">목록 초기화</button>
+                        <!--
+                        <button class="btn btn-xs btn-dark ml-1 _BtnCollapseAll">Collapse All</button>
+                         -->
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewSCNode">시나리오추가</button>
+                    </div>
+                </div>
+                <div class="panel-container show">
+                    <div class="panel-content">
+                        <div id="treeview-selectable"></div>
+                    </div>
+                </div>
+            </div>
+        </div><!-- End div col-xl-6 01 -->
+
+        <div class="col-xl-6 _pnl _pnl_scenario d-none">
+            <div class="panel mb-2">
+                <div class="panel-hdr">
+                    <h2>시나리오</h2>
+                    <div class="panel-toolbar">
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewWrokhourNode">근무시간추가</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewMenuNode">메뉴추가</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewRouteNode">라우트선택</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewDTMFNode">DTMF추가</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewCallbackNode">콜백추가</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewNoticeNode">공지선택</button>
+                        <button class="btn btn-xs btn-dark ml-1 float-right _BtnRemoveSCNode">시나리오 삭제</button>
+                    </div>
+                </div>
+                <div class="panel-container show">
+                    <div class="panel-content">
+
+                        <form class="w-100">
+                            <div class="form-row ml-0 mr-0"><!-- START ROW 01 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">시나리오 이름</span>
+                                        </div>
+                                        <input id="_sc_sccode" type="hidden"/>
+                                        <input id="_sc_scname" type="text" placeholder="이름을 입력하세요" class="form-control" />
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">음원1 선택</span>
+                                        </div>
+                                        <select id="_sc_scumwon1" class="form-control sel_prompt">
+                                            <option value="NONE">음원 없음</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">음원1 내용</span>
+                                        </div>
+                                        <textarea id="_sc_scumwon1_info" placeholder="" class="form-control" readonly></textarea>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">음원2 선택</span>
+                                        </div>
+                                        <select id="_sc_scumwon2" class="form-control sel_prompt">
+                                            <option value="NONE">음원 없음</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">음원2 내용</span>
+                                        </div>
+                                        <textarea id="_sc_scumwon2_info" placeholder="" class="form-control" readonly></textarea>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-50 pr-3">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                <div class="custom-control custom-checkbox">
+                                                    <input id="_sc_scnoti_yn" type="checkbox" class="custom-control-input"/>
+                                                    <label class="custom-control-label" for="_sc_scnoti_yn">공지 사용 여부</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div><!-- end w-50 -->
+                                <div class="form-group w-50">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                <div class="custom-control custom-checkbox">
+                                                    <input id="_sc_scend_yn" type="checkbox" class="custom-control-input"/>
+                                                    <label class="custom-control-label" for="_sc_scend_yn">공지 후 종료</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div><!-- end w-50 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">공지 선택</span>
+                                        </div>
+                                        <select id="_sc_scnoti" class="form-control sel_notice">
+                                            <option value="0">공지 없음</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">공지 내용</span>
+                                        </div>
+                                        <textarea id="_sc_scnoti_info" placeholder="" class="form-control" readonly></textarea>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-50 pr-3">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">공지 시작일</span>
+                                        </div>
+                                        <input id="_sc_scnoti_startdate" type="text" placeholder="시작일" class="form-control datepicker" >
+                                    </div>
+                                </div>
+
+                                <div class="form-group w-50">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">시작시간</span>
+                                        </div>
+                                        <input id="_sc_scnoti_starttime" class="_time form-control" type="text" placeholder="시작 시간"  value="00:00">
+                                    </div>
+                                </div>
+
+
+                                <div class="form-group w-50 pr-3">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">공지 종료일</span>
+                                        </div>
+                                        <input id="_sc_scnoti_enddate" type="text" placeholder="종료일" class="form-control datepicker" >
+                                    </div>
+                                </div><!-- end w-50 -->
+
+                                <div class="form-group w-50">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">종료시간</span>
+                                        </div>
+                                        <input id="_sc_scnoti_endtime" class="_time form-control" type="text" placeholder="종료 시간"  value="00:00">
+                                    </div>
+                                </div><!-- end w-50 -->
+
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">근무시간 그룹 선택</span>
+                                        </div>
+                                        <select id="_sc_scworkhourset" class="form-control sel_workhourset">
+                                            <option value="0">근무시간 사용안함</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+                            </div><!-- END ROW 01 -->
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-xs btn-dark ml-1 _BtnAddSCNode">추가</button>
+            <button class="btn btn-xs btn-dark ml-1 _BtnEdtSCNode">수정</button>
+        </div>
+
+        <!-- <div class="col-xl-6 _pnl_workhour d-none"> -->
+        <div class="col-xl-6 _pnl _pnl_workhour d-none">
+            <div class="panel mb-2">
+                <div class="panel-hdr">
+                    <h2>
+                        근무시간
+                    </h2>
+                    <div class="panel-toolbar">
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewScenarioNode">시나리오선택</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewMenuNode">메뉴추가</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewRouteNode">라우트선택</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewDTMFNode">DTMF추가</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewCallbackNode">콜백추가</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewNoticeNode">공지선택</button>
+                        <button class="btn btn-xs btn-dark ml-1 float-right _BtnRemoveWHNode">근무시간 삭제</button>
+                    </div>
+                </div>
+                <div class="panel-container show">
+                    <div class="panel-content">
+                        <form class="w-100">
+                            <div class="form-row ml-0 mr-0"><!-- START ROW 01 -->
+                                <input id="_wh_sccode" type="hidden"/>
+                                <input id="_wh_whcode" type="hidden"/>
+                                <div class="form-group w-50 pr-3">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">근무시간 종류 선택</span>
+                                        </div>
+                                        <select id="_wh_whtype" class="form-control sel_workhourtype">
+                                        </select>
+                                    </div>
+                                </div><!-- end w-50 -->
+                                <div class="form-group w-50">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">근무구분 선택</span>
+                                        </div>
+                                        <select id="_wh_whkind" class="form-control sel_workhourkind">
+                                            <option value="NONE">없음</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-50 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">음원 선택</span>
+                                        </div>
+                                        <select id="_wh_whprompt" class="form-control sel_prompt">
+                                            <option value="NONE">없음</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">음원 내용</span>
+                                        </div>
+                                        <textarea id="_wh_whprompt_info" placeholder="" class="form-control" readonly></textarea>
+                                    </div>
+                                </div><!-- end w-100 -->
+                            </div><!-- END ROW 01 -->
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-xs btn-dark ml-1 _BtnAddWorkhourNode">추가</button>
+            <button class="btn btn-xs btn-dark ml-1 _BtnEdtWorkhourNode">수정</button>
+        </div>
+
+        <div class="col-xl-6 _pnl _pnl_menu d-none">
+            <div class="panel mb-2">
+                <div class="panel-hdr">
+                    <h2> 메뉴 </h2>
+                    <div class="panel-toolbar">
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewMenuSubNode">번호추가</button>
+                        <button class="btn btn-xs btn-dark ml-1 float-right _BtnRemoveMNNode">메뉴 삭제</button>
+                    </div>
+                </div>
+                <div class="panel-container show">
+                    <div class="panel-content">
+                        <form class="w-100">
+                            <div class="form-row ml-0 mr-0"><!-- START ROW 01 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">메뉴 이름</span>
+                                        </div>
+                                        <input id="_mn_mncode" type="hidden"/>
+                                        <input id="_mn_mnname" type="text" placeholder="이름을 입력하세요" class="form-control" >
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">음원 선택</span>
+                                        </div>
+                                        <select id="_mn_mnprompt" class="form-control sel_prompt">
+                                            <option value="NONE">없음</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">음원 내용</span>
+                                        </div>
+                                        <textarea id="_mn_mnprompt_info" placeholder="" class="form-control" readonly></textarea>
+                                    </div>
+                                </div><!-- end w-100 -->
+
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">입력 오류 음원 선택</span>
+                                        </div>
+                                        <select id="_mn_mnerrprompt" class="form-control sel_prompt">
+                                            <option value="NONE">없음</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">음원 내용</span>
+                                        </div>
+                                        <textarea id="_mn_mnerrprompt_info" placeholder="" class="form-control" readonly></textarea>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">입력 없음 음원 선택</span>
+                                        </div>
+                                        <select id="_mn_mnnoneprompt" class="form-control sel_prompt">
+                                            <option value="NONE">없음</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">음원 내용</span>
+                                        </div>
+                                        <textarea id="_mn_mnnoneprompt_info" placeholder="" class="form-control" readonly></textarea>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-50 pr-3">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">입력 오류 횟수</span>
+                                        </div>
+                                        <select id="_mn_mnerrcnt" class="form-control">
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-50 -->
+                                <div class="form-group w-50">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">입력 제한 시간</span>
+                                        </div>
+                                        <select id="_mn_mnterm" class="form-control">
+                                            <option value="5000">5</option>
+                                            <option value="10000">10</option>
+                                            <option value="15000">15</option>
+                                            <option value="20000">20</option>
+                                            <option value="25000">25</option>
+                                            <option value="30000">30</option>
+
+                                        </select>
+                                    </div>
+                                </div><!-- end w-50 -->
+                            </div><!-- END ROW 01 -->
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-xs btn-dark ml-1 _BtnAddMenuNode">추가</button>
+            <button class="btn btn-xs btn-dark ml-1 _BtnEdtMenuNode">수정</button>
+        </div>
+
+        <div class="col-xl-6 _pnl _pnl_menusub d-none">
+            <div class="panel mb-2">
+                <div class="panel-hdr">
+                    <h2>메뉴Sub </h2>
+                    <div class="panel-toolbar">
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewScenarioNode">시나리오선택</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewMenuNode">메뉴추가</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewRouteNode">라우트선택</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewDTMFNode">DTMF추가</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewCallbackNode">콜백추가</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewNoticeNode">공지선택</button>
+                        <button class="btn btn-xs btn-dark ml-1 float-right _BtnRemoveMSNode">번호 삭제</button>
+                    </div>
+                </div>
+                <div class="panel-container show">
+                    <div class="panel-content">
+                        <form class="w-100">
+                            <div class="form-row ml-0 mr-0"><!-- START ROW 01 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <input id="_ms_mncode" type="hidden"/>
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">번호 선택</span>
+                                        </div>
+                                        <select id="_ms_msdigit" class="form-control">
+                                            <option value="#">#</option>
+                                            <option value="*">*</option>
+                                            <option value="0">0</option>
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
+                                            <option value="6">6</option>
+                                            <option value="7">7</option>
+                                            <option value="8">8</option>
+                                            <option value="9">9</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                <div class="custom-control custom-checkbox">
+                                                    <input id="_ms_msnoti_yn" type="checkbox" class="custom-control-input">
+                                                    <label class="custom-control-label" for="_ms_msnoti_yn">공지 사용 여부</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">공지 선택</span>
+                                        </div>
+                                        <select id="_ms_msnoti" class="form-control sel_notice">
+                                            <option value="0">공지 없음</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">공지 내용</span>
+                                        </div>
+                                        <textarea id="_ms_msnoti_info" placeholder="" class="form-control" readonly></textarea>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-50 pr-3">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">공지 시작일</span>
+                                        </div>
+                                        <input id="_ms_msnoti_startdate" type="text" placeholder="시작일" class="form-control datepicker" >
+                                    </div>
+                                </div><!-- end w-50 -->
+                                <div class="form-group w-50">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">시작시간</span>
+                                        </div>
+                                        <input id="_ms_msnoti_starttime" class="_time form-control" type="text" placeholder="시작 시간"  value="00:00">
+                                    </div>
+                                </div><!-- end w-50 -->
+                                <div class="form-group w-50 pr-3">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">공지 종료일</span>
+                                        </div>
+                                        <input id="_ms_msnoti_enddate" type="text" placeholder="종료일" class="form-control datepicker" >
+                                    </div>
+                                </div><!-- end w-50 -->
+
+                                <div class="form-group w-50">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">종료시간</span>
+                                        </div>
+                                        <input id="_ms_msnoti_endtime" class="_time form-control" type="text" placeholder="종료 시간"  value="00:00">
+                                    </div>
+                                </div><!-- end w-50 -->
+
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">상위 이동</span>
+                                        </div>
+                                        <select id="_ms_msnext" class="form-control">
+                                            <option value="5">상위이동 안함</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+
+                            </div><!-- END ROW 01 -->
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+            <button class="btn btn-xs btn-dark ml-1 _BtnAddMenuSubNode">추가</button>
+            <button class="btn btn-xs btn-dark ml-1 _BtnEdtMenuSubNode">수정</button>
+        </div>
+
+        <div class="col-xl-6 _pnl _pnl_scenario_select d-none">
+            <div class="panel mb-2">
+                <div class="panel-hdr">
+                    <h2>
+                        시나리오 선택 <span class="fw-300"><i>To Do -> Grid형식으로 선택만 가능하도록 수정</i></span>
+                    </h2>
+                    <div class="panel-toolbar">
+                        <button class="btn btn-xs btn-dark ml-1 float-right _BtnRemoveSSNode">시나리오선택 취소</button>
+                    </div>
+                </div>
+                <div class="panel-container show">
+                    <div class="panel-content">
+                        <table id="scenario_sel_grid" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+                            <thead class="thead-themed">
+                            <tr>
+                                <th class="table-tr-bottom-0 d-none">일련번호</th>
+                                <th class="table-tr-bottom-0">시나리오이름</th>
+                            </tr>
+                            </thead>
+                        </table>
+                        <form class="w-100">
+                            <input id="_ss_sccode" type="hidden"/>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+            <button class="btn btn-xs btn-dark ml-1 _BtnAddScenarioNode">추가</button>
+            <button class="btn btn-xs btn-dark ml-1 _BtnEdtScenarioNode">수정</button>
+        </div>
+
+        <div class="col-xl-6 _pnl _pnl_route_select d-none">
+            <div class="panel mb-2">
+                <div class="panel-hdr">
+                    <h2>
+                        라우트 <span class="fw-300"><i>To Do -> Grid형식으로 선택만 가능하도록 수정</i></span>
+                    </h2>
+                    <div class="panel-toolbar">
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewOverCallNode">대기(overcall)추가</button>
+                        <button class="btn btn-xs btn-dark ml-1 float-right _BtnRemoveRTNode">라우트선택 취소</button>
+                    </div>
+                </div>
+                <div class="panel-container show">
+                    <div class="panel-content">
+                        <table id="route_sel_grid" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+                            <thead class="thead-themed">
+                            <tr>
+                                <th class="table-tr-bottom-0 d-none" width="30%">일련번호</th>
+                                <th class="table-tr-bottom-0" width="70%">라우트이름</th>
+                            </tr>
+                            </thead>
+                        </table>
+                        <form class="w-100">
+                            <input id="_rt_rtcode" type="hidden"/>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+            <button class="btn btn-xs btn-dark ml-1 _BtnAddRouteNode">추가</button>
+            <button class="btn btn-xs btn-dark ml-1 _BtnEdtRouteNode">수정</button>
+        </div>
+
+        <div class="col-xl-6 _pnl _pnl_overcall d-none">
+            <div class="panel mb-2">
+                <div class="panel-hdr">
+                    <h2>
+                        대기(Over call)
+                    </h2>
+                    <div class="panel-toolbar">
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewScenarioNode">시나리오선택</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewMenuNode">메뉴추가</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewRouteNode">라우트선택</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewDTMFNode">DTMF추가</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewCallbackNode">콜백추가</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewNoticeNode">공지선택</button>
+                        <button class="btn btn-xs btn-dark ml-1 float-right _BtnRemoveOCNode">대기 삭제</button>
+                    </div>
+                </div>
+                <div class="panel-container show">
+                    <div class="panel-content">
+                        <form class="w-100">
+                            <div class="form-row ml-0 mr-0"><!-- START ROW 01 -->
+                                <input id="_oc_rtcode" type="hidden"/>
+                                <input id="_oc_occode" type="hidden"/>
+                                <input id="_oc_ocorder" type="hidden"/>
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">음원 선택</span>
+                                        </div>
+                                        <select id="_oc_ocprompt" class="form-control sel_prompt">
+                                            <option value="NONE">없음</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">음원 내용</span>
+                                        </div>
+                                        <textarea id="_oc_ocprompt_info" placeholder="" class="form-control" readonly></textarea>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">상위 라우트</span>
+                                        </div>
+                                        <select id="_oc_ocnext" class="form-control">
+                                            <option value="5">상위이동 안함</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+                            </div><!-- END ROW 01 -->
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+            <button class="btn btn-xs btn-dark ml-1 _BtnAddOvercallNode">추가</button>
+            <button class="btn btn-xs btn-dark ml-1 _BtnEdtOvercallNode">수정</button>
+        </div>
+
+        <div class="col-xl-6 _pnl _pnl_dtmf d-none">
+            <div class="panel mb-2">
+                <div class="panel-hdr">
+                    <h2>
+                        DTMF
+                    </h2>
+                    <div class="panel-toolbar">
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewScenarioNode">시나리오선택</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewMenuNode">메뉴추가</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewRouteNode">라우트선택</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewDTMFNode">DTMF추가</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewCallbackNode">콜백추가</button>
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewNoticeNode">공지선택</button>
+                        <button class="btn btn-xs btn-dark ml-1 float-right _BtnRemoveINNode">DTMF 삭제</button>
+                    </div>
+                </div>
+                <div class="panel-container show">
+                    <div class="panel-content">
+                        <form class="w-100">
+                            <div class="form-row ml-0 mr-0"><!-- START ROW 01 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">DTMF 이름</span>
+                                        </div>
+                                        <input id="_in_dtmfcode" type="hidden"/>
+                                        <input id="_in_dtmfname" type="text" placeholder="이름을 입력하세요" class="form-control" >
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">입력 안내 음원 선택</span>
+                                        </div>
+                                        <select id="_in_dtmfprompt" class="form-control sel_prompt">
+                                            <option value="NONE">없음</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">음원 내용</span>
+                                        </div>
+                                        <textarea id="_in_dtmfprompt_info" placeholder="" class="form-control" readonly></textarea>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">입력 최소 길이</span>
+                                        </div>
+                                        <input id="_in_dtmfmin" type="text" placeholder="" class="form-control" >
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">입력 최대 길이</span>
+                                        </div>
+                                        <input id="_in_dtmfmax" type="text" placeholder="" class="form-control" >
+                                    </div>
+                                </div><!-- end w-100 -->
+
+
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">입력 오류 음원 선택</span>
+                                        </div>
+                                        <select id="_in_dtmferrprompt" class="form-control sel_prompt">
+                                            <option value="NONE">없음</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">음원 내용</span>
+                                        </div>
+                                        <textarea id="_in_dtmferrprompt_info" placeholder="" class="form-control" readonly></textarea>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">입력 없음 음원 선택</span>
+                                        </div>
+                                        <select id="_in_dtmfnoneprompt" class="form-control sel_prompt">
+                                            <option value="NONE">없음</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">음원 내용</span>
+                                        </div>
+                                        <textarea id="_in_dtmfnoneprompt_info" placeholder="" class="form-control" readonly></textarea>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-50 pr-3">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">입력 오류 횟수</span>
+                                        </div>
+                                        <select id="_in_dtmferrcnt" class="form-control">
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-50 -->
+                                <div class="form-group w-50">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">입력 제한 시간</span>
+                                        </div>
+                                        <select id="_in_dtmfterm" class="form-control">
+                                            <option value="5000">5</option>
+                                            <option value="10000">10</option>
+                                            <option value="15000">15</option>
+                                            <option value="20000">20</option>
+                                            <option value="25000">25</option>
+                                            <option value="30000">30</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-50 -->
+                            </div><!-- END ROW 01 -->
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+            <button class="btn btn-xs btn-dark ml-1  _BtnAddDTMFNode">추가</button>
+            <button class="btn btn-xs btn-dark ml-1  _BtnEdtDTMFNode">수정</button>
+        </div>
+
+        <div class="col-xl-6 _pnl _pnl_callback d-none">
+            <div class="panel mb-2">
+                <div class="panel-hdr">
+                    <h2>콜백</h2>
+                    <div class="panel-toolbar">
+                        <button class="btn btn-xs btn-dark ml-1 _BtnNewMenuNode">메뉴추가</button>
+                        <button class="btn btn-xs btn-dark ml-1 float-right _BtnRemoveCBNode">콜백 삭제</button>
+                    </div>
+                </div>
+                <div class="panel-container show">
+                    <div class="panel-content">
+                        <form class="w-100">
+                            <div class="form-row ml-0 mr-0"><!-- START ROW 01 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">콜백 이름</span>
+                                        </div>
+                                        <input id="_cb_cbcode" type="hidden"/>
+                                        <input id="_cb_cbname" type="text" placeholder="이름을 입력하세요" class="form-control" >
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">입력 안내 음원1 선택</span>
+                                        </div>
+                                        <select id="_cb_cbprompt" class="form-control sel_prompt">
+                                            <option value="NONE">음원 없음</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">음원 내용</span>
+                                        </div>
+                                        <textarea id="_cb_cbprompt_info" placeholder="" class="form-control" readonly></textarea>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">입력 안내 음원2 선택</span>
+                                        </div>
+                                        <select id="_cb_cbprompt2" class="form-control sel_prompt">
+                                            <option value="NONE">음원 없음</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">음원 내용</span>
+                                        </div>
+                                        <textarea id="_cb_cbprompt2_info" placeholder="" class="form-control" readonly></textarea>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">입력 최소 길이</span>
+                                        </div>
+                                        <input id="_cb_cbmin" type="text" placeholder="" class="form-control" >
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">입력 최대 길이</span>
+                                        </div>
+                                        <input id="_cb_cbmax" type="text" placeholder="" class="form-control" >
+                                    </div>
+                                </div><!-- end w-100 -->
+
+
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">입력 오류 음원 선택</span>
+                                        </div>
+                                        <select id="_cb_cberrprompt" class="form-control sel_prompt">
+                                            <option value="NONE">없음</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">음원 내용</span>
+                                        </div>
+                                        <textarea id="_cb_cberrprompt_info" placeholder="" class="form-control" readonly></textarea>
+                                    </div>
+                                </div><!-- end w-100 -->
+
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">입력 없음 음원 선택</span>
+                                        </div>
+                                        <select id="_cb_cbnoneprompt" class="form-control sel_prompt">
+                                            <option value="NONE">없음</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">음원 내용</span>
+                                        </div>
+                                        <textarea id="_cb_cbnoneprompt_info" placeholder="" class="form-control" readonly></textarea>
+                                    </div>
+                                </div><!-- end w-100 -->
+                                <div class="form-group w-50 pr-3">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">입력 오류 횟수</span>
+                                        </div>
+                                        <select id="_cb_cberrcnt" class="form-control">
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-50 -->
+                                <div class="form-group w-50">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">입력 제한 시간</span>
+                                        </div>
+                                        <select id="_cb_cbterm" class="form-control">
+                                            <option value="5000">5</option>
+                                            <option value="10000">10</option>
+                                            <option value="15000">15</option>
+                                            <option value="20000">20</option>
+                                            <option value="25000">25</option>
+                                            <option value="30000">30</option>
+                                        </select>
+                                    </div>
+                                </div><!-- end w-50 -->
+                                <div class="form-group w-100">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">최대 콜백 갯수</span>
+                                        </div>
+                                        <input id="_cb_cblimit" type="text" placeholder="" class="form-control" >
+                                    </div>
+                                </div><!-- end w-100 -->
+                            </div><!-- END ROW 01 -->
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-xs btn-dark ml-1  _BtnAddCallbackNode">추가</button>
+            <button class="btn btn-xs btn-dark ml-1  _BtnEdtCallbackNode">수정</button>
+        </div>
+
+        <div class="col-xl-6 _pnl _pnl_notice_select d-none">
+            <div class="panel mb-2">
+                <div class="panel-hdr">
+                    <h2>
+                        공지 <span class="fw-300"><i>To Do -> Grid 형식으로 선택만 가능하도록 수정</i></span>
+                    </h2>
+                    <div class="panel-toolbar">
+                        <button class="btn btn-xs btn-dark ml-1 float-right _BtnRemoveNTNode">공지선택 취소</button>
+                    </div>
+                </div>
+                <div class="panel-container show">
+                    <div class="panel-content">
+                        <table id="notice_sel_grid" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+                            <thead class="thead-themed">
+                            <tr>
+                                <th class="table-tr-bottom-0 d-none" width="30%">일련번호</th>
+                                <th class="table-tr-bottom-0" width="70%">공지이름</th>
+                            </tr>
+                            </thead>
+                        </table>
+                        <form class="w-100">
+                            <input id="_nt_ntcode" type="hidden"/>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-xs btn-dark ml-1  _BtnAddNotiNode">추가</button>
+            <button class="btn btn-xs btn-dark ml-1  _BtnEdtNotiNode">수정</button>
+        </div>
+
+    </div>
+
+</main>
+
+</html>

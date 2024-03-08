@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	function reloadData(){
+		$('#dt_basic').DataTable().ajax.reload();
+	}
+
+	$(document).ready(function() {
+
+		const getIVRData = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mntng/ivr/status",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				let html = "";
+				let defaultColor = "panel-info";
+				let vwText = "";
+				let _tot_channel = 0, _busy_channel = 0;
+
+				$.each(data.IVRReal, function (i, item) {
+					_tot_channel += 1
+
+					defaultColor = "alert-primary";
+					vwText = item.EXTENSION;
+
+					if (item.DNIS_NAME !== "")
+					{
+						_busy_channel += 1
+						defaultColor = "alert-info";
+						vwText = "<small>"+item.DNIS_NAME+"</small>";
+					}
+
+					html +='';
+					html +='<div class="col-xs-12 col-sm-4 col-md-2">';
+					html +='	<div class="alert '+defaultColor+'" role="alert">';
+					html +='		<strong>'+vwText+'</strong>';
+					html +='	</div>';
+
+					/*
+					html +='	<div class="panel '+defaultColor+'">'; //panel-redLight 로 변경
+					html +='		<div class="panel-heading">';
+					html +='			<h3 class="panel-title">'+vwText+'</h3>'; //text DNIS_NAME으로  내용변경, 글씨는 작게
+					html +='		</div>';
+
+					html +='	</div>';
+					*/
+					html +='</div>';
+				});
+
+				$("._cntnt").html("").append(html);
+				$("._tot_channel").text(_tot_channel);
+				$("._busy_channel").text(_busy_channel);
+				$("._idle_channel").text(parseInt(_tot_channel) - parseInt(_busy_channel));
+			});
+		}
+
+		getIVRData();
+		setInterval(getIVRData, 5000);
+
+	});
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 실시간 IVR 모니터링
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="row">
+		<div class="col-sm-6 col-xl-4">
+			<div class="p-3 bg-primary-300 rounded overflow-hidden position-relative text-white mb-g">
+				<div class="">
+					<h3 class="display-4 d-block l-h-n m-0 fw-500">
+						<span class="_tot_channel">000</span>
+						<small class="m-0 l-h-n">전체 채널수</small>
+					</h3>
+				</div>
+				<i class="fal fa-user position-absolute pos-right pos-bottom opacity-15 mb-n1 mr-n1" style="font-size:6rem"></i>
+			</div>
+		</div>
+		<div class="col-sm-6 col-xl-4">
+			<div class="p-3 bg-primary-300 rounded overflow-hidden position-relative text-white mb-g">
+				<div class="">
+					<h3 class="display-4 d-block l-h-n m-0 fw-500">
+						<span class="_busy_channel">000</span>
+						<small class="m-0 l-h-n">사용 채널수</small>
+					</h3>
+				</div>
+				<i class="fal fa-user position-absolute pos-right pos-bottom opacity-15 mb-n1 mr-n1" style="font-size:6rem"></i>
+			</div>
+		</div>
+		<div class="col-sm-6 col-xl-4">
+			<div class="p-3 bg-primary-300 rounded overflow-hidden position-relative text-white mb-g">
+				<div class="">
+					<h3 class="display-4 d-block l-h-n m-0 fw-500">
+						<span class="_idle_channel">000</span>
+						<small class="m-0 l-h-n">대기 채널수</small>
+					</h3>
+				</div>
+				<i class="fal fa-user position-absolute pos-right pos-bottom opacity-15 mb-n1 mr-n1" style="font-size:6rem"></i>
+			</div>
+		</div>
+	</div>	
+	
+		
+	<div id="content">
+		<div class="row _cntnt"></div>
+	</div>
+	
+</main>
+</html>

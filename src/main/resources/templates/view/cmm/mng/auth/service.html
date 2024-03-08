@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ko"
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+		let SELECTED_ROW = "";
+		let FORM_MODE = "add";
+		$(document).ready(function() {
+			const table = $('#dt_basic').DataTable({
+				ajax: {
+					method: "POST",
+					url: CONTEXT_PATH+"/auth/service/list"
+				},
+				columns: [
+					{ "data": "Svc_No" },
+					{ "data": "Svc_Nm" },
+					{ "data": "Svc_Nm_Depth" },
+					{ "data": "Svc_Url" },
+					{ "data": "Use_Stat"},
+					{ "data": "Use_Stat_Nm"}
+				],
+				columnDefs: [
+					{  targets: [0, 1, 4], visible: false, searchable: false },
+				],
+				stateSave: false,
+				searching: false,
+				ordering: false,
+				scrollY: "350px",//scrollY: "57vh",
+				scrollCollapse: true
+			});
+			table.on('select', function(e, dt, type, indexes){
+				SELECTED_ROW = table.row(indexes).data();
+				FORM_MODE = "edit";
+				$("#Svc_Nm").val(SELECTED_ROW.Svc_Nm);
+				$("#Svc_Url").val(SELECTED_ROW.Svc_Url);
+				$("#Use_Stat").val(SELECTED_ROW.Use_Stat);
+
+			}).on('deselect', function(){
+				SELECTED_ROW = "";
+				FORM_MODE = "add";
+			});
+
+			//Add
+			$("#btn-add").click(function (){
+				if($("#service-form").css("display") === "none") $("#service-form").css("display","block");
+
+				FORM_MODE = "add";
+				$("#Svc_Nm").val("");
+				$("#Svc_Url").val("");
+				$("#Use_Stat").val("");
+
+			});
+
+			//Edit
+			$("#btn-edt").click(function () {
+				if(SELECTED_ROW === "") {
+					alert("수정할 서비스를 선택하세요.")
+					return false;
+				}
+
+				if($("#service-form").css("display") === "none") $("#service-form").css("display","block");
+
+				FORM_MODE = "edit";
+				$("#Svc_Nm").val(SELECTED_ROW.Svc_Nm);
+				$("#Svc_Url").val(SELECTED_ROW.Svc_Url);
+				$("#Use_Stat").val(SELECTED_ROW.Use_Stat);
+			});
+
+			//Add
+			$("#btn-save").click(function(){
+				//Save
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/auth/service/"+FORM_MODE,
+					data: {
+						Svc_No : SELECTED_ROW.Svc_No
+						, Svc_Nm: $("#Svc_Nm").val()
+						, Svc_Url: $("#Svc_Url").val()
+						, Use_Stat: $("#Use_Stat").val()
+					},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (rst) {
+					console.log(rst);
+					$('#dt_basic').DataTable().ajax.reload();
+					SELECTED_ROW = "";
+				});
+
+			});
+
+			//Del Btn Click
+			$("#btn-delete").click(function(){
+				if(SELECTED_ROW === "")
+				{
+					alert("삭제할 서비스를 선택하세요.");
+					return false;
+				}
+
+				if(confirm("선택한 서비스를 삭제하시겠습니까?")) {
+					$.ajax({
+						method: "POST",
+						url: CONTEXT_PATH+"/auth/service/del",
+						data: {
+							Svc_No : SELECTED_ROW.Svc_No
+						},
+						error: function(jqXHR) { jqXHR_Process(jqXHR) }
+					}).done(function (rst) {
+						console.log(rst);
+						SELECTED_ROW = "";
+						$('#dt_basic').DataTable().ajax.reload();
+					});
+				}
+
+
+			});
+
+		});
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 권한 서비스 관리
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-container show">
+			<div class="panel-content">
+				<!--<button class="btn btn-xs btn-dark mt-3" id="btn-add">Add</button>-->
+				<button class="btn btn-xs btn-dark mt-3" id="btn-edt">Edit</button>
+				<button class="btn btn-xs btn-dark mt-3 float-right" id="btn-delete">Delete</button>
+
+				<table id="dt_basic" class="table table-bordered table-hover table-striped w-100 table-sm" style="width:100%">
+					<thead class="thead-themed">
+						<tr>
+							<th class="d-none">서비스번호</th>
+							<th class="d-none">서비스명</th>
+							<th>서비스명</th>
+							<th>서비스 URL</th>
+							<th class="d-none">Use_Stat</th>
+							<th>사용 여부</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+	</div>
+
+	<div id="service-form" class="panel" style="display:none">
+		<div class="panel-hdr text-primary">
+			<div class="panel-toolbar">
+				<button class="btn btn-panel bg-transparent fs-xl w-auto h-auto rounded-0" data-action="hide" data-target_id="service-form" data-offset="0,10" data-original-title="Close"><i class="fal fa-times"></i></button>
+			</div>
+		</div>
+
+		<div class="panel-container show">
+			<div class="panel-content">
+				<div class="form-row ml-0 mr-0">
+					<div class="form-group w-25 pr-3">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">서비스 명</span>
+							</div>
+							<input type="text" id="Svc_Nm" placeholder="서비스명" class="form-control" required oninvalid="this.setCustomValidity('서비스명을 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+					</div>
+					<div class="form-group w-25 pr-3">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">서비스 URL</span>
+							</div>
+							<input type="text" id="Svc_Url" placeholder="서비스명" class="form-control">
+						</div>
+					</div>
+					<div class="form-group pr-3">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">사용 여부</span>
+							</div>
+							<select class="form-control" id="Use_Stat"> <!-- custom-select -->
+								<option value="0" selected>사용</option>
+								<option value="1">사용 안함</option>
+							</select>
+						</div>
+					</div>
+				</div>
+				<button class="btn btn-xs btn-dark" id="btn-save">Save</button>
+			</div>
+		</div>
+	</div>
+
+
+	<!-- Layer Modal
+	<div class="modal" id="Add" role="dialog" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content" >
+				<div class="modal-header">
+					<h4 class="modal-title">서비스 추가</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="addfrm" id="addfrm" method="post">
+					<div class="modal-body">
+						<div class="form-group">
+							<label>서비스명</label>
+							<input type="text" id="add_Svc_Nm" placeholder="서비스명" class="form-control" required oninvalid="this.setCustomValidity('서비스명을 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>서비스 URL</label>
+							<input type="text" id="add_Svc_Url" placeholder="서비스 URL" class="form-control">
+						</div>
+						<div class="form-group">
+							<label>사용 여부</label>
+							<select class="form-control _usestat" id="add_Use_Stat">
+								<option value="0" selected>사용</option>
+								<option value="1">사용 안함</option>
+							</select>
+						</div>
+					</div>
+
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-default">저장</button>
+						<button type="button" class="btn btn-primary" data-dismiss="modal">닫기</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal" id="Edit" role="dialog" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">서비스 수정</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="edtfrm" id="edtfrm" method="post">
+					<div class="modal-body">
+						<input type="hidden" name="edt_Svc_No" id="edt_Svc_No">
+						<div class="form-group">
+							<label>서비스명</label>
+							<input type="text" id="edt_Svc_Nm" placeholder="서비스명" class="form-control" required oninvalid="this.setCustomValidity('서비스명을 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>서비스 URL</label>
+							<input type="text" id="edt_Svc_Url" placeholder="서비스 URL" class="form-control">
+						</div>
+						<div class="form-group">
+							<label>사용 여부</label>
+							<select class="form-control _usestat" id="edt_Use_Stat">
+								<option value="0">사용</option>
+								<option value="1">사용 안함</option>
+							</select>
+						</div>
+
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-default">저장</button>
+						<button type="button" class="btn btn-primary" data-dismiss="modal">닫기</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	-->
+</main>
+</html>

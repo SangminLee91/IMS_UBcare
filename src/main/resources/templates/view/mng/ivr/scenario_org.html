@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+		let SELECTED_ROW = "";
+
+		$(document).ready(function() {
+			//부서
+			const getDept = function() {
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/cmm/ajax/dept/list",
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					$.each(data.Dept, function (i, item) {
+						$(".sel_dept").append($('<option>', { value: item.Dept_No, text: item.Dept_Nm }));
+					});
+					$(".sel_dept")[0].sumo.reload();
+					$(".sel_dept")[1].sumo.reload();
+				});
+
+			}
+
+			//안내음원
+			const getPrompt = function() {
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/voice/list",
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					$.each(data.data, function (i, item) {
+						$(".sel_promptcode").append($('<option>', { value: item.SC_PROMPT, text: item.SC_FILENAME, title: item.SC_DESCRIPTION }));
+					});
+					$(".sel_promptcode")[0].sumo.reload();
+					$(".sel_promptcode")[1].sumo.reload();
+				});
+			}
+
+			//연결 서비스 : code-9, 1-메뉴, 2-route, 3-콜백, 4-공지, 5-종료, 6-sms, 7-Agent
+			const getNext = function() {
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/code/cmm/dtl/list",
+					data: {
+						Cmm_Code : 9
+					},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					$.each(data.Code, function (i, item) {
+						if(item.Cmm_Dtl_Code!=4)
+							$(".sel_next").append($('<option>', { value: item.Cmm_Dtl_Code, text: item.Cmm_Dtl_Code_Nm }));
+					});
+					$(".sel_next")[0].sumo.reload();
+					$(".sel_next")[1].sumo.reload();
+				});
+			}
+
+			const getNoti = function() {
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/notice/list",
+					data: {
+						Cmm_Code : 9
+					},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					$.each(data.Notice, function (i, item) {
+						$(".sel_noticode").append($('<option>', { value: item.NT_Code, text: item.NT_NAME }));
+					});
+					//$(".sel_noticode")[0].sumo.reload();
+					//$(".sel_noticode")[1].sumo.reload();
+				});
+			}
+
+			//시나리오 Grid
+			const table = $('#sccode_dt').DataTable({
+				ajax: {
+					url: CONTEXT_PATH+"/mng/ivr/scenario/list",
+					dataSrc: "Scenario"
+				},
+				columns: [
+					{ "data": "SC_CODE" },
+					{ "data": "SC_NAME" },
+					{ "data": "Dept_No" },
+					{ "data": "Dept_Nm" },
+					{ "data": "SC_PROMPT_YN" },
+					{ "data": "SC_PROMPT" },
+					{ "data": "SC_PROMPT_NM" },
+					{ "data": "SC_NEXT" },
+					{ "data": "SC_NEXTNM" },
+					{ "data": "SC_NEXT_TARGET" },
+					{ "data": "SC_NEXT_TARGET_NM" }/*,
+				{ "data": "SC_NOTI_YN" },
+				{ "data": "SC_NOTI" },
+				{ "data": "SC_NOTI_NM" }*/
+				],
+				columnDefs: [
+					{
+						"render": function ( data, type, row ) {
+							if(data==0){
+								return '';
+							}
+							else{
+								return '사용';
+							}
+						},
+						targets: 4
+					},/*
+				{
+					render: function ( data, type, row ) {
+						if(data==0){
+							return '';
+						}
+						else{
+							return '사용';
+						}
+					},
+					targets: 11
+				},*/
+					{
+						targets: [0,2,3,4,5,7,9], //,11,12
+						visible: false,
+						searchable: false
+					}
+				],
+				searching: true,
+				ordering:false
+			});
+			table.on('select', function(e, dt, type, indexes){
+				SELECTED_ROW = table.row(indexes).data();
+
+			}).on('deselect', function(){
+				SELECTED_ROW = "";
+			});
+
+
+
+			//등록창 열릴때 데이터 초기화
+			$("._BtnAdd").click(function(){
+				SELECTED_ROW = "";
+				$("#add_Dept_No").val("")
+				$("#add_Dept_No")[0].sumo.reload();
+				$("#add_SC_NAME").val("");
+				$("#add_SC_PROMPT_YN").val("");
+				$("#add_SC_PROMPT_YN")[0].sumo.reload();
+				$("#add_SC_PROMPT").val("");
+				$("#add_SC_PROMPT")[0].sumo.reload();
+				$("#add_SC_NEXT").val("");
+				$("#add_SC_NEXT")[0].sumo.reload();
+				$("#add_SC_NEXT_TARGET").val("");
+				$("#add_SC_NEXT_CODE").val("");
+				$("#add_SC_NEXT_CODE")[0].sumo.reload();
+				$("#add_NOTI_YN").val("");
+				$("#add_NOTI_YN")[0].sumo.reload();
+				$("#add_NOTI").val("");
+				$("#add_NOTI")[0].sumo.reload();
+
+				$('.sel_prompt_code').hide();
+				$('.sel_prompt_code').attr( 'disabled', true );
+				$('.sel_next_target').hide();
+				$('.sel_next_code').hide();
+				$('.sel_next_target').attr( 'disabled', true );
+				$('.sel_next_code').attr( 'disabled', true );
+				$('.sel_noti_code').hide();
+				$('.sel_noti_code').attr( 'disabled', true );
+			});
+
+			//등록처리
+			$("#addfrm").submit(function(e){
+				let next=Number($("#add_SC_NEXT").val());
+				let nextaction=null;
+
+				switch(next){
+					case 1:
+					case 2:
+					case 4:
+						nextaction=$("#add_SC_NEXT_CODE").val();
+						break;
+					case 9:
+						nextaction=$("#add_SC_NEXT_CODE").val();
+						break;
+					default:
+						nextaction=$("#add_SC_NEXT_TARGET").val();
+						break;
+				}
+
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/scenario/add",
+					data: {
+						Dept_No: $("#add_Dept_No").val(),
+						SC_NAME: $("#add_SC_NAME").val(),
+						SC_NOTI_YN: $("#add_NOTI_YN").val(),
+						SC_NOTI: $("#add_NOTI").val(),
+						SC_NEXT: next,
+						SC_NEXT_TARGET: nextaction,
+						SC_PROMPT_YN: $("#add_SC_PROMPT_YN").val(),
+						SC_PROMPT: $("#add_SC_PROMPT").val().replace(/:/gi, "")/*,
+					SC_WORKTIME: $("#add_SC_WORKTIME_CODE").val()*/
+					},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					$('#sccode_dt').DataTable().ajax.reload();
+				});
+
+				e.preventDefault();
+
+				$('#modal-add').modal('hide');
+			});
+			//Edit Btn Click
+			$("._BtnEdit").click(function(){
+				if(SELECTED_ROW == "")
+				{
+					alert("시나리오를 선택하세요.");
+					return false;
+				}
+
+				$("#edt_Dept_No").val(SELECTED_ROW.Dept_No);
+				$("#edt_Dept_No")[0].sumo.reload();
+				$("#edt_SC_NAME").val(SELECTED_ROW.SC_NAME);
+				$("#edt_SC_PROMPT_YN").val(SELECTED_ROW.SC_PROMPT_YN);
+				$("#edt_SC_PROMPT_YN")[0].sumo.reload();
+				$("#edt_SC_PROMPT").val(SELECTED_ROW.SC_PROMPT);
+				$("#edt_SC_PROMPT")[0].sumo.reload();
+				$("#edt_SC_NEXT").val(SELECTED_ROW.SC_NEXT);
+				$("#edt_SC_NEXT")[0].sumo.reload();
+
+				//$("#edt_SC_WORKTIME_CODE").val(SELECTED_ROW.SC_WORKTIME_CODE);
+				//$("#edt_SC_WORKTIME_CODE")[0].sumo.reload();
+
+
+				switch(SELECTED_ROW.SC_NEXT){
+					case 1:
+						$('.sel_next_target').hide();
+						$('.sel_next_code').show();
+						$('.sel_next_target ').attr( 'disabled', true );
+						$('.sel_next_code ').attr( 'disabled', false );
+						$.ajax({
+							method: "POST",
+							url: CONTEXT_PATH+"/mng/ivr/menu/set/list",
+							data: {
+								Cmm_Code : 9
+							},
+							error: function(jqXHR) { jqXHR_Process(jqXHR) }
+						}).done(function (data) {
+							$('.sel_nextcode').empty();
+							$.each(data.SCSet, function (i, item) {
+								$('.sel_nextcode').append($('<option>', { value: item.SC_MENU, text: item.SC_MENUNAME }));
+							});
+							$('#edt_SC_NEXT_CODE').val(Number(SELECTED_ROW.SC_NEXT_TARGET));
+							$('.sel_nextcode')[1].sumo.reload();
+						});
+						break;
+					case 2:
+						$('.sel_next_target').hide();
+						$('.sel_next_code').show();
+						$('.sel_next_target ').attr( 'disabled', true );
+						$('.sel_next_code ').attr( 'disabled', false );
+						$.ajax({
+							method: "POST",
+							url: CONTEXT_PATH+"/mng/ivr/route/list",
+							data: {
+								Cmm_Code : 9
+							},
+							error: function(jqXHR) { jqXHR_Process(jqXHR) }
+						}).done(function (data) {
+							$('.sel_nextcode').empty();
+							$.each(data.Route, function (i, item) {
+								$('.sel_nextcode').append($('<option>', { value: item.RT_ROUTE, text: item.RT_ROUTENAME }));
+							});
+							$('#edt_SC_NEXT_CODE').val(Number(SELECTED_ROW.SC_NEXT_TARGET));
+							$('.sel_nextcode')[1].sumo.reload();
+						});
+						break;
+					case 4:
+						$('.sel_next_target').hide();
+						$('.sel_next_code').show();
+						$('.sel_next_target ').attr( 'disabled', true );
+						$('.sel_next_code ').attr( 'disabled', false );
+						$.ajax({
+							method: "POST",
+							url: CONTEXT_PATH+"/mng/ivr/notice/list",
+							data: {
+								Cmm_Code : 9
+							},
+							error: function(jqXHR) { jqXHR_Process(jqXHR) }
+						}).done(function (data) {
+							$('.sel_nextcode').empty();
+							$.each(data.Notice, function (i, item) {
+								$('.sel_nextcode').append($('<option>', { value: item.NT_Code, text: item.NT_NAME }));
+							});
+							$('#edt_SC_NEXT_CODE').val(Number(SELECTED_ROW.SC_NEXT_TARGET));
+							$('.sel_nextcode')[1].sumo.reload();
+						});
+						break;
+					case 3:
+					case 5:
+					case 6:
+						$('.sel_next_target').hide();
+						$('.sel_next_code').show();
+						$('.sel_next_target ').attr( 'disabled', true );
+						$('.sel_next_code ').attr( 'disabled', false );
+						$('#edt_SC_NEXT_TARGET').val(SELECTED_ROW.SC_NEXT_TARGET);
+						break;
+					case 9:
+
+						$('.sel_next_target').hide();
+						$('.sel_next_code').show();
+						$('.sel_next_target').attr( 'disabled', true );
+						$('.sel_next_code').attr( 'disabled', false );
+
+						$.ajax({
+							method: "POST",
+							url: CONTEXT_PATH+"/mng/ivr/workhour/set/list",
+							error: function(jqXHR) { jqXHR_Process(jqXHR) }
+						}).done(function (data) {
+							$('.sel_nextcode')[1].sumo.unSelectAll();
+							$('.sel_nextcode').empty();
+							$.each(data.WHSet, function (i, item) {
+								$('.sel_nextcode').append($('<option>', { value: item.WH_Code, text: item.WH_Code_Nm }));
+							});
+
+							$('#edt_SC_NEXT_CODE').val(SELECTED_ROW.SC_NEXT_TARGET);
+							$('.sel_nextcode')[1].sumo.reload();
+
+						});
+
+						break;
+					default:
+						$('.sel_next_target').hide();
+						$('.sel_next_code').hide();
+						$('.sel_next_target').attr( 'disabled', true );
+						$('.sel_next_code ').attr( 'disabled', true );
+						break;
+				}
+
+
+				$("#edt_NOTI_YN").val(SELECTED_ROW.SC_NOTI_YN);
+				$("#edt_NOTI_YN")[0].sumo.reload();
+				$("#edt_NOTI").val(SELECTED_ROW.SC_NOTI);
+				$("#edt_NOTI")[0].sumo.reload();
+
+				if(SELECTED_ROW.SC_PROMPT_YN == 1){
+					$('.sel_prompt_code').show();
+					$('.sel_prompt_code').attr( 'disabled', false );
+				}
+				if(SELECTED_ROW.SC_NOTI_YN == 1){
+					$('.sel_noti_code').show();
+					$('.sel_noti_code').attr( 'disabled', false );
+				}
+				$('#modal-edt').modal('show');
+			});
+			//수정 처리
+			$("#edtfrm").submit(function(e){
+				let next = Number($("#edt_SC_NEXT").val());
+				let nextaction = null;
+
+				switch(next){
+					case 1:
+					case 2:
+					case 4:
+						nextaction=$("#edt_SC_NEXT_CODE").val();
+						break;
+					default:
+						nextaction=$("#edt_SC_NEXT_TARGET").val();
+						break;
+				}
+
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/scenario/edit\"",
+					data: {
+						SC_CODE: SELECTED_ROW.SC_CODE,
+						Dept_No: $("#edt_Dept_No").val(),
+						SC_NAME: $("#edt_SC_NAME").val(),
+						SC_NOTI_YN: $("#edt_NOTI_YN").val(),
+						SC_NOTI: $("#edt_NOTI").val(),
+						SC_NEXT: next,
+						SC_NEXT_TARGET: nextaction,
+						SC_PROMPT_YN: $("#edt_SC_PROMPT_YN").val(),
+						SC_PROMPT: $("#edt_SC_PROMPT").val().replace(/:/gi, "")
+					},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					$('#sccode_dt').DataTable().ajax.reload();
+				});
+
+				e.preventDefault();
+				SELECTED_ROW = "";
+				$('#modal-edt').modal('hide');
+			});
+
+			//삭제
+			$("._BtnDel").click(function(){
+				if(SELECTED_ROW == "")
+				{
+					alert("삭제할  시나리오를 선택하세요.");
+					return false;
+				}
+
+				if (confirm("시나리오 삭제", "["+SELECTED_ROW.SC_NAME +"] 시나리오를 삭제 하시겠습니까?"))
+				{
+					$.ajax({
+						method: "POST",
+						url: CONTEXT_PATH+"/mng/ivr/scenario/del",
+						data: {SC_CODE: SELECTED_ROW.SC_CODE},
+						error: function(jqXHR) { jqXHR_Process(jqXHR) }
+					}).done(function (data) {
+						$('#sccode_dt').DataTable().ajax.reload();
+					});
+
+					SELECTED_ROW = "";
+				}
+				else
+				{
+					return false;
+				}
+			});
+
+			$('._promptyn').on('change', function (e) {
+				let optionSelected = $("option:selected", this);
+				let valueSelected = this.value;
+
+				if(valueSelected == 1){
+					$('.sel_prompt_code').show();
+					$('.sel_prompt_code').attr( 'disabled', false );
+					$("#add_SC_PROMPT")[0].sumo.reload();
+					$("#edt_SC_PROMPT")[0].sumo.reload();
+				}
+				else
+				{
+					$('.sel_prompt_code').hide();
+					$('.sel_prompt_code').attr( 'disabled', true );
+					$("#add_SC_PROMPT").val("");
+					$("#add_SC_PROMPT")[0].sumo.reload();
+					$("#edt_SC_PROMPT").val("");
+					$("#edt_SC_PROMPT")[0].sumo.reload();
+				}
+			});
+
+			$('._noticeyn').on('change', function (e) {
+				let optionSelected = $("option:selected", this);
+				let valueSelected = this.value;
+
+				if(valueSelected == 1){
+					$('.sel_noti_code').show();
+					$('.sel_noti_code').attr( 'disabled', false );
+					$("#add_NOTI")[0].sumo.reload();
+					$("#edt_NOTI")[0].sumo.reload();
+				}
+				else
+				{
+					$('.sel_noti_code').hide();
+					$('.sel_noti_code').attr( 'disabled', true );
+					$("#add_NOTI").val("");
+					$("#add_NOTI")[0].sumo.reload();
+					$("#edt_NOTI").val("");
+					$("#edt_NOTI")[0].sumo.reload();
+				}
+
+			});
+
+			$('.sel_next').on('change', function (e) {
+				let optionSelected = $('option:selected', this);
+				let valueSelected = Number(this.value);
+				switch(valueSelected){
+					case 1:
+						$('.sel_next_target').hide();
+						$('.sel_next_code').show();
+						//$('.sel_worktime_code').hide();
+						$('.sel_next_target').attr( 'disabled', true );
+						$('.sel_next_code').attr( 'disabled', false );
+						//$('.sel_worktime_code').attr( 'disabled', true );
+						$.ajax({
+							method: "POST",
+							url: CONTEXT_PATH+"/mng/ivr/menu/set/list",
+							data: {
+								Cmm_Code : 9
+							},
+							error: function(jqXHR) { jqXHR_Process(jqXHR) }
+						}).done(function (data) {
+							$('.sel_nextcode').empty();
+							$.each(data.SCSet, function (i, item) {
+								$('.sel_nextcode').append($('<option>', { value: item.SC_MENU, text: item.SC_MENUNAME }));
+							});
+							$(".sel_nextcode")[0].sumo.reload();
+							$('.sel_nextcode')[1].sumo.reload();
+						});
+						break;
+					case 2:
+						$('.sel_next_target').hide();
+						$('.sel_next_code').show();
+						//$('.sel_worktime_code').hide();
+						$('.sel_next_target').attr( 'disabled', true );
+						$('.sel_next_code, ._sel_lunch').attr( 'disabled', false );
+						//$('.sel_worktime_code').attr( 'disabled', true );
+						$.ajax({
+							method: "POST",
+							url: CONTEXT_PATH+"/mng/ivr/route/list",
+							data: {
+								Cmm_Code : 9
+							},
+							error: function(jqXHR) { jqXHR_Process(jqXHR) }
+						}).done(function (data) {
+							$('.sel_nextcode').empty();
+							$.each(data.Route, function (i, item) {
+								$('.sel_nextcode').append($('<option>', { value: item.RT_ROUTE, text: item.RT_ROUTENAME }));
+							});
+							$(".sel_nextcode")[0].sumo.reload();
+							$('.sel_nextcode')[1].sumo.reload();
+						});
+						break;
+					case 4:
+						$('.sel_next_target').hide();
+						$('.sel_next_code').show();
+						//$('.sel_worktime_code').hide();
+						$('.sel_next_target').attr( 'disabled', true );
+						$('.sel_next_code').attr( 'disabled', false );
+						//$('.sel_worktime_code').attr( 'disabled', true );
+						$.ajax({
+							method: "POST",
+							url: CONTEXT_PATH+"/mng/ivr/notice/list",
+							data: {
+								Cmm_Code : 9
+							},
+							error: function(jqXHR) { jqXHR_Process(jqXHR) }
+						}).done(function (data) {
+							$('.sel_nextcode').empty();
+							$.each(data.Notice, function (i, item) {
+								$('.sel_nextcode').append($('<option>', { value: item.NT_Code, text: item.NT_NAME }));
+							});
+							$(".sel_nextcode")[0].sumo.reload();
+							$('.sel_nextcode')[1].sumo.reload();
+						});
+						break;
+					case 3:
+					case 5:
+					case 6:
+						$('.sel_next_target').show();
+						$('.sel_next_code').hide();
+						//$('.sel_worktime_code').hide();
+						$('.sel_next_target').attr( 'disabled', false );
+						$('.sel_next_code').attr( 'disabled', true );
+						//$('.sel_worktime_code').attr( 'disabled', true );
+						break;
+					case 9:
+
+						$('.sel_next_target').hide();
+						$('.sel_next_code').show();
+						//$('.sel_worktime_code').hide();
+						$('.sel_next_target').attr( 'disabled', true );
+						$('.sel_next_code').attr( 'disabled', false );
+
+						//$('.sel_worktime_code').show();
+						//$('.sel_worktime_code').attr( 'disabled', false );
+
+						$.ajax({
+							method: "POST",
+							url: CONTEXT_PATH+"</mng/ivr/workhour/set/list",
+							error: function(jqXHR) { jqXHR_Process(jqXHR) }
+						}).done(function (data) {
+							$('.sel_nextcode').empty();
+							$.each(data.WHSet, function (i, item) {
+								$('.sel_nextcode').append($('<option>', { value: item.WH_Code, text: item.WH_Code_Nm }));
+							});
+							$(".sel_nextcode")[0].sumo.reload();
+							$('.sel_nextcode')[1].sumo.reload();
+						});
+
+						//$(".worktime_code_data")
+
+
+						break;
+					default:
+						$('.sel_next_target').hide();
+						$('.sel_next_code').hide();
+						//$('.sel_worktime_code').hide();
+						$('.sel_next_target').attr( 'disabled', true );
+						$('.sel_next_code').attr( 'disabled', true );
+						//$('.sel_worktime_code').attr( 'disabled', true );
+						break;
+				}
+			});
+
+			getDept();
+
+			//getPrompt();
+			//getNext();
+			//getNoti();
+
+
+            $('.sel_dept').SumoSelect({
+                placeholder: '부서',
+                search : true,
+                forceCustomRendering: true
+            });
+
+
+			$('.sel_promptcode').SumoSelect({
+				placeholder: '안내음원',
+				search : true,
+				forceCustomRendering: true
+			});
+
+			$('.sel_noticode').SumoSelect({
+				placeholder: '공지안내',
+				search : true,
+				forceCustomRendering: true
+			});
+
+			$('._promptyn').SumoSelect({
+				placeholder: '안내음원 사용여부',
+				forceCustomRendering: true
+			});
+
+			$('._noticeyn').SumoSelect({
+				placeholder: '공지 사용여부',
+				forceCustomRendering: true
+			});
+
+			$('.sel_next').SumoSelect({
+				placeholder: '액션 종류',
+				search : true,
+				forceCustomRendering: true
+			});
+
+
+			$('.sel_nextcode').SumoSelect({
+				placeholder: '액션 선택',
+				search : true,
+				forceCustomRendering: true
+			});
+
+			/*
+            $('.worktime_code_data').SumoSelect({
+                placeholder: '업무시간 선택',
+                search : true,
+                forceCustomRendering: true
+            });
+            */
+		});
+	</script>
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 시나리오 관리
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			<div class="panel-toolbar">
+				<button class="btn btn-xs btn-dark _BtnAdd" data-toggle="modal" data-target="#modal-add" data-backdrop="static">Add</button>
+				<button class="btn btn-xs btn-dark ml-1 _BtnEdit" data-backdrop="static">Edit</button>
+				<button class="btn btn-xs btn-dark ml-1 _BtnDel">Delete</button>
+			</div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+
+				<table id="sccode_dt" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+					<tr>
+						<th colspan="4" class="text-center border-bottom-0">기본정보</th>
+						<th colspan="3" class="text-center border-bottom-0">안내음원</th>
+						<th colspan="4" class="text-center border-bottom-0">시작 서비스</th>
+						<!-- <th colspan="3" class="text-center table-tr-bottom-0">공지</th> -->
+					</tr>
+					<tr>
+						<th class="text-center">일련번호</th>
+						<th class="text-center">시나리오 명</th>
+						<th class="text-center">부서 번호</th>
+						<th class="text-center">부서</th>
+
+						<th class="text-center">사용여부</th>
+						<th class="text-center">음원번호</th>
+						<th class="text-center">음원이름</th>
+
+						<th class="text-center">서비스 번호</th>
+						<th class="text-center">서비스 종류</th>
+						<th class="text-center">서비스 대상 번호</th>
+						<th class="text-center">서비스 명</th>
+						<!--
+                        <th class="table-tr-bottom-0">사용여부</th>
+                        <th class="table-tr-bottom-0">공지번호</th>
+                        <th class="table-tr-bottom-0">공지이름</th>
+                         -->
+					</tr>
+					</thead>
+				</table>
+
+			</div>
+		</div>
+	</div>
+
+
+	<div id="modal-add" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">시나리오 추가</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="addfrm" id="addfrm" method="post">
+					<div class="modal-body">
+                        <div class="form-group">
+                            <label>사용 부서</label>
+                            <select class="form-control sel_dept" id="add_Dept_No" required>
+                                <option value="">부서</option>
+                            </select>
+                        </div>
+						<div class="form-group">
+							<label>시나리오 명</label>
+							<input id="add_SC_NAME" name="SC_NAME" type="text" class="form-control" required oninvalid="this.setCustomValidity('시나리오 명을 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>안내음원 사용여부</label>
+							<select class="form-control _promptyn" id="add_SC_PROMPT_YN" required>
+								<option value="0">사용안함</option>
+								<option value="1">사용</option>
+							</select>
+						</div>
+						<div class="form-group sel_prompt_code">
+							<label>안내 음원 선택</label>
+							<select class="form-control sel_promptcode" id="add_SC_PROMPT">
+								<option value="">음원</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>서비스 종류</label>
+							<select class="form-control sel_next" id="add_SC_NEXT" required>
+								<option value="">종류</option>
+							</select>
+						</div>
+						<div class="form-group sel_next_target">
+							<label>서비스명</label>
+							<input id="add_SC_NEXT_TARGET" type="text" name='SC_NEXT_TARGET' class="form-control sel_next_target" value="">
+						</div>
+						<div class="form-group sel_next_code">
+							<label>서비스명</label>
+							<select  class="form-control sel_nextcode" name='SC_NEXT_CODE' id="add_SC_NEXT_CODE">
+								<option value="">종류</option>
+							</select>
+						</div>
+						<!--
+                        <div class="form-group sel_worktime_code">
+                            <label>근무 시간</label>
+                            <select  class="form-control sel_worktime_code worktime_code_data" id="add_SC_WORKTIME_CODE">
+                                <option value="">종류</option>
+                            </select>
+                        </div>
+                        -->
+
+						<div class="form-group">
+							<label>공지 사용 여부</label>
+							<select class="form-control _noticeyn" id="add_NOTI_YN" required>
+								<option value="0">사용안함</option>
+								<option value="1">사용</option>
+							</select>
+						</div>
+						<div class="form-group sel_noti_code">
+							<label>공지 선택</label>
+							<select class="form-control sel_noticode" id="add_NOTI">
+								<option value="">종류</option>
+							</select>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-dark" id="btnadd">Save</button>
+						<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div id="modal-edt" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">시나리오 수정</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+
+				<form name="edtfrm" id="edtfrm" method="post">
+					<div class="modal-body">
+						<div class="form-group">
+							<label>사용 부서</label>
+							<select class="form-control sel_dept" id="edt_Dept_No" required>
+								<option value="">부서</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>시나리오 명</label>
+							<input id="edt_SC_NAME" name="SC_NAME" type="text" class="form-control" required oninvalid="this.setCustomValidity('시나리오 명을 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>안내음원 사용여부</label>
+							<select class="form-control _promptyn" id="edt_SC_PROMPT_YN" required>
+								<option value="0">사용안함</option>
+								<option value="1">사용</option>
+							</select>
+						</div>
+						<div class="form-group sel_prompt_code">
+							<label>안내 음원 선택</label>
+							<select class="form-control sel_promptcode" id="edt_SC_PROMPT" >
+								<option value="">음원</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>서비스 종류</label>
+							<select class="form-control sel_next" id="edt_SC_NEXT">
+								<option value="">종류</option>
+							</select>
+						</div>
+						<div class="form-group sel_next_target">
+							<label>서비스명</label>
+							<input id="edt_SC_NEXT_TARGET" type="text" name='SC_NEXT_TARGET' class="form-control sel_next_target" value="">
+						</div>
+						<div class="form-group sel_next_code">
+							<label>서비스명</label>
+							<select  class="form-control sel_nextcode" name='SC_NEXT_CODE' id="edt_SC_NEXT_CODE">
+								<option value="">종류</option>
+							</select>
+						</div>
+						<!--
+						<div class="form-group sel_worktime_code">
+							<label>근무 시간</label>
+							<select  class="form-control sel_worktime_code worktime_code_data" id="edt_SC_WORKTIME_CODE">
+								<option value="">종류</option>
+							</select>
+						</div>
+						-->
+						<div class="form-group">
+							<label>공지 사용 여부</label>
+							<select class="form-control _noticeyn" id="edt_NOTI_YN" required>
+								<option value="0">사용안함</option>
+								<option value="1">사용</option>
+							</select>
+						</div>
+						<div class="form-group sel_noti_code">
+							<label>공지 선택</label>
+							<select class="form-control sel_noticode" id="edt_NOTI">
+								<option value="">종류</option>
+							</select>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-dark" id="btnedt">Save</button>
+						<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+</main>
+</html>

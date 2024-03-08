@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="sttRec">
+    <select id="getSttRec" parameterType="hashmap" resultType="hashmap">
+<!--     	CALL USP_Stt_Rec_S(#{Dept_No}, #{Agent_Key}, #{sDate}, #{eDate}, #{sTime}, #{eTime}) -->
+		EXEC CTI_RECDB.RECORD.dbo.usp_ims_stt_rec_s #{Agent_Key}, #{sDate}, #{eDate}, #{sTime}, #{eTime}
+	</select> 
+</mapper>

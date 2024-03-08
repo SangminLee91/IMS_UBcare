@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	let SELECTED_ROW = "";
+
+	function reloadData(){
+		$('#dt_callback').DataTable().ajax.reload();
+	}
+
+
+	$(document).ready(function() {
+		const callback = $('#dt_callback').DataTable({
+			ajax: {
+				url: CONTEXT_PATH+"/mng/cti/callback_user/callback/cnt",
+				dataSrc: "callback"
+			},
+			columns: [
+				{ "data": "seq" },
+				{ "data": "branch" },
+				{ "data": "Cnt" }
+			],
+			columnDefs: [
+				{ "targets": [0], "visible": false, className: "never"}
+			],
+			bPaginate: false,
+			ordering: false,
+			searching: false,
+			select: false,
+		});
+
+
+		const table = $('#dt_agent').DataTable({
+			ajax: {
+				url: CONTEXT_PATH+"/mng/cti/callback_user/agent",
+				dataSrc: "Agent"
+			},
+			columns: [
+				{ "data": "code" },
+				{ "data": "name" },
+				{ "data": "agentNm" },
+				{ "data": "teamkey" },
+				{ "data": "branch" },
+				{ "data": "deptnm" },
+				{ "data": "branchnm" },
+				{ "data": "USE_YN" }
+			],
+			columnDefs: [
+				{  "targets": [0, 3, 4], "visible": false, "searchable": false },
+			],
+			bPaginate: true,
+			ordering: false,
+			iDisplayLength: 10
+		});
+		table.on('select', function(e, dt, type, indexes){
+			SELECTED_ROW = table.row(indexes).data();
+			$("#agent-form").css("display","block");
+
+			$("#userid").val(SELECTED_ROW.name);
+			$("#name").val(SELECTED_ROW.agentNm);
+			$("#deptnm").val(SELECTED_ROW.deptnm);
+			$("#branch").val(SELECTED_ROW.branch);
+
+
+		}).on('deselect', function(){
+			SELECTED_ROW = "";
+			$("#agent-form").css("display","none");
+
+			$("#userid").val("");
+			$("#name").val("");
+			$("#deptnm").val("");
+			$("#branch").val("");
+		});
+
+
+		//Branch 정보 ajax
+		const getBranch = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mng/cti/callback_user/branch",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$("._branch option:not(option:eq(0))").remove();
+				$.each(data.Branch, function (i, item) {
+					$("._branch").append($('<option>', { value: item.seq, text: item.branch }));
+				});
+
+			});
+		}
+
+		//수정시
+		$("#btn-save").click(function (){
+			if ($("#branch").val() === "") {
+				alert("Branch 를 선택하세요");
+				return false;
+			}
+
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mng/cti/callback_user/set",
+				data: {
+					code: SELECTED_ROW.code
+					, teamkey: SELECTED_ROW.teamkey
+					, branch: $("#branch").val()
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$('#dt_agent').DataTable().ajax.reload(null, false );
+				// _selected(table, SELECTED_ROW.code);
+
+				SELECTED_ROW = "";
+				$("#agent-form").css("display","none");
+
+				$("#userid").val("");
+				$("#name").val("");
+				$("#deptnm").val("");
+				$("#branch").val("");
+
+			});
+
+		});
+
+		const _selected = function(dt_table, val){
+			$.each(dt_table.rows().data(), function (i, item) {
+				if (item.code == val) {
+					dt_table.row(i).select();
+					return false;
+				}
+			});
+		};
+
+		getBranch();
+		setInterval("reloadData()", 5000); // 5s
+	});
+
+
+	</script>
+</th:block>
+
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 사용자 그룹 변경
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+<!--			<div class="panel-toolbar">-->
+<!--				<button class="btn btn-xs btn-dark ml-1" id="btn-edt">Edit</button>-->
+<!--			</div>-->
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+				<table id="dt_callback" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+					<tr>
+						<th>seq</th>
+						<th>Branch</th>
+						<th>미처리 콜백수</th>
+					</tr>
+					</thead>
+				</table>
+
+
+				<table id="dt_agent" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+						<tr>
+							<th>code</th>
+							<th>USER ID</th>
+							<th>이름</th>
+							<th>팀키</th>
+							<th>Branch Code</th>
+							<th>부서명</th>
+							<th>Branch 명</th>
+							<th>사용 여부</th>
+						</tr>
+					</thead>
+				</table>		
+			</div>
+		</div>
+	</div>
+
+
+	<div id="agent-form" class="panel" style="display:none">
+		<div class="panel-hdr text-primary">
+			<div class="panel-toolbar">
+				<button class="btn btn-panel bg-transparent fs-xl w-auto h-auto rounded-0" data-action="hide" data-target_id="agent-form" data-offset="0,10" data-original-title="Close"><i class="fal fa-times"></i></button>
+			</div>
+		</div>
+
+		<div class="panel-container show">
+			<div class="panel-content">
+				<div class="form-row ml-0 mr-0">
+					<div class="form-group w-25 pr-3">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">USER ID</span>
+							</div>
+							<input type="text" id="userid"  class="form-control" readonly>
+						</div>
+					</div>
+					<div class="form-group w-25 pr-3">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">이름</span>
+							</div>
+							<input type="text" id="name" class="form-control" readonly>
+						</div>
+					</div>
+
+					<div class="form-group w-25 pr-3">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">부서명</span>
+							</div>
+							<input type="text" id="deptnm" class="form-control" readonly>
+						</div>
+					</div>
+					<div class="form-group w-25 pr-3">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Branch</span>
+							</div>
+							<select class="form-control _branch" id="branch">
+								<option value="">Branch</option>
+							</select>
+						</div>
+					</div>
+				</div>
+				<button class="btn btn-xs btn-dark" id="btn-save">Save</button>
+			</div>
+		</div>
+	</div>
+
+
+</main>
+
+</html>

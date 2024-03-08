@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	let SELECTED_ROW = "";
+	$(document).ready(function() {
+
+		//IFX teams
+		const getTeams = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/code/ifx/teams/list", //<c:url value='/api/code/ifxteams.do'/>",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$("._teams option:not(option:eq(0))").remove();
+				$.each(data.Teams, function (i, item) {
+					$("._teams").append($('<option>', { value: item.teamkey, text: item.teamname }));
+				});
+				// $("._teams")[0].sumo.reload();
+				// $("._teams")[1].sumo.reload();
+			});
+		}
+		// $('._teams').SumoSelect({
+		// 	placeholder: 'Teams Key',
+		// 	search : true,
+		// 	forceCustomRendering: true
+		// });
+
+
+		const table_dept = $('#dt_dept').DataTable({
+			ajax: {
+				url: CONTEXT_PATH+"/cmm/ajax/total/dept/list",
+				dataSrc: "Dept"
+			},
+			columns: [
+				{ "data": "Dept_No" },
+				{ "data": "Dept_Nm" },
+				{ "data": "High_Dept_No" },
+				{ "data": "Dept_Desc" },
+				{ "data": "Path_Code" },
+				{ "data": "Path_Dept_Nm" },
+				{ "data": "Team_Key" },
+				{ "data": "teamname" }
+			],
+			columnDefs: [
+				{  "targets": [0, 2, 4, 6], "visible": false, className: "never", "searchable": false }
+			],
+			initComplete: function(settings, json) {
+				$("._highdept option:not(option:eq(0))").remove();
+				$.each(json.Dept, function (i, item) {
+					$("._highdept").append($('<option>', { value: item.Dept_No, text: item.Path_Dept_Nm }));
+				});
+			},
+			ordering: false,
+			searching: true,
+			scrollY: "536px",
+			scrollCollapse: true,
+			stateSave: false
+		});
+		table_dept.on('select', function(e, dt, type, indexes){
+			SELECTED_ROW = table_dept.row(indexes).data();
+		}).on('deselect', function(){
+			SELECTED_ROW = "";
+		});
+
+		//Add Modal Open
+		$('#add').on('show.bs.modal', function () {
+			$("._teams").val("");
+			$("._highdept").val("");
+		});
+
+		//Add
+		$("#addfrm").submit(function(e){
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/code/dept/add",
+				data: {
+					Dept_Nm: $("#add_DeptNm").val()
+					, Dept_Type: $("#add_DeptType").val()
+					, High_Dept_No: $("#add_High_DeptNo").val()
+					, Team_Key: $("#add_TeamKey").val()
+					, Dept_Desc: $("#add_Dept_Desc").val()
+					},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function () { // function (data)
+				$('#dt_dept').DataTable().ajax.reload();
+			});
+
+			e.preventDefault();
+
+			//form 초기화
+			$("#add_DeptNm").val("");
+			$("#add_DeptType").val("");
+			$("#add_High_DeptNo").val("");
+			$("#add_TeamKey").val("");
+			$("#add_Dept_Desc").val("");
+
+			SELECTED_ROW = "";
+
+			$('#add').modal('hide');
+		});
+
+		//Edit Click
+		$("._BtnEdit").click(function(){
+			if(SELECTED_ROW === "")
+			{
+				alert("수정할 부서를 선택하세요.");
+				return false;
+			}
+
+			$('#edt').modal('show');
+		});
+
+		//Edit Modal Open
+		$('#edt').on('show.bs.modal', function () {
+			$("#edt_DeptNm").val(SELECTED_ROW.Dept_Nm);
+			$("#edt_DeptType").val(SELECTED_ROW.Dept_Type);
+			$("#edt_High_DeptNo").val(SELECTED_ROW.High_Dept_No);
+			$("#edt_TeamKey").val(SELECTED_ROW.Team_Key);
+			$("#edt_Dept_Desc").val(SELECTED_ROW.Dept_Desc);
+
+			// $("#edt_TeamKey")[0].sumo.reload();
+		});
+
+		$("#edtfrm").submit(function(e){
+			//Save
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/code/dept/edit",
+				data: {
+					Dept_No : SELECTED_ROW.Dept_No
+					, Dept_Nm: $("#edt_DeptNm").val()
+					, Dept_Type: $("#edt_DeptType").val()
+					, High_Dept_No: $("#edt_High_DeptNo").val()
+					, Team_Key: $("#edt_TeamKey").val()
+					, Dept_Desc: $("#edt_Dept_Desc").val()
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function () { // function (data)
+				$('#dt_dept').DataTable().ajax.reload();
+			});
+
+			e.preventDefault();
+
+			SELECTED_ROW = "";
+			$('#edt').modal('hide');
+
+		});
+
+		//Del Btn Click
+		$("._BtnDel").click(function(){
+			if(SELECTED_ROW === "")
+			{
+				alert("삭제할 부서를 선택하세요.");
+				return false;
+			}
+
+			if(confirm("["+SELECTED_ROW.Dept_Nm +"] 부서를 삭제 하시겠습니까?\n부서내 사원이 존재하면 삭제되지 않습니다."))
+			{
+					$.ajax({
+						method: "POST",
+						url: CONTEXT_PATH+"/code/dept/del",
+						data: {
+							Dept_No : SELECTED_ROW.Dept_No
+						},
+						error: function(jqXHR) { jqXHR_Process(jqXHR) }
+					}).done(function () { // function (data)
+						$('#dt_dept').DataTable().ajax.reload();
+					});
+
+					SELECTED_ROW = "";
+			}
+			else
+			{
+				return false;
+			}
+		});
+
+
+		getTeams();
+
+	});
+
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 부서 정보
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			<div class="panel-toolbar">
+				<button class="btn btn-xs btn-dark _BtnAdd" data-toggle="modal" data-target="#add" data-backdrop="static">Add</button>
+				<button class="btn btn-xs btn-dark ml-1 _BtnEdit" data-target="#edt" data-backdrop="static">Edit</button>
+				<button class="btn btn-xs btn-dark ml-1 _BtnDel">Delete</button>
+			</div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+				<table id="dt_dept" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+						<tr class="text-center">
+							<th class="hide">부서 번호</th>
+							<th>부서 명</th>
+							<th class="hide">상위 부서 번호</th>
+							<th>설 명</th>
+							<th class="hide">Path_Code</th>
+							<th>Path_Dept_Nm</th>
+							<th class="hide">Team_Key</th>
+							<th>OSCC Team 명</th>
+						</tr>
+					</thead>
+				</table>		
+			</div>
+		</div>
+	</div>
+
+	<div id="add" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">부서 추가</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="addfrm" id="addfrm" method="post">
+					<div class="modal-body">
+
+						<div class="form-group">
+							<div class="input-group input-group-sm">
+								<div class="input-group-prepend">
+									<span class="input-group-text width-76px">부서명</span>
+								</div>
+								<input type="text" id="add_DeptNm" placeholder="부서명" class="form-control" required oninvalid="this.setCustomValidity('부서명을 입력하세요.')" oninput="this.setCustomValidity('')">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="input-group input-group-sm">
+								<div class="input-group-prepend">
+									<span class="input-group-text width-76px">Team Key</span>
+								</div>
+								<select class="form-control _teams" id="add_TeamKey">
+									<option value="" disabled selected hidden> -선택- </option>
+								</select>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="input-group input-group-sm">
+								<div class="input-group-prepend">
+									<span class="input-group-text width-76px">설명</span>
+								</div>
+								<input type="text" id="add_Dept_Desc" placeholder="설명" class="form-control" oninvalid="this.setCustomValidity('OSCC 팀명에 사용할 값을 입력하세요. ()영문)')" oninput="this.setCustomValidity('')">
+							</div>
+						</div>
+						<!--
+                        <div class="form-group">
+                            <label>부서유형</label>
+                            <select class="form-control" id="add_DeptType">
+                                <option value="">부서유형 선택</option>
+                                <option value="">부서</option>
+                                <option value="">그룹</option>
+                            </select>
+                        </div>
+                         -->
+						<div class="form-group">
+							<div class="input-group input-group-sm">
+								<div class="input-group-prepend">
+									<span class="input-group-text width-76px">상위 부서</span>
+								</div>
+								<select class="form-control _highdept" id="add_High_DeptNo">
+									<option value="" disabled selected hidden> -상위 부서 선택- </option>
+								</select>
+							</div>
+						</div>
+
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-xs btn-dark _btnadd">Save</button>
+						<button type="button" class="btn btn-xs btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div id="edt" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">부서 수정</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="edtfrm" id="edtfrm" method="post">
+					<div class="modal-body">
+						<div class="form-group">
+							<div class="input-group input-group-sm">
+								<div class="input-group-prepend">
+									<span class="input-group-text width-76px">부서명</span>
+								</div>
+								<input type="text" id="edt_DeptNm" placeholder="부서명" class="form-control" required oninvalid="this.setCustomValidity('부서명을 입력하세요.')" oninput="this.setCustomValidity('')">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="input-group input-group-sm">
+								<div class="input-group-prepend">
+									<span class="input-group-text width-76px">Team Key</span>
+								</div>
+								<select class="form-control _teams" id="edt_TeamKey">
+									<option value="" disabled selected hidden> -선택- </option>
+								</select>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<div class="input-group input-group-sm">
+								<div class="input-group-prepend">
+									<span class="input-group-text width-76px">설명</span>
+								</div>
+								<input type="text" id="edt_Dept_Desc" placeholder="설명" class="form-control" oninvalid="this.setCustomValidity('OSCC 팀명에 사용할 값을 입력하세요. ()영문)')" oninput="this.setCustomValidity('')">
+							</div>
+						</div>
+
+						<!--
+                        <div class="form-group">
+                            <label>부서유형</label>
+                            <select class="form-control" id="edt_DeptType">
+                                <option value="">부서유형 선택</option>
+                                <option value="">부서</option>
+                                <option value="">그룹</option>
+                            </select>
+                        </div>
+                         -->
+						<div class="form-group">
+							<div class="input-group input-group-sm">
+								<div class="input-group-prepend">
+									<span class="input-group-text width-76px">상위 부서</span>
+								</div>
+								<select class="form-control _highdept" id="edt_High_DeptNo">
+									<option value="" disabled selected hidden> -상위 부서 선택- </option>
+								</select>
+							</div>
+						</div>
+
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-xs btn-dark _btnEdt">Save</button>
+						<button type="button" class="btn btn-xs btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+</main>	
+</html>
+
+
+

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	$(document).ready(function() {
+		const table = $('#dt_basic').DataTable({
+			serverSide : true,
+			ajax: {
+				url: CONTEXT_PATH+"/stt/total/incall/dtl",
+				type: "POST",
+				data: function ( d ) {
+					d.origdestination =  $("#origdestination").val().toString().replace(/,/gi, "|");
+					d.Start_Dt = $("#sdate").val();
+					d.End_Dt = $("#edate").val();
+				}
+			},
+			columns: [
+				{ "data": "callstart_dt" },
+				{ "data": "origdestination_Desc" },
+				{ "data": "origdestination" },
+				{ "data": "origin" },
+				{ "data": "ivr_ans" },
+				{ "data": "ivr_abn" },
+				{ "data": "agent_ans" },
+				{ "data": "agent_abn" }
+				//,{ "data": "redirect" }
+			],
+			ordering: false,
+			searching: false,
+			iDisplayLength: 20,
+			bPaginate: true
+		});
+
+
+		//대표전화 가져오기
+		const getDestination = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/cmm/ajax/grantcalled",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$.each(data.Code, function (i, item) {
+					$("#origdestination").append($('<option>', { value: item.CalledNumber, text: item.Desc }));
+				});
+
+				$('#origdestination').multiselect({
+					includeFilterClearBtn: false,
+					enableFiltering: true,
+					includeSelectAllOption: true,
+					selectAllText: '전체선택',
+					nonSelectedText: '대표번호',
+					allSelectedText: '전체 선택됨',
+					buttonWidth: '100%',
+					maxHeight: 400,
+					buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+				});
+			});
+		}
+
+		//검색Btn
+		$("._searchGo").click(function(){
+			table.ajax.reload();
+		})
+
+
+		getDestination();
+
+		$("#sdate").val(getToday()); //오늘날짜 기본
+		$("#edate").val(getToday()); //오늘날짜 기본
+	});
+	</script>
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 수신 상세 목록
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			 <div id="buttons" class="btn-group"></div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+
+				<div class="form-row">
+					<div class="col-md-3">
+						<label class="form-label d-none"></label>
+						<select multiple="multiple" id="origdestination"></select>
+					</div>
+					<div class="col-md-4">
+						<label class="form-label d-none">날짜</label>
+						<div class="input-daterange input-group">
+							<input type="text" class="form-control datepicker" name="startdate" id="sdate" placeholder="시작일자">
+							<div class="input-group-append input-group-prepend">
+								<span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>
+							</div>
+							<input type="text" class="form-control datepicker" name="finishdate" id="edate" placeholder="종료일자">
+						</div>
+					</div>
+					<div class="col-md">
+						<label class="form-label d-none ">&nbsp;</label>
+						<button class="btn btn-sm btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span class="">Search</span></button>
+					</div>
+				</div>
+
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">			                
+						<tr>
+							<th style="width:150px" class="text-center">날짜</th>
+							<th class="text-center">번호이름</th>
+							<th class="text-center">대표번호</th>
+							<th class="text-center">발신번호</th>
+							<th class="text-center">IVR응대 여부</th>
+							<th class="text-center">IVR포기 여부</th>
+							<th class="text-center">상담원응대 여부</th>
+							<th class="text-center">상담원포기 여부</th>
+<!--							<th class="text-center">Redirect 여부</th>-->
+						</tr>
+					</thead>
+				</table>	
+
+			</div>
+		</div>
+	</div>
+	
+</main>					
+
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lagn="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" class="root-text-sm">
+
+<meta charset="UTF-8" />
+    <title>IMS</title>
+    <meta name="description" content="Login">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no, minimal-ui">
+
+    <!-- 공통 CSS -->
+    <link id="vendorsbundle" rel="stylesheet" media="screen, print" th:href="@{/css/vendors.bundle.css}">
+    <link id="appbundle" rel="stylesheet" media="screen, print" th:href="@{/css/app.bundle.css}">
+
+
+<!--    <link id="mytheme" rel="stylesheet" media="screen, print" th:href="@{/css/themes/cust-theme-7.css}">-->
+    <link id="mytheme" rel="stylesheet" media="screen, print" href="#">
+    <link id="myskin" rel="stylesheet" media="screen, print" th:href="@{/css/skins/skin-master.css}">
+    <link rel="stylesheet" media="screen, print" th:href="@{/css/fa-brands.css}">
+
+    <link rel="stylesheet" media="screen, print" th:href="@{/css/formplugins/alertify/alertify.min.css}">
+    <link rel="stylesheet" media="screen, print" th:href="@{/css/datagrid/datatables/datatables.bundle.css}">
+    <link rel="stylesheet" th:href="@{/css/formplugins/sumoselect/sumoselect.css}">
+    <link rel="stylesheet" th:href="@{/css/formplugins/bootstrap-datepicker/bootstrap-datepicker.css}">
+
+    <link rel="stylesheet" media="screen, print" th:href="@{/css/site.css}">
+
+    <!-- 컨텐츠 CSS 영역 -->
+    <th:block layout:fragment="css"></th:block>
+
+
+    <body class="mod-bg-1 desktop chrome webkit nav-function-fixed pace-done footer-function-fixed"><!-- mod-skin-light, mod-skin-dark -->
+
+    <script>
+        'use strict';
+        var classHolder = document.getElementsByTagName("BODY")[0],
+        // Load from localstorage
+            themeSettings = (localStorage.getItem('themeSettings')) ? JSON.parse(localStorage.getItem('themeSettings')) :
+                {},
+            themeURL = themeSettings.themeURL || '',
+            themeOptions = themeSettings.themeOptions || '';
+        // Load theme options
+        if (themeSettings.themeOptions)
+        {
+            classHolder.className = themeSettings.themeOptions;
+            console.log("%c✔ Theme settings loaded", "color: #148f32");
+        }
+        else
+        {
+            console.log("%c✔ loading default settings...", "color: #ed1c24");
+        }
+        if (themeSettings.themeURL && !document.getElementById('mytheme'))
+        {
+            var cssfile = document.createElement('link');
+            cssfile.id = 'mytheme';
+            cssfile.rel = 'stylesheet';
+            cssfile.href = themeURL;
+            document.getElementsByTagName('head')[0].appendChild(cssfile);
+
+        }
+        else if (themeSettings.themeURL && document.getElementById('mytheme'))
+        {
+            document.getElementById('mytheme').href = themeSettings.themeURL;
+        }
+
+        // Save to localstorage
+        var saveSettings = function() {
+            themeSettings.themeOptions = String(classHolder.className).split(/[^\w-]+/).filter(function(item)
+            {
+                return /^(nav|header|footer|mod|display)-/i.test(item);
+            }).join(' ');
+            if (document.getElementById('mytheme'))
+            {
+                themeSettings.themeURL = document.getElementById('mytheme').getAttribute("href");
+            };
+            localStorage.setItem('themeSettings', JSON.stringify(themeSettings));
+        }
+        // Reset settings
+        var resetSettings = function() {
+            localStorage.setItem("themeSettings", "");
+        }
+    </script>
+
+    <!-- BEGIN Page Wrapper -->
+    <div class="page-wrapper">
+        <div class="page-inner">
+            <!-- BEGIN Left Aside -->
+            <aside class="page-sidebar list-filter-active">
+                <div th:replace="fragments/logo :: logoFragment"></div>
+                <!-- BEGIN PRIMARY NAVIGATION -->
+                <nav th:replace="fragments/nav :: navFragment"></nav>
+                <!-- END PRIMARY NAVIGATION -->
+
+                <!-- NAV FOOTER
+                <div class="nav-footer shadow-top">
+                    <a href="#" onclick="return false;" data-action="toggle" data-class="nav-function-minify" class="hidden-md-down">
+                        <i class="ni ni-chevron-right"></i>
+                        <i class="ni ni-chevron-right"></i>
+                    </a>
+                    <ul class="list-table m-auto nav-footer-buttons">
+                        <li>
+                            <a href="javascript:void(0);" data-toggle="tooltip" data-placement="top" title="Chat logs">
+                                <i class="fal fa-comments"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="javascript:void(0);" data-toggle="tooltip" data-placement="top" title="Support Chat">
+                                <i class="fal fa-life-ring"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="javascript:void(0);" data-toggle="tooltip" data-placement="top" title="Make a call">
+                                <i class="fal fa-phone"></i>
+                        </li>
+                    </ul>
+                </div>
+                END NAV FOOTER -->
+
+            </aside>
+            <!-- END Left Aside -->
+
+            <div class="page-content-wrapper">
+                <!-- BEGIN Page Header -->
+                <header class="page-header" role="banner">
+                    <div th:replace="fragments/logo :: logoFragment"></div>
+                    <div class="hidden-md-down dropdown-icon-menu position-relative d-none">
+                        <a href="#" class="header-btn btn js-waves-off" data-action="toggle" data-class="nav-function-hidden" title="Hide Navigation">
+                            <i class="ni ni-menu"></i>
+                        </a>
+                        <ul>
+                            <li>
+                                <a href="#" class="btn js-waves-off" data-action="toggle" data-class="nav-function-minify" title="Minify Navigation">
+                                    <i class="ni ni-minify-nav"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="btn js-waves-off" data-action="toggle" data-class="nav-function-fixed" title="Lock Navigation">
+                                    <i class="ni ni-lock-nav"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="hidden-lg-up">
+                        <a href="#" class="header-btn btn press-scale-down" data-action="toggle" data-class="mobile-nav-on">
+                            <i class="ni ni-menu"></i>
+                        </a>
+                    </div>
+
+                    <div class="subheader">
+                        <h1 class="subheader-title pt-5">
+                            <th:block layout:fragment="headertitle"></th:block>
+<!--                            <i class="subheader-icon fal fa-window"></i> 상담원 관리-->
+                        </h1>
+                    </div>
+<!--                    <div class="search">-->
+<!--                        <form class="app-forms hidden-xs-down" role="search" action="page_search.html" autocomplete="off">-->
+<!--                            <input type="text" id="search-field" placeholder="" class="form-control" tabindex="1" readonly disabled>-->
+<!--                            <a href="#" onclick="return false;" class="btn-danger btn-search-close js-waves-off d-none" data-action="toggle" data-class="mobile-search-on">-->
+<!--                                <i class="fal fa-times"></i>-->
+<!--                            </a>-->
+<!--                        </form>-->
+<!--                    </div>-->
+                    <div class="ml-auto d-flex">
+                        <!-- activate app search icon (mobile) -->
+                        <div class="hidden-sm-up">
+                            <a href="#" class="header-icon" data-action="toggle" data-class="mobile-search-on" data-focus="search-field" title="Search">
+                                <i class="fal fa-search"></i>
+                            </a>
+                        </div>
+                        <!-- app settings -->
+                        <div class="hidden-md-down">
+                            <a href="#" class="header-icon" data-toggle="modal" data-target=".js-modal-settings">
+                                <i class="fal fa-cog"></i>
+                            </a>
+                        </div>
+
+                        <!-- app shortcuts
+                        <div th:replace="fragments/shortcuts :: shortcutsFragment"></div>
+                         -->
+
+                        <!-- app message
+                        <a href="#" class="header-icon" data-toggle="modal" data-target=".js-modal-messenger">
+                            <i class="fal fa-globe"></i>
+                            <span class="badge badge-icon">!</span>
+                        </a>
+                         -->
+
+                        <!-- app notifiy
+                        <div th:replace="fragments/notifiy :: notifiyFragment"></div>
+                         -->
+
+                        <!-- app user menu
+                        <div th:replace="fragments/userinfo :: userinfoFragment"></div>
+                        -->
+                    </div>
+                </header>
+                <!-- END Page Header -->
+
+                <!-- BEGIN Page Content -->
+                <main layout:fragment="content"></main>
+
+
+                <div class="page-content-overlay" data-action="toggle" data-class="mobile-nav-on"></div>
+                <!-- END Page Content -->
+
+                <!-- BEGIN Page Footer -->
+                <footer th:replace="fragments/footer :: footerFragment"></footer>
+                <!-- END Page Footer -->
+
+                <!-- BEGIN Shortcuts -->
+                <div th:replace="fragments/shortcuts :: shortcutsAppFragment"></div>
+                <!-- END Shortcuts -->
+
+                <!-- BEGIN Color profile -->
+                <p th:replace="fragments/colorprofile :: colorFragment"></p>
+                <!-- END Color profile -->
+            </div>
+        </div>
+    </div>
+    <!-- END Page Wrapper -->
+
+    <!-- BEGIN Quick Menu  -->
+    <p th:replace="fragments/pageset :: quickFragment"></p>
+    <!-- END Quick Menu -->
+
+    <!-- BEGIN Page Settings -->
+    <p th:replace="fragments/pageset :: pagesetFragment"></p>
+    <!-- END Page Settings -->
+
+    <!-- 공통 js -->
+    <script th:src="@{/js/vendors.bundle.js}"></script>
+    <script th:src="@{/js/app.bundle.js}"></script>
+    <script th:src="@{/js/formplugins/alertify/alertify.min.js}"></script>
+    <script th:src="@{/js/datagrid/datatables/datatables.bundle.js}"></script>
+    <script th:src="@{/js/datagrid/datatables/datatables.export.js}"></script>
+    <script th:src="@{/js/datagrid/datatables/datatables.default.setting.js}"></script>
+
+    <script th:src="@{/js/formplugins/sumoselect/jquery.sumoselect.min.js}"></script>
+    <script th:src="@{/js/formplugins/bootstrap-datepicker/bootstrap-datepicker.js}"></script>
+    <script th:src="@{/js/bootstrap-multiselect.js}"></script>
+    <script th:src="@{/js/ims.js}"></script>
+
+    <!-- Context Path -->
+    <link id="contextPathHolder" th:data-contextPath="${#httpServletRequest.getContextPath()}"/>
+
+    <script type="text/javascript">
+        const CONTEXT_PATH = document.getElementById("contextPathHolder").getAttribute("data-contextPath") ? document.getElementById("contextPathHolder").getAttribute("data-contextPath") : '';
+        $(document).ready(function() {
+            $(".mainLink").click(function(){
+                location.href = "/ims";
+            });
+        });
+    </script>
+
+    <!-- 컨텐츠 스크립트 영역 -->
+    <th:block layout:fragment="script"></th:block>
+
+
+    </body>
+
+
+
+</html>

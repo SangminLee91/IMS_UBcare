@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ko"
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        layout:decorate="~{layouts/layout}">
+
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+	<link rel="stylesheet" th:href="@{/css/formplugins/sumoselect/sumoselect.css}">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script th:src="@{/js/formplugins/sumoselect/jquery.sumoselect.min.js}"></script>
+
+	<script type="text/javascript">
+	$(document).ready(function() {
+
+		$('.select2').SumoSelect({
+			//selectAll: true,
+			placeholder: '사원명',
+			search : true,
+			noMatch : 'No matches for "{0}"',
+			locale :  ['OK', 'Cancel', '전체선택'],
+			captionFormat: '{0} 선택됨',
+			captionFormatAllSelected : '{0} 전체 선택됨',
+			forceCustomRendering: true
+		});
+
+		$("#person_role_table").DataTable({
+			stateSave: false,
+			searching: false,
+			ordering: false,
+			scrollY: "500px",
+			scrollCollapse: true,
+			select: false
+		});
+		$("#person_dept_table").DataTable({
+			stateSave: false,
+			searching: false,
+			ordering: true,
+			scrollY: "500px",
+			scrollCollapse: true,
+			select: false
+		});
+		$("#person_que_table").DataTable({
+			stateSave: false,
+			searching: false,
+			ordering: true,
+			scrollY: "500px",
+			scrollCollapse: true,
+			select: false
+		});
+		$("#person_called_table").DataTable({
+			stateSave: false,
+			searching: false,
+			ordering: true,
+			scrollY: "500px",
+			scrollCollapse: true,
+			select: false
+		});
+		$("#person_branch_table").DataTable({
+			stateSave: false,
+			searching: false,
+			ordering: true,
+			scrollY: "500px",
+			scrollCollapse: true,
+			select: false
+		});
+
+		const getEmp = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/acnt/emp/total/list",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				makeEmp(data.Emp);
+			});
+		}
+
+		const makeEmp = function(data) {
+			$(".select2 option:not(option:eq(0))").remove();
+
+			let oscc_userid="";
+			$.each(data, function (i, item) {
+				oscc_userid="";
+				if (item.userid !== "") oscc_userid = ' ['+item.userid+']';
+				$(".select2").append($('<option>', { value: item.Emp_No, text: item.Emp_Nm + oscc_userid }));
+			});
+			$(".select2")[0].sumo.reload();
+		}
+
+		const getSvc = function(Emp_No) {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/auth/role/person/list",
+				data:{Emp_No: Emp_No}
+			})
+			.done(function (data) {
+
+				if(data.Svc.length > 0 )
+				{
+					let html = "";
+					let checked = "";
+
+					$.each(data.Svc, function (i, item) {
+						checked = "";
+						if (item.Disabled_Stat === "disabled" || item.CHK === "checked") {
+							checked = "checked";
+						}
+						html += '<tr>';
+						html += '	<td class="text-center">';
+						html += '		<div class="custom-control custom-checkbox">';
+						html += '			<input type="checkbox" id="svc_chkbox_'+i+'" class="custom-control-input _chkbox" name="checkbox'+item.Svc_No+'" '+checked+' '+item.Disabled_Stat+' data-svcno="'+item.Svc_No+'">';
+						html += '			<label class="custom-control-label" for="svc_chkbox_'+i+'"></label>';
+						html += '		</div>';
+						html += '	</td>';
+						html += '	<td>'+item.Svc_Nm_Depth+'</td>';
+						html += '	<td>'+item.Svc_Url+'</td>';
+						html += '	<td><span id="_vwRegdt'+item.Svc_No+'">'+item.Reg_Dt+'</span></td>';
+						html += '</tr>';
+					});
+					$("._empsvc").html("").append(html);
+				}
+
+				if(data.Dept.length > 0 )
+				{
+					let html = "";
+					$.each(data.Dept, function (i, item) {
+						html += '<tr>';
+						html += '	<td class="text-center">';
+						html += '		<div class="custom-control custom-checkbox">';
+						html += '			<input type="checkbox" id="dept_chkbox_'+i+'" class="custom-control-input _chkbox" name="checkbox'+item.Dept_No+'" '+item.CHK+' data-deptno="'+item.Dept_No+'">';
+						html += '			<label class="custom-control-label" for="dept_chkbox_'+i+'"></label>';
+						html += '		</div>';
+						html += '	</td>';
+						html += '	<td>'+item.Dept_Nm_Depth+'</td>';
+						html += '</tr>';
+					});
+					$("._dept").html("").append(html);
+				}
+
+				if(data.Que.length > 0 )
+				{
+					let html = "";
+					$.each(data.Que, function (i, item) {
+						html += '<tr>';
+						html += '	<td class="text-center">';
+						html += '		<div class="custom-control custom-checkbox">';
+						html += '			<input type="checkbox" id="que_chkbox_'+i+'" class="custom-control-input _chkbox" name="checkbox'+item.Seq+'" '+item.CHK+' data-seq="'+item.Seq+'">';
+						html += '			<label class="custom-control-label" for="que_chkbox_'+i+'"></label>';
+						html += '		</div>';
+						html += '	</td>';
+						html += '	<td>'+item.Que_Nm+'</td>';
+						html += '</tr>';
+					});
+
+					$("._que").html("").append(html);
+				}
+
+				if(data.Called.length > 0 )
+				{
+					let html = "";
+					$.each(data.Called, function (i, item) {
+						html += '<tr>';
+						html += '	<td class="text-center">';
+						html += '		<div class="custom-control custom-checkbox">';
+						html += '			<input type="checkbox" id="called_chkbox_'+i+'" class="custom-control-input _chkbox" name="checkbox'+item.Seq+'" '+item.CHK+' data-seq="'+item.Seq+'">';
+						html += '			<label class="custom-control-label" for="called_chkbox_'+i+'"></label>';
+						html += '		</div>';
+						html += '	</td>';
+						html += '	<td>'+item.CalledNumber+'</td>';
+						html += '</tr>';
+					});
+					$("._called").html("").append(html);
+				}
+
+				if(data.Branch.length > 0 )
+				{
+					let html = "";
+					$.each(data.Branch, function (i, item) {
+						html += '<tr>';
+						html += '	<td class="text-center">';
+						html += '		<div class="custom-control custom-checkbox">';
+						html += '			<input type="checkbox" id="branch_chkbox_'+i+'" class="custom-control-input _chkbox" name="checkbox'+item.Cmm_Dtl_Code+'" '+item.CHK+' data-seq="'+item.Cmm_Dtl_Code+'">';
+						html += '			<label class="custom-control-label" for="branch_chkbox_'+i+'"></label>';
+						html += '		</div>';
+						html += '	</td>';
+						html += '	<td>'+item.Cmm_Dtl_Code_Nm+'</td>';
+						html += '</tr>';
+					});
+					$("._branch").html("").append(html);
+				}
+
+
+
+			});
+
+		}
+
+		//조회
+		$(".select2").change(function(){
+			if($(this).val() === "" )
+			{
+				alert("사원을 선택하세요.");
+				return false;
+			}
+			else
+			{
+				getSvc($(this).val());
+
+				// $("#person_role_table").DataTable().columns.adjust().draw();
+				// $("#person_dept_table").DataTable().columns.adjust().draw();
+				// $("#person_que_table").DataTable().columns.adjust().draw();
+				// $("#person_called_table").DataTable().columns.adjust().draw();
+
+			}
+		});
+
+		//개인서비스 CHECKBOX 선택시
+		$("._empsvc").on('change',"._chkbox", function (e) {
+			let Svc_No = $(e.currentTarget).data('svcno');
+
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/auth/role/person/add",
+				data: { Svc_No: Svc_No, Emp_No: $(".select2").val() },
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				if(data.Svc != null)
+				{
+					if (data.Svc.Result < 1) {
+						alert("권한 추가및 삭제시 오류가 발생하였습니다. 다시 시도해주세요.");
+						return false;
+					}
+					else
+					{
+						$("#_vwRegdt"+Svc_No).text(data.Svc.Reg_Dt); //등록의 경우 Reg_Dt 보여줌, 삭제의 경우는 '' 처리 필요
+					}
+				}
+			});
+		});
+
+		//부서 checkbox
+		$("._dept").on('change',"._chkbox", function (e) {
+			let Dept_No = $(e.currentTarget).data('deptno');
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/auth/role/grant",
+				data: { Emp_No: $(".select2").val(), Grant_Type:1 , Grant_Type_Seq: Dept_No},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+			});
+		});
+
+		//queue checkbox
+		$("._que").on('change',"._chkbox", function (e) {
+			let Seq = $(e.currentTarget).data('seq');
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/auth/role/grant",
+				data: { Emp_No: $(".select2").val(), Grant_Type:2 , Grant_Type_Seq: Seq},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+
+			}).done(function (data) {
+			});
+		});
+
+		//callednumber checkbox
+		$("._called").on('change',"._chkbox", function (e) {
+			let Seq = $(e.currentTarget).data('seq');
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/auth/role/grant",
+				data: { Emp_No: $(".select2").val(), Grant_Type:3 , Grant_Type_Seq: Seq}
+			}).done(function (data) {
+			});
+		});
+
+		//branch checkbox
+		$("._branch").on('change',"._chkbox", function (e) {
+			let Seq = $(e.currentTarget).data('seq');
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/auth/role/grant",
+				data: { Emp_No: $(".select2").val(), Grant_Type:4 , Grant_Type_Seq: Seq}
+			}).done(function (data) {
+			});
+		});
+
+
+		$("a[data-toggle='tab']").on("shown.bs.tab", function() {
+			getSvc($("#emp_select").val());
+			$("#person_role_table").DataTable().columns.adjust().draw();
+			$("#person_dept_table").DataTable().columns.adjust().draw();
+			$("#person_que_table").DataTable().columns.adjust().draw();
+			$("#person_called_table").DataTable().columns.adjust().draw();
+			$("#person_branch_table").DataTable().columns.adjust().draw();
+		});
+
+		getEmp();
+	});
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 개인 권한 관리
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-container show">
+			<div class="panel-content">
+
+				<section class="col col-2 pl-0" style="margin-bottom: 5px;">
+					<select class="select2 hide" id="emp_select">
+						<option value="">사원 선택</option>
+					</select>	
+				</section>	
+				<ul class="nav nav-tabs nav-tabs-clean" role="tablist">
+					<li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab1" role="tab">개인 권한</a></li>
+					<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab2" role="tab">부서</a></li>
+					<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab3" role="tab">Queue</a></li>
+					<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab4" role="tab">Called Number</a></li>
+					<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab5" role="tab">Branch Code</a></li>
+				</ul>
+
+				<div class="tab-content pt-3">
+					<div class="tab-pane fade show active" id="tab1" role="tabpanel" aria-labelledby="tab1">
+						<table id="person_role_table" class="table table-bordered table-hover table-striped w-100 table-sm" style="width:100%">
+							<thead class="thead-themed">		                
+								<tr>
+									<th style="width:50px"></th>
+<!--									<th data-hide="phone">서비스번호</th>-->
+									<th>서비스 명</th>
+									<th>서비스 URL</th>
+									<th>권한 취득일시</th>
+								</tr>
+							</thead>
+							<tbody class="_empsvc"></tbody>	
+						</table>
+					</div>
+					
+					<div class="tab-pane fade" id="tab2" role="tabpanel" aria-labelledby="tab2">
+						<table id="person_dept_table" class="table table-bordered table-hover table-striped w-100 table-sm" style="width:100%">
+							<thead class="thead-themed">		                
+								<tr>
+									<th style="width:50px"></th>
+									<th>부서</th>
+								</tr>
+							</thead>
+							<tbody class="_dept"></tbody>	
+						</table>
+					</div>
+					
+					<div class="tab-pane fade" id="tab3" role="tabpanel" aria-labelledby="tab3">
+						<table id="person_que_table" class="table table-bordered table-hover table-striped w-100 table-sm" style="width:100%">
+							<thead class="thead-themed">		                
+								<tr>
+									<th style="width:50px"></th>
+									<th>Queue</th>
+								</tr>
+							</thead>
+							<tbody class="_que"></tbody>	
+						</table>
+					</div>
+					
+					<div class="tab-pane fade" id="tab4" role="tabpanel" aria-labelledby="tab4">
+						<table id="person_called_table" class="table table-bordered table-hover table-striped w-100 table-sm" style="width:100%">
+							<thead class="thead-themed">			                
+								<tr>
+									<th style="width:50px"></th>
+									<th>Number</th>
+								</tr>
+							</thead>
+							<tbody class="_called"></tbody>	
+						</table>
+					</div>
+
+
+					<div class="tab-pane fade" id="tab5" role="tabpanel" aria-labelledby="tab4">
+						<table id="person_branch_table" class="table table-bordered table-hover table-striped w-100 table-sm" style="width:100%">
+							<thead class="thead-themed">
+							<tr>
+								<th style="width:50px"></th>
+								<th>브랜치명</th>
+							</tr>
+							</thead>
+							<tbody class="_branch"></tbody>
+						</table>
+					</div>
+				</div>	
+
+			</div>
+		</div>
+	</div>	
+
+</main>
+
+</html>

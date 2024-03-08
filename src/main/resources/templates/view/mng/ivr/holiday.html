@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script th:src="@{/js/datagrid/datatables/fnFindCellRowIndexes.js}"></script>
+<!--<script src="<c:url value='/js/datagrid/datatables/fnFindCellRowIndexes.js'/>"></script>  -->
+
+<script type="text/javascript">
+let SELECTED_ROW = "";
+let SELECTED_DTL_ROW = "";
+
+$(document).ready(function() {
+	//부서
+	const getDept = function() {
+        $.ajax({
+            method: "POST",
+            url: CONTEXT_PATH+"/cmm/ajax/dept/list",
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+        }).done(function (data) {
+       		$.each(data.Dept, function (i, item) {
+       			$(".sel_dept").append($('<option>', { value: item.Dept_No, text: item.Dept_Nm }));
+     		});
+       		$(".sel_dept")[0].sumo.reload();
+       		$(".sel_dept")[1].sumo.reload();
+        });
+        
+	}
+	
+	//안내음원
+	const getPrompt = function() {
+        $.ajax({
+            method: "POST",
+            url: CONTEXT_PATH+"/mng/ivr/voice/list",
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+        }).done(function (data) {
+       		$.each(data.data, function (i, item) {
+       			$(".sel_prompt").append($('<option>', { value: item.SC_PROMPT, text: item.SC_FILENAME, title:item.SC_DESCRIPTION }));
+     		});
+       		$(".sel_prompt")[0].sumo.reload();
+       		$(".sel_prompt")[1].sumo.reload();
+        });
+        
+	}
+
+	//공휴일셋 Grid
+	const table = $('#hdcode_dt').DataTable({
+		ajax: {
+            url: CONTEXT_PATH+"/mng/ivr/holiday/set/list",
+            dataSrc: "HDSet"
+        },
+		columns: [
+            { "data": "HD_Code" },
+            { "data": "HD_Code_Nm" }
+        ], 
+        columnDefs: [
+            { 
+                "targets": [0],
+                "visible": false,
+                "searchable": false
+            }
+        ],
+        searching: true,
+		ordering: false,
+		scrollY: "100px",
+		scrollCollapse: true
+
+	});
+
+	//공휴일 ㅌ상세 Grid
+	const dtl_table = $('#hdcodedtl_dt').DataTable({
+		ajax: {
+            url: CONTEXT_PATH+"/mng/ivr/holiday/list",
+            dataSrc: "HD",
+            data: function(d){
+            	d.HD_Code = SELECTED_ROW.HD_Code
+            }
+        },
+		columns: [
+            { "data": "HD_Seq" },
+            { "data": "HD_Date" },
+            { "data": "HD_Nm" },
+            { "data": "HD_TimeStart" },
+            { "data": "HD_TimeEnd" },
+            { "data": "HD_AnuallyYN" },
+            { "data": "HD_PromptYN" },
+            { "data": "HD_Prompt" },
+            { "data": "HD_Prompt_Nm" }
+        ], 
+        columnDefs: [
+        	{
+                render: function ( data, type, row ) {
+                	if(data==0){
+                		return '반복안함';
+                	}
+                	else{
+                		return '매년';
+                	}
+                },
+                targets: 5
+            },
+            { 
+                targets: [0,6,7],
+                visible: false,
+                searchable: false
+            }
+        ],
+        searching: true,
+		ordering: false,
+		scrollY: "300px",
+		scrollCollapse: true
+	});
+	table.on('select', function(e, dt, type, indexes){
+		SELECTED_ROW = table.row(indexes).data();
+
+		//상세데이타 재조회
+		$('#hdcodedtl_dt').DataTable().ajax.reload();
+		SELECTED_DTL_ROW = "";
+
+	}).on('deselect', function(){
+		SELECTED_ROW = "";
+	});
+
+	//공휴일 상세 Row  Click
+	dtl_table.on('select', function(e, dt, type, indexes){
+		SELECTED_DTL_ROW = dtl_table.row(indexes).data();
+
+	}).on('deselect', function(){
+		SELECTED_DTL_ROW = "";
+	});
+
+
+	//등록처리
+	$("#addfrm").submit(function(e){
+	    $.ajax({
+	        method: "POST",
+	        url: CONTEXT_PATH+"/mng/ivr/holiday/set/add",
+	        data: {
+	        		HD_Code_Nm: $("#add_HD_Code_Nm").val(),
+	        		Dept_No: 0
+			}, //$("#add_Dept_No").val()},
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	    }).done(function (data) {
+	    	$('#hdcode_dt').DataTable().ajax.reload();
+	    });
+	    
+		e.preventDefault();
+		
+		SELECTED_ROW = "";
+		// $("#add_Dept_No").val("")
+		$("#add_HD_Code_Nm").val("");
+		// $("#add_Dept_No")[0].sumo.reload();
+		$('#modal-add').modal('hide');
+	});
+	//Edit Btn Click
+	$("._BtnEdit").click(function(){
+		if(SELECTED_ROW == "")
+		{
+			alert("공휴일 그룹을 선택하세요.");
+			return false;
+		}
+		
+		$("#edt_HD_Code").val(SELECTED_ROW.HD_Code);
+		// $("#edt_Dept_No").val(SELECT_ROW.Dept_No);
+		$("#edt_HD_Code_Nm").val(SELECTED_ROW.HD_Code_Nm);
+		// $("#edt_Dept_No")[0].sumo.reload();
+		
+		$('#modal-edt').modal('show');
+	});
+	//수정 처리
+	$("#edtfrm").submit(function(e){
+	    $.ajax({
+	        method: "POST",
+	        url: CONTEXT_PATH+"/mng/ivr/holiday/set/edit",
+	        data: {HD_Code: $("#edt_HD_Code").val(), 
+	        	Dept_No: 0, //$("#edt_Dept_No").val(),
+	        	HD_Code_Nm: $("#edt_HD_Code_Nm").val()}, 
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	    }).done(function (data) {
+	    	$('#hdcode_dt').DataTable().ajax.reload();
+	    });
+	    
+		e.preventDefault();
+		SELECTED_ROW = "";
+		$('#modal-edt').modal('hide');
+	});
+	//삭제
+	$("._BtnDel").click(function(){
+		if(SELECTED_ROW == "")
+		{
+			alert("삭제할  그룹을 선택하세요.");
+			return false;
+		}
+		
+		if(confirm("["+SELECTED_ROW.HD_Code_Nm +"] 그룹을 삭제 하시겠습니까?"))
+		{
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mng/ivr/holiday/set/del",
+				data: {HD_Code: SELECTED_ROW.HD_Code},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$('#hdcode_dt').DataTable().ajax.reload();
+			});
+
+			SELECTED_ROW = "";
+		}
+		else
+		{
+			return false;
+		}
+
+
+	});
+	
+	
+	//공통코드 상세 등록 Btn
+	$("._BtnDtlAdd").click(function(){
+		if(SELECTED_ROW == "")
+		{
+			alert("공휴일 그룹을 선택하세요.");
+			return false;
+		}
+		$('#dtl_add').modal('show'); 
+		$("#addDtl_HD_Code_Nm").val(SELECTED_ROW.HD_Code_Nm);
+		$("#add_HD_Dtl_Code").val("");
+		$("#add_HD_Dtl_Code_Nm").val("");
+	});
+	
+	//공휴일 그룹에 공휴일 등록처리
+	$("#addDtlFrm").submit(function(e){
+		let submit_date=$("#add_Sdate").val();
+		let table = $('#hdcodedtl_dt').DataTable();
+		let rowId = $('#hdcodedtl_dt').dataTable().fnFindCellRowIndexes(submit_date, 1);
+		
+		if(rowId.length==0){
+			//신규 휴일
+		    $.ajax({
+		        method: "POST",
+		        url: CONTEXT_PATH+"/mng/ivr/holiday/add",
+		        data: {
+		        	HD_Code: SELECTED_ROW.HD_Code,
+		        	HD_Nm: $("#add_HD_Dtl_Code_Nm").val(),
+		        	HD_Date: $("#add_Sdate").val().replace(/-/gi, ""),
+		        	HD_TimeStart: $("#add_Stime").val().replace(/:/gi, ""),
+		        	HD_TimeEnd: $("#add_Etime").val().replace(/:/gi, ""),
+		        	HD_AnuallyYN: $("#add_AnuallyYN").val(),
+		        	HD_PromptYN: $("#add_PromptYN").val(),
+		        	HD_Prompt: $("#add_Prompt_ID").val()
+		        }, 
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+		    }).done(function (data) {
+		    	$('#hdcodedtl_dt').DataTable().ajax.reload();
+		    });
+		}
+		else{
+			//이미 존재하고 있음
+			alert("해당일의 휴일은 이미 등록되어 있습니다.");
+			return false;
+		}
+		e.preventDefault();
+		
+    	$("#add_HD_Dtl_Code_Nm").val("");
+    	$("#add_Sdate").val(getToday()); //오늘날짜 기본
+		$("#add_Stime").val("00:00");
+		$("#add_Etime").val("23:59");
+		$("#add_AnuallyYN").val("1");
+		$("#add_PromptYN").val("0");
+		$("#add_Prompt_ID").val("");
+		
+		$("#add_Prompt_ID")[0].sumo.reload();
+		
+		$('#dtl_add').modal('hide');
+	});
+	//공휴일 그룹에 공휴일 수정
+	$("._BtnDtlEdt").click(function(){
+		if(SELECTED_DTL_ROW == "")
+		{
+			alert("수정할 공휴일을 선택하세요.");
+			return false;
+		}
+		$('#dtl_edt').modal('show'); 
+		$("#edtDtl_HD_Code_Nm").val(SELECTED_ROW.HD_Code_Nm);
+		$("#edt_HD_Dtl_Seq").val(SELECTED_DTL_ROW.HD_Seq);
+		$("#edt_HD_Dtl_Code_Nm").val(SELECTED_DTL_ROW.HD_Nm);
+    	$("#edt_Sdate").val(SELECTED_DTL_ROW.HD_Date); //오늘날짜 기본
+		$("#edt_Stime").val(SELECTED_DTL_ROW.HD_TimeStart);
+		$("#edt_Etime").val(SELECTED_DTL_ROW.HD_TimeEnd);
+		$("#edt_AnuallyYN").val(SELECTED_DTL_ROW.HD_AnuallyYN);
+		$("#edt_PromptYN").val(SELECTED_DTL_ROW.HD_PromptYN);
+		$("#edt_Prompt_ID").val(SELECTED_DTL_ROW.HD_Prompt);
+		
+		$("#edt_Prompt_ID")[0].sumo.reload();
+	});
+	//공통코드 상세 수정 처리
+	$("#edtDtlFrm").submit(function(e){
+		let use_prompt=$("#edt_PromptYN").val();
+	    $.ajax({
+	        method: "POST",
+	        url: CONTEXT_PATH+"/mng/ivr/holiday/edit",
+	        data: {
+	        	HD_Seq: SELECTED_DTL_ROW.HD_Seq,
+	        	HD_Nm: $("#edt_HD_Dtl_Code_Nm").val(),
+	        	HD_Date: $("#edt_Sdate").val().replace(/-/gi, ""),
+	        	HD_TimeStart: $("#edt_Stime").val().replace(/:/gi, ""),
+	        	HD_TimeEnd: $("#edt_Etime").val().replace(/:/gi, ""),
+	        	HD_AnuallyYN: $("#edt_AnuallyYN").val(),
+	        	HD_PromptYN: use_prompt,
+	        	HD_Prompt: (use_prompt==1?$("#edt_Prompt_ID").val():"")
+	        }, 
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	    }).done(function (data) {
+	    	$('#hdcodedtl_dt').DataTable().ajax.reload();
+	    });
+	    
+		e.preventDefault();
+		
+		SELECTED_DTL_ROW = "";
+		$('#dtl_edt').modal('hide');
+	});
+
+	//공통코드 상세 삭제
+	$("._BtnDtlDel").click(function(){
+		if(SELECTED_DTL_ROW == "")
+		{
+			alert("삭제할 공휴일을 선택하세요.");
+			return false;
+		}
+		
+		if(confirm("["+SELECTED_DTL_ROW.HD_Nm +"] 공휴일을 삭제 하시겠습니까?") )
+		{
+		    $.ajax({
+		        method: "POST",
+		        url: CONTEXT_PATH+"/mng/ivr/holiday/del",
+		        data: {HD_Seq: SELECTED_DTL_ROW.HD_Seq},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+		    }).done(function (data) {
+		    	$('#hdcodedtl_dt').DataTable().ajax.reload();
+		    });
+		    
+		    SELECTED_DTL_ROW = "";
+		}
+		else
+		{
+			return false;
+		}
+		
+
+	});
+	
+	$('._promptyn').on('change', function (e) {
+		let optionSelected = $("option:selected", this);
+		let valueSelected = this.value;
+
+	    if(valueSelected == 1){
+	    	$(".sel_prompt").attr( 'disabled', false );
+	    	//$(".sel_prompt").prop('required',true);
+	    }
+	    else{
+	    	$(".sel_prompt").attr( 'disabled', true );
+	    	//$(".sel_prompt").prop('required',false);
+	    }
+	});
+	
+	//getDept();
+	getPrompt();
+	
+	$('.sel_dept').SumoSelect({ 
+		placeholder: '부서',
+		search : true,
+	    forceCustomRendering: true
+	});
+	
+	$('.sel_prompt').SumoSelect({ 
+		placeholder: '안내음원',
+		search : true,
+	    forceCustomRendering: true
+	});
+	
+	$('._anuallyyn').SumoSelect({ 
+		placeholder: '매년 반복 휴일 여부',
+	    forceCustomRendering: true
+	});
+	
+	$('._promptyn').SumoSelect({ 
+		placeholder: '안내음원 사용여부',
+	    forceCustomRendering: true
+	});
+	
+	$("#add_Sdate").val(getToday()); //오늘날짜 기본
+	
+	/*
+	$('._time').timepicker({
+		defaultTime: "",
+		showMeridian: false //24시간
+	});
+	*/
+});
+</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 공휴일 관리
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="row">
+		<div class="col-xs-12 col-sm-12 col-md-12">
+			<div class="panel">
+				<div class="panel-hdr">
+					<h2>공휴일 그룹</h2>
+					<div class="panel-toolbar">
+						<button class="btn btn-xs btn-dark _BtnAdd" data-toggle="modal" data-target="#modal-add" data-backdrop="static">Add</button>
+						<button class="btn btn-xs btn-dark ml-1 _BtnEdit">Edit</button>
+						<button class="btn btn-xs btn-dark ml-1 _BtnDel">Delete</button>
+					</div>
+				</div>
+				<div class="panel-container show">
+					<div class="panel-content">
+	            		<table id="hdcode_dt" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+	            			<thead class="thead-themed">
+	            			<tr>
+	            			    <th>그룹 번호</th>
+	            				<th>그룹 명</th>
+	            			</tr>
+	            			</thead>
+	            		</table>	
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="col-xs-12 col-sm-12 col-md-12">
+			<div class="panel">
+				<div class="panel-hdr">
+					<h2>공휴일 리스트</h2>
+					<div class="panel-toolbar">
+						<button class="btn btn-xs btn-dark _BtnDtlAdd" data-toggle="modal" data-target="#dtl-add" data-backdrop="static">Add</button>
+						<button class="btn btn-xs btn-dark ml-1 _BtnDtlEdt">Edit</button>
+						<button class="btn btn-xs btn-dark ml-1 _BtnDtlDel">Delete</button>
+					</div>
+				</div>
+				<div class="panel-container show">
+					<div class="panel-content">
+	            		<table id="hdcodedtl_dt" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+	            			<thead class="thead-themed">
+	            			<tr>
+					            <th class="text-center">일련번호</th>
+								<th class="text-center">날짜</th>
+								<th class="text-center">공휴일 이름</th>
+							    <th class="text-center">시작시간</th>
+								<th class="text-center">종료시간</th>
+								<th>매년반복</th>
+								<th class="hide text-center">안내음원사용</th>
+								<th class="hide text-center">안내음원ID</th>
+								<th class="text-center">안내음원</th>
+	            			</tr>
+	            			</thead>
+	            		</table>
+	            		
+					</div>
+				</div>		
+			</div>		
+		</div>
+		
+	</div>
+
+
+	<div id="modal-add" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">공휴일 그룹 추가</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="addfrm" id="addfrm" method="post">
+				<div class="modal-body">
+				<!--
+					<div class="form-group">
+						<label>사용 부서</label>
+						<select class="form-control sel_dept" id="add_Dept_No" required>
+							<option value="">부서</option>
+						</select>
+					</div>
+				 -->
+					<div class="form-group">
+						<label>그룹 명</label>
+						<input id="add_HD_Code_Nm" name="HD_Code_Nm" type="text" class="form-control" required oninvalid="this.setCustomValidity('공휴일 그룹명을 입력하세요.')" oninput="this.setCustomValidity('')">
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="submit" class="btn btn-dark" id="btnadd">Save</button>
+					<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+				</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div id="modal-edt" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">공휴일 그룹 수정</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+
+				<form name="edtfrm" id="edtfrm" method="post">
+					<input type="hidden" name="HD_Code" id="edt_HD_Code" />
+					<div class="modal-body">
+					<!--
+						<div class="form-group">
+							<label>사용 부서</label>
+							<select class="form-control sel_dept" id="edt_Dept_No" required>
+								<option value="">부서</option>
+							</select>
+						</div>
+					 -->
+						<div class="form-group">
+							<label>그룹 명</label>
+							<input id="edt_HD_Code_Nm" name="HD_Code_Nm" type="text" class="form-control" required oninvalid="this.setCustomValidity('공휴일 그룹명을 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+					</div>
+
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-dark" id="btnedt">Save</button>
+						<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+
+	<div id="dtl_add" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">공휴일 추가</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="addDtlFrm" id="addDtlFrm" method="post">
+					<div class="modal-body">
+						<div class="form-group">
+							<label>공휴일 그룹 명</label>
+							<input id="addDtl_HD_Code_Nm" type="text" class="form-control" value="공통코드 1-1" readonly>
+						</div>
+						<div class="form-group">
+							<label>공휴일 명</label>
+							<input id="add_HD_Dtl_Code_Nm" type="text" class="form-control" required oninvalid="this.setCustomValidity('공휴일 명을 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>날짜</label>
+							<i class="icon-append fa fa-calendar"></i>
+							<input type="text" class="datepicker form-control" value="" name="sdate" id="add_Sdate" placeholder="공휴일 일자" data-dateformat="yy-mm-dd" required>
+						</div>
+						<div class="form-group">
+							<label>시간</label>
+							<i class="icon-append fa fa-clock-o"></i>
+							<div class="row">
+								<div class="col-md-6">
+									<input class="_time form-control" type="text" name="stime" id="add_Stime" placeholder="시작 시간"  value="00:00" required>
+								</div>
+								<div class="col-md-6">
+									<input class="_time form-control" type="text" name="etime" id="add_Etime" placeholder="종료 시간" value="23:59" required>
+								</div>
+							</div>
+						</div>
+
+
+						<div class="form-group">
+							<label>매년 반복 여부</label>
+							<select class="form-control _anuallyyn" id="add_AnuallyYN" required>
+								<option value="1">반복</option>
+								<option value="0">반복 안함</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>안내 음원 사용 여부</label>
+							<select class="form-control _promptyn" id="add_PromptYN" required>
+								<option value="0">사용 안함</option>
+								<option value="1">사용</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>안내 음원 선택</label>
+							<select class="form-control sel_prompt" id="add_Prompt_ID">
+								<option value="">음원</option>
+							</select>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-dark" id="BtnDtlAdd">Save</button>
+						<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	<div id="dtl_edt" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">공휴일 수정</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="edtDtlFrm" id="edtDtlFrm" method="post">
+				<div class="modal-body">
+					<div class="form-group">
+						<label>공휴일 그룹 명</label>
+						<input id="edtDtl_HD_Code_Nm" type="text" class="form-control" value="" readonly>
+					</div>
+					<div class="form-group">
+						<label>공휴일 명</label>
+						<input id="edt_HD_Dtl_Code_Nm" type="text" class="form-control" required oninvalid="this.setCustomValidity('공휴일 명을 입력하세요.')" oninput="this.setCustomValidity('')">
+					</div>
+					<div class="form-group">
+						<label>날짜</label>
+						<i class="icon-append fa fa-calendar"></i>
+						<input type="text" class="form-control" value="" name="sdate" id="edt_Sdate" placeholder="공휴일 일자" readonly>
+					</div>
+					<div class="form-group">
+						<label>시간</label>
+						<i class="icon-append fa fa-clock-o"></i>
+						<div class="row">
+							<div class="col-md-6">
+								<input class="_time form-control" type="text" name="stime" id="edt_Stime" placeholder="시작 시간"  value="00:00" required>
+							</div>
+							<div class="col-md-6">
+								<input class="_time form-control" type="text" name="etime" id="edt_Etime" placeholder="종료 시간" value="23:59" required>
+							</div>
+						</div>
+					</div>
+					<div class="form-group">
+						<label>매년 반복 여부</label>
+						<select class="form-control _anuallyyn" id="edt_AnuallyYN" required>
+							<option value="1">반복</option>
+							<option value="0">반복 안함</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label>안내 음원 사용 여부</label>
+						<select class="form-control _promptyn" id="edt_PromptYN" required>
+							<option value="0">사용 안함</option>
+							<option value="1">사용</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label>안내 음원 선택</label>
+						<select class="form-control sel_prompt" id="edt_Prompt_ID">
+							<option value="">음원</option>
+						</select>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="submit" class="btn btn-dark" id="BtnDtlEdt">Save</button>
+					<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+				</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</main>
+
+</html>>

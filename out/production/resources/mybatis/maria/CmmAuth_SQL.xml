@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="auth">
+
+	<!-- 권한체크 -->
+	<select id="AuthCheck" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Cmm_AuthCheck(#{url}, #{emp_no})
+	</select>
+	
+	<!-- 권한 서비스 -->
+    <select id="SvcList" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_AUTH_Service_S()
+	</select> 
+	<insert id="SvcAdd" parameterType="hashmap">
+    	CALL USP_AUTH_Service_I(#{Svc_Nm}, #{Svc_Url}, NULLIF(#{Use_Stat},''))
+	</insert> 
+	<update id="SvcEdt" parameterType="hashmap">
+    	CALL USP_AUTH_Service_U(#{Svc_No}, #{Svc_Nm}, #{Svc_Url}, NULLIF(#{Use_Stat},''))
+	</update>
+	<select id="SvcDel" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_AUTH_Service_D(#{Svc_No})
+	</select>
+	
+	<!-- 기본권한-->
+    <select id="Role" parameterType="hashmap" resultType="hashmap">
+		CALL USP_AUTH_Role_S(#{_EMP_NO})
+	</select>
+	<insert id="RoleAdd" parameterType="hashmap">
+    	CALL USP_AUTH_Role_I(#{Role_Nm}, NULLIF(#{CCAPP_Admin_Stat},''))
+	</insert> 
+	<update id="RoleEdt" parameterType="hashmap">
+    	CALL USP_AUTH_Role_U(#{Role_No}, #{Role_Nm}, NULLIF(#{CCAPP_Admin_Stat},''))
+	</update>
+	<update id="RoleDel" parameterType="hashmap">
+    	CALL USP_AUTH_Role_D(NULLIF(#{Role_No},''))
+	</update>
+	<select id="RoleSvcAdd" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_AUTH_RoleAddService_I(#{Svc_No}, NULLIF(#{Role_No},''))
+	</select>
+    <select id="RoleSvc" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_AUTH_RoleAddService_S()
+	</select>
+
+	<select id="RoleAndService" parameterType="hashmap" resultType="hashmap">
+		CALL USP_AUTH_Role_Service_S(#{Role_No})
+	</select>
+
+	
+	<!-- 개인권한 -->
+	<select id="PersonSvc" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_AUTH_Emp_ServiceAdd_RoleSvc_S(#{Emp_No})
+	</select>
+	<select id="PersonDept" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_AUTH_Emp_ServiceAdd_Dept_S(#{Emp_No})
+	</select>
+	<select id="PersonQue" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_AUTH_Emp_ServiceAdd_Queue_S(#{Emp_No})
+	</select>
+	<select id="PersonCalled" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_AUTH_Emp_ServiceAdd_Called_S(#{Emp_No})
+	</select>
+	<select id="PersonBranch" parameterType="hashmap" resultType="hashmap">
+		CALL USP_AUTH_Emp_ServiceAdd_Branch_S(#{Emp_No})
+	</select>
+
+	
+	<select id="PersonRoleAdd" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_AUTH_Emp_ServiceAdd_I(#{Svc_No}, #{Emp_No})
+	</select>
+
+	<!-- 개인권한내 부서, QUEUE, CalledNumber 조회 권한 -->
+	<insert id="RoleGrant" parameterType="hashmap">
+    	CALL USP_AUTH_Emp_Grant_I(#{Emp_No}, NULLIF(#{Grant_Type},''), NULLIF(#{Grant_Type_Seq},''))
+	</insert>
+	
+</mapper>

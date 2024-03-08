@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+	<link rel="stylesheet" th:href="@{/css/formplugins/bootstrap-timepicker/bootstrap-timepicker.css}">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script th:src="@{/js/formplugins/bootstrap-timepicker/bootstrap-timepicker.min.js}"></script>
+	<script type="text/javascript">
+		let SELECT_ROW = "";
+
+		$(document).ready(function() {
+			//안내음원
+			const getPrompt = function() {
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/voice/list",
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					$.each(data.data, function (i, item) {
+						//$(".sel_prompt").append($('<option>', { value: item.SC_PROMPT, text: item.SC_FILENAME }));
+						$(".sel_prompt").append($('<option>', { value: item.SC_PROMPT, text: item.SC_FILENAME , desc: item.vwSC_DESCRIPTION}));
+					});
+					$(".sel_prompt")[0].sumo.reload();
+					$(".sel_prompt")[1].sumo.reload();
+					$(".sel_prompt")[2].sumo.reload();
+				});
+			}
+
+			//공지불러오기
+			const getNotice = function() {
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/notice/list",// "<c:url value='/mng/ivr/noticelist.do'/>",
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					$.each(data.Notice, function (i, item) {
+						//var pid=item.SC_PROMPT.replace(/^\s+|\s+$/g,"")
+						$(".sel_notice").append($('<option>', { value: item.NT_Code, text: item.NT_NAME, desc: item.NT_PROMPT_INFO }));
+					});
+				});
+			}
+
+
+			const table = $('#rtcode_dt').DataTable({
+				ajax: {
+					url: CONTEXT_PATH+"/mng/ivr/routenewlist",
+					dataSrc: "Route"
+				},
+				columns: [
+					{ "data": "RT_ROUTE" }, //0
+					{ "data": "RT_ROUTENAME" },
+					{ "data": "RT_ENQUEUE_YN" },
+					{ "data": "RT_QUEUENAME" },
+					{ "data": "RT_ENQUEUE_PRIORITY" },
+					{ "data": "RT_PROMPT" }, //5
+					{ "data": "RT_PROMPT_NM" },
+					{ "data": "RT_PROMPT2" },
+					{ "data": "RT_PROMPT2_NM" },
+					{ "data": "SC_NOTI_YN" },
+					{ "data": "SC_NOTI" }, //10
+					{ "data": "SC_NOTI_NM" },
+					{ "data": "SC_NOTI_END_YN" },
+					{ "data": "RT_ROUTENUM" }, //13번으로 추가
+					{ "data": "SC_NOTI_SDATE" },
+					{ "data": "SC_NOTI_STIME" },
+					{ "data": "SC_NOTI_EDATE" }, //15에서 16으로 변경되었음
+					{ "data": "SC_NOTI_ETIME" }
+				],
+				columnDefs: [
+					{
+						// The `data` parameter refers to the data for the cell (defined by the
+						// `data` option, which defaults to the column being worked with, in
+						// this case `data: 0`.
+						"render": function ( data, type, row ) {
+							if(data==1){
+								return 'Enqueue';
+							}
+							else if(data==2){
+								return 'Blind transfer';
+							}
+							else{
+								//3
+								return 'Two step transfer';
+							}
+						},
+						"targets": 2
+					},
+					{
+						// The `data` parameter refers to the data for the cell (defined by the
+						// `data` option, which defaults to the column being worked with, in
+						// this case `data: 0`.
+						"render": function ( data, type, row ) {
+							if(data==0){
+								return '';
+							}
+							else{
+								return '사용';
+							}
+						},
+						"targets": 9 //[9,12]
+					},
+					{
+						// The `data` parameter refers to the data for the cell (defined by the
+						// `data` option, which defaults to the column being worked with, in
+						// this case `data: 0`.
+						"render": function ( data, type, row ) {
+							if(row.SC_NOTI_YN==1 && data==''){
+								return '없음';
+							}
+							else{
+								return data;
+							}
+						},
+						"targets": 11
+					},
+					{
+						// The `data` parameter refers to the data for the cell (defined by the
+						// `data` option, which defaults to the column being worked with, in
+						// this case `data: 0`.
+						"render": function ( data, type, row ) {
+							if(row.SC_NOTI_YN==1) {
+								if (data == 0) {
+									return '라우팅';
+								} else if (data == 2) {
+									return '착신전환';
+								} else {
+									return '콜종료';
+								}
+							}
+							else{
+								return '';
+							}
+						},
+						"targets": 12
+					},
+					{
+						// The `data` parameter refers to the data for the cell (defined by the
+						// `data` option, which defaults to the column being worked with, in
+						// this case `data: 0`.
+						"render": function ( data, type, row ) {
+							if(row.SC_NOTI_END_YN==2){
+								return data;
+							}
+							else{
+								return '';
+							}
+						},
+						"targets": 13
+					},
+					{
+						targets: [0,5,7,10,15,17], //targets: [0,5,7,10,14,16],
+						visible: false,
+						searchable: false
+					}
+				],
+				scrollY: "536px",
+				scrollCollapse: true
+			});
+			table.on('select', function(e, dt, type, indexes){
+				SELECT_ROW = table.row(indexes).data();
+			}).on('deselect', function(){
+				SELECT_ROW = "";
+			});
+
+
+			//등록창 열릴때 데이터 초기화
+			$("._BtnAdd").click(function(){
+				$.each(table.rows().data(), function (i, item) {
+					$.each($("#add_RT_ROUTENAME option"), function (j, _ctigroup) {
+						if (item.RT_GROUP == _ctigroup.getAttribute('group_seq'))
+						{
+							$(this).attr("disabled","disabled");
+						}
+					});
+				});
+
+				SELECT_ROW = "";
+				$("#add_RT_ROUTENAME").val("")
+				$("#add_RT_ROUTENAME")[0].sumo.reload();
+				$("#add_RT_ENQUEUE_YN").val("");
+				//$("#add_RT_ENQUEUE_YN")[0].sumo.reload();
+				$("#add_RT_QUEUENAME").val("");
+				$("#add_RT_ENQUEUE_PRIORITY").val("");
+				$("#add_RT_PROMPT").val("");
+				$("#add_RT_PROMPT")[0].sumo.reload();
+				$("#add_RT_PROMPT2").val("");
+				$("#add_RT_PROMPT2")[0].sumo.reload();
+			});
+
+			//등록처리
+			$("#addfrm").submit(function(e){
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/routenewadd",
+					data: {
+						RT_ROUTENAME: $("#add_RT_ROUTENAME").val(),
+						RT_ENQUEUE_YN: $("#add_RT_ENQUEUE_YN").val(),
+						RT_QUEUENAME: $("#add_RT_QUEUENAME").val(),
+						RT_ENQUEUE_PRIORITY: $("#add_RT_ENQUEUE_PRIORITY").val(),
+						RT_PROMPT: $("#add_RT_PROMPT").val(),
+						RT_PROMPT2: $("#add_RT_PROMPT2").val()
+					},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function () {
+					$('#rtcode_dt').DataTable().ajax.reload();
+				});
+
+				e.preventDefault();
+				$('#modal-add').modal('hide');
+			});
+
+			//Edit Btn Click
+			$("._BtnEdit").click(function(){
+				if(SELECT_ROW == "")
+				{
+					alert("라우트를 선택하세요.");
+					return false;
+				}
+				$("#edt_RT_ROUTE").val(SELECT_ROW.RT_ROUTE);
+				$("#edt_RT_ROUTENAME").val(SELECT_ROW.RT_ROUTENAME);
+				$("#edt_RT_ENQUEUE_YN").val(SELECT_ROW.RT_ENQUEUE_YN);
+				//$("#edt_RT_ENQUEUE_YN")[0].sumo.reload();
+				$("#edt_RT_QUEUENAME").val(SELECT_ROW.RT_QUEUENAME);
+				$("#edt_RT_ENQUEUE_PRIORITY").val(SELECT_ROW.RT_ENQUEUE_PRIORITY);
+				$("#edt_RT_PROMPT").val(SELECT_ROW.RT_PROMPT);
+				$("#edt_RT_PROMPT")[0].sumo.reload();
+				$("#edt_RT_PROMPT2").val(SELECT_ROW.RT_PROMPT2);
+				$("#edt_RT_PROMPT2")[0].sumo.reload();
+				$('#modal-edt').modal('show');
+			});
+
+			//수정 처리
+			$("#edtfrm").submit(function(e){
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/routenewedit",
+					data: {
+						RT_ROUTE: $("#edt_RT_ROUTE").val(),
+						RT_ROUTENAME: $("#edt_RT_ROUTENAME").val(),
+						RT_ENQUEUE_YN: $("#edt_RT_ENQUEUE_YN").val(),
+						RT_QUEUENAME: $("#edt_RT_QUEUENAME").val(),
+						RT_ENQUEUE_PRIORITY: $("#edt_RT_ENQUEUE_PRIORITY").val(),
+						RT_PROMPT: $("#edt_RT_PROMPT").val(),
+						RT_PROMPT2: $("#edt_RT_PROMPT2").val()
+					},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function () {
+					$('#rtcode_dt').DataTable().ajax.reload();
+				});
+
+				e.preventDefault();
+				SELECT_ROW = "";
+				$('#modal-edt').modal('hide');
+			});
+
+			//삭제
+			$("._BtnDel").click(function(){
+				if(SELECT_ROW == "")
+				{
+					alert("삭제할 라우트를 선택하세요.");
+					return false;
+				}
+				if(confirm("["+SELECT_ROW.RT_ROUTENAME +"] 라우트를 삭제 하시겠습니까?")) {
+					$.ajax({
+						method: "POST",
+						url: CONTEXT_PATH+"/mng/ivr/route/del",
+						data: {RT_ROUTE: SELECT_ROW.RT_ROUTE},
+						error: function(jqXHR) { jqXHR_Process(jqXHR) }
+					}).done(function (data) {
+						$('#rtcode_dt').DataTable().ajax.reload();
+					});
+
+					SELECT_ROW = "";
+				}
+				else
+				{
+					return false;
+				}
+			});
+
+			//긴급공지 클릭
+			$("._BtnEmgr").click(function(){
+				if(SELECT_ROW == "")
+				{
+					alert("긴급공지를 설정할 라우트를 선택하세요.");
+					return false;
+				}
+				$("#emgr_rt_scnoti_yn").val(0)
+				$("#emgr_rt_scend_yn").val(0);
+				$("#emgr_rt_routenum").val('');
+				$("#emgr_rt_scnoti").val("0");
+				$("#emgr_rt_scnoti_info").val('');
+				$("#emgr_rt_Sdate").val(getToday());
+				$("#emgr_rt_STime").val("00:00");
+				$("#emgr_rt_Edate").val(getToday());
+				$("#emgr_rt_ETime").val("23:50");
+				$('#modal-emgr').modal('show');
+			});
+
+			//긴급공지 설정
+			$("#emgrfrm").submit(function(e){
+
+				var sel_datas=table.rows({ selected: true }).data();
+				var sel_codes='';
+				var need_set=$("#emgr_rt_scnoti_yn").val();
+				console.log(sel_datas);
+				console.log(sel_datas[0]);
+
+				for(var i=0; i<sel_datas.length; i++){
+					if(i!=0){
+						sel_codes+="|";
+					}
+					sel_codes+=sel_datas[i].RT_ROUTE;
+				}
+
+
+				console.log("emgr_rt_codes -->"+sel_codes+"<");
+
+				console.log("emgr_rt_codes -->"+$("#emgr_rt_codes").val());
+				console.log("emgr_rt_scnoti_yn -->"+$("#emgr_rt_scnoti_yn").val());
+				console.log("emgr_rt_scend_yn -->"+$("#emgr_rt_scend_yn").val());
+				console.log("emgr_rt_routenum -->"+$("#emgr_rt_routenum").val());
+				console.log("emgr_rt_scnoti -->"+$("#emgr_rt_scnoti").val());
+				console.log("emgr_rt_Sdate -->"+$("#emgr_rt_Sdate").val().replace(/-/gi, ""));
+				console.log("emgr_rt_STime -->"+$("#emgr_rt_STime").val().replace(/:/gi, ""));
+				console.log("emgr_rt_Edate -->"+$("#emgr_rt_Edate").val().replace(/-/gi, ""));
+				console.log("emgr_rt_ETime -->"+$("#emgr_rt_ETime").val().replace(/:/gi, ""));
+
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/routeemergencyset",
+					data: {
+						RT_CODES: sel_codes,
+						RT_NOTI_YN: need_set,
+						RT_END_YN: need_set==1?$("#emgr_rt_scend_yn").val():0,
+						RT_NOTI: need_set==1?$("#emgr_rt_scnoti").val():0,
+						RT_NOTI_SDATE: need_set==1?$("#emgr_rt_Sdate").val().replace(/-/gi, ""):null,
+						RT_NOTI_STIME: need_set==1?$("#emgr_rt_STime").val().replace(/:/gi, ""):null,
+						RT_NOTI_EDATE: need_set==1?$("#emgr_rt_Edate").val().replace(/-/gi, ""):null,
+						RT_NOTI_ETIME: need_set==1?$("#emgr_rt_ETime").val().replace(/:/gi, ""):null,
+						RT_ROUTENUM: need_set==1?$("#emgr_rt_routenum").val():null
+					},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function () {
+					$('#rtcode_dt').DataTable().ajax.reload();
+				});
+
+				e.preventDefault();
+				$('#modal-emgr').modal('hide');
+			});
+
+			$('.sel_enqueue_yn').on('change', function (e) {
+				var optionSelected = $("option:selected", this);
+				//$("#add_RT_ROUTE_GROUPSEQ").val(optionSelected.attr('group_seq'));
+				//$("#add_RT_ROUTE_DEPTNO").val(optionSelected.attr('dept_no'));
+				console.log('enqueue_yn change');
+			});
+
+			$('.sel_notice').on('change', function (e) {
+				let descSelected = $("option:selected", this).attr('desc');
+				let valueSelected = this.value;
+				if(valueSelected!=="0"){
+					$("#emgr_rt_scnoti_info").val(descSelected);
+				}
+				else{
+					$("#emgr_rt_scnoti_info").val('');
+				}
+			});
+
+			getPrompt();
+			getNotice();
+
+
+			$('.sel_prompt').SumoSelect({
+				placeholder: '안내음원',
+				search : true,
+				forceCustomRendering: true
+			});
+
+			$('._time').timepicker({
+				defaultTime: "",
+				minuteStep: 10,
+				showMeridian: false, //24시간
+				icons: {
+					up: "fal fa-caret-up",
+					down: "fal fa-caret-down"
+				}
+			});
+		});
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 라우트 관리
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			<div class="panel-toolbar">
+				<button class="btn btn-xs btn-dark _BtnEmgr" data-backdrop="static">긴급공지 설정</button>
+				<button class="btn btn-xs btn-dark ml-1 _BtnAdd" data-toggle="modal" data-target="#modal-add" data-backdrop="static">Add</button>
+				<button class="btn btn-xs btn-dark ml-1 _BtnEdit" data-backdrop="static">Edit</button>
+				<button class="btn btn-xs btn-dark ml-1 _BtnDel">Delete</button>
+			</div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+				<table id="rtcode_dt" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+					<tr>
+						<th colspan="5" class="text-center border-bottom-0">라우트정보</th>
+						<th colspan="4" class="text-center border-bottom-0">안내음원</th>
+						<th colspan="9" class="text-center border-bottom-0">긴급공지</th>
+					</tr>
+					<tr>
+						<th class="border-bottom-0">일련번호</th> <!-- 1 -->
+						<th class="border-bottom-0">이름</th>
+						<th class="border-bottom-0">라우트방식</th>
+						<th class="border-bottom-0">라우트대상</th>
+						<th class="border-bottom-0">큐우선순위</th> <!-- 5 -->
+						<th class="border-bottom-0">음원1ID</th>
+						<th class="border-bottom-0">음원1이름</th>
+						<th class="border-bottom-0">음원2ID</th>
+						<th class="border-bottom-0">음원2이름</th>
+						<th class="border-bottom-0">사용여부</th> <!-- 10 -->
+						<th class="border-bottom-0">번호</th>
+						<th class="border-bottom-0">공지</th>
+						<th class="border-bottom-0">공지후행동</th>
+						<th class="border-bottom-0">전환대상</th>
+						<th class="border-bottom-0">시작날짜</th>
+						<th class="border-bottom-0">시작시간</th>
+						<th class="border-bottom-0">종료날짜</th>
+						<th class="border-bottom-0">종료시간</th>
+					</tr>
+					</thead>
+				</table>
+
+			</div>
+		</div>
+	</div>
+
+	<div id="modal-add" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">라우트 추가</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="addfrm" id="addfrm" method="post">
+					<div class="modal-body">
+						<div class="form-group">
+							<label>라우트 명</label>
+							<input id="add_RT_ROUTENAME" name="RT_ROUTENAME" type="text" class="form-control sel_ctigroupset" required oninvalid="this.setCustomValidity('라우트 명을 입력하세요.')" oninput="this.setCustomValidity('')">
+
+							<!--
+                            <select class="form-control sel_ctigroupset" id="add_RT_ROUTENAME" required>
+                                <option value="">라우트</option>
+                            </select>
+                            -->
+						</div>
+						<div class="form-group">
+							<label>라우트 대상 선택</label>
+							<select class="form-control" id="add_RT_ENQUEUE_YN" required>
+								<option value="0">선택하세요</option>
+								<option value="1">Enqueue</option>
+								<option value="2">Blind transfer</option>
+								<option value="3">Two step stransfer</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>라우트 번호</label>
+							<input id="add_RT_QUEUENAME" name="RT_QUEUENAME" type="text" class="form-control" required oninvalid="this.setCustomValidity('대상을 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>큐우선순위</label>
+							<input id="add_RT_ENQUEUE_PRIORITY" name="RT_ENQUEUE_PRIORITY" type="text" class="form-control" required oninvalid="this.setCustomValidity('1이상의 숫자를 입력하세요')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>안내 음원 선택</label>
+							<select class="form-control sel_prompt" id="add_RT_PROMPT" required>
+								<option value="">음원</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>안내 음원2 선택</label>
+							<select class="form-control sel_prompt" id="add_RT_PROMPT2" required>
+								<option value="">음원</option>
+							</select>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-dark" id="btnadd">Save</button>
+						<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div id="modal-edt" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">라우트 수정</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+
+				<form name="edtfrm" id="edtfrm" method="post">
+					<input type="hidden" name="RT_ROUTE" id="edt_RT_ROUTE" />
+					<div class="modal-body">
+						<div class="form-group">
+							<label>라우트 명</label>
+							<input id="edt_RT_ROUTENAME" name="RT_ROUTENAME" type="text" class="form-control"  readonly="readonly">
+						</div>
+						<div class="form-group">
+							<label>라우트 대상 선택</label>
+							<select class="form-control" id="edt_RT_ENQUEUE_YN" required>
+								<option value="0">선택하세요</option>
+								<option value="1">Enqueue</option>
+								<option value="2">Blind transfer</option>
+								<option value="3">Two step stransfer</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>라우트 번호</label>
+							<input id="edt_RT_QUEUENAME" name="RT_QUEUENAME" type="text" class="form-control" required oninvalid="this.setCustomValidity('대상을 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>큐우선순위</label>
+							<input id="edt_RT_ENQUEUE_PRIORITY" name="RT_ENQUEUE_PRIORITY" type="text" class="form-control" required oninvalid="this.setCustomValidity('1이상의 숫자를 입력하세요')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>안내 음원 선택</label>
+							<select class="form-control sel_prompt" id="edt_RT_PROMPT" required>
+								<option value="">음원</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>안내 음원2 선택</label>
+							<select class="form-control sel_prompt" id="edt_RT_PROMPT2" required>
+								<option value="">음원</option>
+							</select>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-dark" id="btnedt">Save</button>
+						<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div id="modal-emgr" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">라우트 긴급공지</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="emgerfrm" id="emgrfrm" method="post">
+					<input id="emgr_rt_codes" name="rt_codes" type="hidden"/>
+					<div class="modal-body">
+						<div class="form-group">
+							<label>공지 사용 여부</label>
+							<select class="form-control" id="emgr_rt_scnoti_yn" name="scnoti_yn" required>
+								<option value="0">사용 안함</option>
+								<option value="1">사용</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>공지 후 행동</label>
+							<select class="form-control" id="emgr_rt_scend_yn" name="scend_yn" required>
+								<option value="0">라우팅</option>
+								<option value="1">콜종료</option>
+								<option value="2">착신전환</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label>착신전환 번호</label>
+							<input id="emgr_rt_routenum" name="routenum" type="text" class="form-control">
+						</div>
+
+						<div class="form-group">
+							<label>공지 선택</label>
+							<select class="form-control sel_notice" id="emgr_rt_scnoti" name="scnoti" required>
+								<option value="0">공지 없음</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label>공지 내용</label>
+							<textarea id="emgr_rt_scnoti_info" placeholder="" class="form-control" readonly></textarea>
+						</div>
+
+						<div class="form-group">
+							<label>시작 날짜 및 시간</label>
+							<i class="icon-append fa fa-calendar"></i>
+							<div class="row">
+								<div class="col-md-6">
+									<input type="text" class="datepicker form-control" value="" name="sdate" id="emgr_rt_Sdate" placeholder="시작 날짜" data-dateformat="yy-mm-dd" required>
+								</div>
+								<div class="col-md-6">
+									<input type="text" class="_time form-control" value="00:00" name="stime" id="emgr_rt_STime" placeholder="시작 시간" required>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label>종료 날짜 및 시간</label>
+							<i class="icon-append fa fa-calendar"></i>
+							<div class="row">
+								<div class="col-md-6">
+									<input type="text" class="datepicker form-control" value="" name="edate" id="emgr_rt_Edate" placeholder="종료 날짜" data-dateformat="yy-mm-dd" required>
+								</div>
+								<div class="col-md-6">
+									<input type="text" class="_time form-control" value="00:00" name="etime" id="emgr_rt_ETime" placeholder="종료 시간" required>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-dark" id="btnemgr">Apply</button>
+						<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</main>
+</html>

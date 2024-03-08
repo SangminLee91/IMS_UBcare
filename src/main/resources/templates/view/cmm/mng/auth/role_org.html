@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html
+		xmlns:th="http://www.thymeleaf.org"
+		xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+		layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<!--
+        <link rel="stylesheet" href="<c:url value='/css/formplugins/sumoselect/sumoselect.css'/>">
+        <script src="<c:url value='/js/formplugins/sumoselect/jquery.sumoselect.min.js'/>"></script>
+    -->
+
+	<script type="text/javascript">
+		$(document).ready(function() {
+
+			$("._devEdt").css("cursor", "pointer").click(function () {
+				var Role_No = $(event.currentTarget).data('roleno');
+				var Role_Nm = $(event.currentTarget).data('rolenm');
+				var Admin_Stat = $(event.currentTarget).data('adminstat');
+
+
+				$("#edt_Role_No").val(Role_No);
+				$("#edt_Role_Nm").val(Role_Nm);
+				//$("#edt_CCAPP_Admin_Stat").val(Admin_Stat);
+
+				//$("#edt_CCAPP_Admin_Stat")[0].sumo.reload();
+
+				$("#modal-edt").modal("show");
+			});
+
+			$("._devDel").css("cursor", "pointer").click(function (event) {
+				var Role_No = $(event.currentTarget).data('roleno');
+				var Role_Nm = $(event.currentTarget).data('rolenm');
+
+				if(Role_No == 1)
+				{
+					alertify.alert("","슈퍼 관리자는 삭제할수 없습니다.");
+					return false;
+				}
+				else
+				{
+					$.ajax({
+						method: "POST",
+						url: CONTEXT_PATH+"/auth/role/del",
+						data: { Role_No: Role_No },
+						error: function(jqXHR) { jqXHR_Process(jqXHR) }
+					}).done(function (rst) {
+						location.reload();
+					});
+				}
+			});
+
+			//checkbox처리
+			$("._chk").change(function(event){
+				var Svc_No = $(event.currentTarget).data('svcno');
+				var Role_No = $(event.currentTarget).data('roleno');
+
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/auth/role/svcadd",
+					data: { Svc_No: Svc_No, Role_No: Role_No },
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					if (data.Svc.Result < 0) {
+						alertify.alert("","권한 추가및 해제시 오류가 발생하였습니다. 다시 시도해주세요.");
+					}
+				});
+
+			})
+
+			/*
+                    $('._Admin_Stat').SumoSelect({
+                        placeholder: '선택',
+                        search : true,
+                        forceCustomRendering: true
+                    });
+            */
+
+		});
+	</script>
+
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+	<ol class="breadcrumb page-breadcrumb">
+		<li class="breadcrumb-item"><a href="javascript:void(0);">Home</a></li>
+		<li class="breadcrumb-item">SYSTEM관리</li>
+		<li class="breadcrumb-item">권한관리</li>
+		<li class="breadcrumb-item active">기본 Role 관리</li>
+		<li class="position-absolute pos-top pos-right d-none d-sm-block"><span class="js-get-date"></span></li>
+	</ol>
+
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2>기본 Role 관리</h2>
+			<div class="panel-toolbar">
+				<a href="#modal-reg" data-toggle="modal" class="btn btn-xs btn-default"><span class="fal fa-plus"></span> 기본 역할 추가</a>
+			</div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+
+				<table class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+					<tr>
+						<th data-class="expand">서비스 번호</th>
+						<th>서비스 명</th>
+						<th:block th:each="role: ${Role}">
+							<th>
+								<th:block th:utext="${role.Role_Nm}"/>
+								<button class="btn btn-xs btn-default _devEdt" data-roleno="${role.Role_No}" data-rolenm="${role.Role_Nm}" data-adminstat="${role.CCAPP_Admin_Stat}"><span class="fal fa-pencil" id="edt_${role.Role_No}" title="수정"></span></button>
+								<button class="btn btn-xs btn-default _devDel" data-roleno="${role.Role_No}" data-rolenm="${role.Role_Nm}"><span class="fal fa-trash" title="삭제"></span></button>
+							</th>
+						</th:block>
+					</tr>
+					</thead>
+					<tbody>
+
+
+					<tr th:each="svc : ${Svc}">
+						<td th:utext="${svc.Svc_No}"></td>
+						<td th:utext="${svc.Svc_Nm_Depth}"></td>
+						<td th:each="role : ${Role}">
+							<div class="custom-control custom-checkbox">
+								<input type="checkbox" class="custom-control-input _chk" th:id="'checkbox_' + ${svc.Svc_No} + '_' + ${role.Role_No}" name='checkbox[[${role.Role_No}]]' ${checked} data-roleno="[[${role.Role_No}]]" data-svcno="[[${svc.Svc_No}]]">
+								<label class="custom-control-label" th:for="'checkbox_' + ${svc.Svc_No} + '_' + ${role.Role_No}"></label>
+							</div>
+						</td>
+
+					</tr>
+					</tbody>
+				</table>
+
+			</div>
+		</div>
+	</div>
+
+
+
+</main>
+
+<div id="modal-reg" class="modal" aria-hidden="true" role="dialog">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h4 class="modal-title">기본 역할 추가</h4>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true"><i class="fal fa-times"></i></span>
+				</button>
+			</div>
+			<form name="roleaddfrm" id="roleaddfrm" method="post" action="<c:url value='/api/auth/roleadd.do'/>">
+				<div class="modal-body">
+					<div>
+						<div class="form-horizontal">
+							<div class="form-group">
+								<label class="control-label col-md-12">기본 역할명</label>
+								<div class="col-md-12">
+									<input class="form-control" id="add_Role_Nm" name="Role_Nm" type="text" value="" required oninvalid="this.setCustomValidity('기본 역할명을 입력하세요.')" oninput="this.setCustomValidity('')"/>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="control-label col-md-12">상담원 APP 관리자 여부</label>
+								<div class="col-md-12">
+									<select class="form-control _Admin_Stat" id="add_CCAPP_Admin_Stat" name="CCAPP_Admin_Stat">
+										<option value="0" selected>아니오</option>
+										<option value="1">예</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="submit" class="btn btn-default _btnadd">저장</button>
+					<button type="button" class="btn btn-primary" data-dismiss="modal">닫기</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+<div id="modal-edt" class="modal" aria-hidden="true" role="dialog">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h4 class="modal-title">기본 역할 수정</h4>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true"><i class="fal fa-times"></i></span>
+				</button>
+			</div>
+
+			<form name="roleedtfrm" id="roleedtfrm" method="post" action="<c:url value='/api/auth/roleedt.do'/>">
+				<input type="hidden" name="Role_No" id="edt_Role_No" />
+				<div class="modal-body">
+					<div>
+						<div class="form-horizontal">
+							<div class="form-group">
+								<label class="control-label col-md-12">기본 역할명</label>
+								<div class="col-md-12">
+									<input class="form-control" id="edt_Role_Nm" name="Role_Nm" type="text" value="" required oninvalid="this.setCustomValidity('기본 역할명을 입력하세요.')" oninput="this.setCustomValidity('')" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="control-label col-md-12">상담원 APP 관리자 여부</label>
+								<div class="col-md-12">
+									<select class="form-control _Admin_Stat" id="edt_CCAPP_Admin_Stat" name="CCAPP_Admin_Stat">
+										<option value="0">아니오</option>
+										<option value="1">예</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="modal-footer">
+					<button type="submit" class="btn btn-default _btnedt">수정</button>
+					<button type="button" class="btn btn-primary" data-dismiss="modal">닫기</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+</html>
+

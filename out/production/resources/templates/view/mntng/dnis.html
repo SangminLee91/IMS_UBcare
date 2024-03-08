@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+	<th:block layout:fragment="script">
+	<script type="text/javascript">
+	function reloadData(){
+		$('#dt_basic').DataTable().ajax.reload();
+	}
+
+	$(document).ready(function() {
+
+		const table = $('#dt_basic').DataTable({
+			ajax: {
+				url: CONTEXT_PATH+"/mntng/dnis/status",
+				dataSrc: "DNISStatus"
+			},
+			columns: [
+				{ "data": "DNIS" },
+				{ "data": "DNIS_NAME" },
+				//{ "data": "SERVICE_NAME" },
+				{ "data": "RECEIVE_CNT" },
+				{ "data": "AGENT_CNT" },
+				{ "data": "TRANS_CNT" }
+			],
+			searching: false,
+			ordering: false,
+			select: false
+			// ,
+			// scrollY: "600px",
+			// scrollCollapse: true
+		});
+
+		//Excel Btn
+/*		const buttons = new $.fn.dataTable.Buttons(table, {
+			 buttons: [
+			 {
+				  extend: 'excelHtml5',
+				  text: '<i class="fa  fa-file-excel-o"></i> Excel',
+				  title: 'DNIS별 모니터링',
+				  className: 'btn-outline-success btn-sm mr-1',
+				  exportOptions: {
+					modifier: {
+					  page: 'all'
+					}
+				  },
+				  customize: function ( xlsx ){
+					  let sheet = xlsx.xl.worksheets['sheet1.xml'];
+					  $('row c', sheet).attr( 's', '25' ); //border
+				  }
+				}
+			]
+		}).container().appendTo($('#buttons'));*/
+
+		setInterval("reloadData()", 5000);
+	});
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 인바운드 모니터링
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			<div id="buttons" class="btn-group"></div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+			
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+						<tr>
+							<th colspan="2" class="text-center border-bottom-0">DNIS</th>
+							<th colspan="3" class="text-center border-bottom-0">IVR</th>
+						</tr>
+						<tr>
+							<th class="text-center">DID</th>
+							<th class="text-center">설명</th>
+							<th class="text-center">인입</th>
+							<th class="text-center">상담요청</th>
+							<th class="text-center">서비스전환</th>
+						</tr>
+					</thead>
+				</table>
+				
+			</div>
+		</div>
+	</div>	
+	
+	
+		
+</main>
+</html>

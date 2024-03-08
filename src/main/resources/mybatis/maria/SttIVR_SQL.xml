@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="sttIvr">
+	<!-- 서비스별통계 -->
+    <select id="getServiceStat" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Stt_IVR_Statistics_S(#{servicelist}, NULLIF(#{Srch_Type},''), #{Start_Dt}, #{End_Dt})
+	</select>
+    
+    <!-- 메뉴별통계 -->
+    <select id="getMenuStat" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Stt_IVR_MemuStat_S(#{destinations}, NULLIF(#{Srch_Type},''), #{Start_Dt}, #{End_Dt})
+	</select>
+	
+	<!-- 메뉴별통계 change dnis별 서비스 통계-->
+    <select id="getServiceStatbyDNIS" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Stt_IVR_ServiceStat_S(#{destinations}, NULLIF(#{Srch_Type},''), #{Start_Dt}, #{End_Dt})
+	</select>
+	
+	<!-- callback list -->
+	<select id="getCallbackList" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Stt_IVR_CallbackList_S(#{branch}, #{callback}, #{Start_Dt}, #{End_Dt})
+	</select>
+	
+	<!-- callback statistic -->
+	<select id="getCallbackStat" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Stt_IVR_CallbackStat_S(#{destinations}, NULLIF(#{Srch_Type},''), #{Start_Dt}, #{End_Dt})
+	</select>
+
+	<!-- callback type -->
+	<select id="getCallbackType" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Stt_IVR_CallbackType_S(#{branch}, #{callback}, #{Start_Dt}, #{End_Dt})
+	</select>
+	
+</mapper>

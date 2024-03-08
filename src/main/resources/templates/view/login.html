@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko" class="root-text-sm" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>
+        IMS ::: Login
+    </title>
+    <meta name="description" content="Login">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no, minimal-ui">
+
+    <link id="vendorsbundle" rel="stylesheet" media="screen, print" th:href="@{/css/vendors.bundle.css}">
+    <link id="appbundle" rel="stylesheet" media="screen, print" th:href="@{/css/app.bundle.css}">
+    <link id="mytheme" rel="stylesheet" media="screen, print" th:href="@{/css/themes/cust-theme-7.css}">
+    <link id="myskin" rel="stylesheet" media="screen, print" th:href="@{/css/skins/skin-master.css}">
+
+    <link rel="stylesheet" media="screen, print" th:href="@{/css/fa-brands.css}">
+</head>
+<!-- BEGIN Body -->
+
+<body>
+
+<div class="page-wrapper auth">
+    <div class="page-inner bg-brand-gradient">
+        <div class="page-content-wrapper bg-transparent m-0">
+            <div class="height-10 w-100 shadow-lg px-4 bg-brand-gradient">
+                <div class="d-flex align-items-center container p-0">
+                    <div class="page-logo width-mobile-auto m-0 align-items-center justify-content-center p-0 bg-transparent bg-img-none shadow-0 height-9 border-0">
+                        <a href="javascript:void(0)" class="page-logo-link press-scale-down d-flex align-items-center">
+                            <img th:src="@{/img/logo.png}" alt="IMS" aria-roledescription="logo">
+                            <span class="page-logo-text mr-1">통합운영시스템</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="flex-1" style="background: url('/ims/img/svg/pattern-1.svg') no-repeat center bottom fixed; background-size: cover;">
+                <div class="container py-4 py-lg-6 my-lg-5 px-4 px-sm-0">
+                    <div class="row">
+                        <div class="col col-md-3 col-lg-4 d-none"></div>
+                        <div class="col-sm-12 col-md-6 col-lg-4 col-xl-4 ml-auto">
+                            <h1 class="text-white fw-300 mb-3">
+                                통합운영시스템
+                            </h1>
+                            <div class="card p-4 rounded-plus bg-faded">
+                                <form id="login" novalidate="">
+                                    <div class="form-group">
+                                        <label class="form-label" for="Emp_No">User ID</label>
+                                        <input type="text" id="Emp_No" class="form-control form-control-lg" placeholder="id" value="" required>
+<!--                                        <div class="invalid-feedback">No, you missed this one.</div>
+                                        <div class="help-block">Your unique ID</div>-->
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="Emp_Pwd">Password</label>
+                                        <input type="password" id="Emp_Pwd" class="form-control form-control-lg" placeholder="password" value="" required>
+<!--                                        <div class="invalid-feedback">Sorry, you missed this one.</div>
+                                        <div class="help-block">Your password</div>-->
+                                    </div>
+                                    <div class="row no-gutters">
+                                        <div class="col-lg-12 pl-lg-1 my-2">
+                                            <button id="js-login-btn" type="submit" class="btn btn-danger btn-block btn-lg">login</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col col-md-3 col-lg-4 hidden-sm-down"></div>
+
+                    </div>
+                    <div class="position-absolute pos-bottom pos-left pos-right p-3 text-center text-white">
+                        2021 © Integration Management System by&nbsp;<a href='http://www.vodacom.co.kr' class='text-white opacity-40 fw-500' title='vodacom' target='_blank'>www.vodacom.co.kr</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p th:replace="fragments/colorprofile :: colorFragment"></p>
+
+<!-- Context Path -->
+<link id="contextPathHolder" th:data-contextPath="${#httpServletRequest.getContextPath()}"/>
+
+<script type="text/javascript">
+    let CONTEXT_PATH = document.getElementById("contextPathHolder").getAttribute("data-contextPath") ? document.getElementById("contextPathHolder").getAttribute("data-contextPath") : '';
+</script>
+
+<script th:src="@{/js/vendors.bundle.js}"></script>
+<script th:src="@{/js/app.bundle.js}"></script>
+<script th:src="@{/js/formplugins/bootstrap-datepicker/bootstrap-datepicker.js}"></script>
+<script th:src="@{/js/ims.js}"></script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+
+        if(window.location.pathname !== CONTEXT_PATH+"/login" && window.location.pathname !=="")
+        {
+            window.open(CONTEXT_PATH+"/login", "_top");
+        }
+        $("#js-login-btn").click(function(event) {
+            event.preventDefault()
+            event.stopPropagation()
+
+            const form = $("#login")
+
+            if (form[0].checkValidity() === false)
+            {
+                form.addClass('was-validated');
+            }
+            else
+            {
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/loginchk",
+                    data: {
+                        Emp_No: $("#Emp_No").val()
+                        , Pwd: $("#Emp_Pwd").val()
+                    },
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    if(!data.Rst.ldap.ldap)
+                    {
+                        alert("아이디와 비밀번호를 확인하세요.(LDAP 인증 오류)");
+                        return false;
+                    }
+                    else
+                    {
+                        if(data.Rst.ims == null) {
+                            alert("해당 서비스를 사용할수 없습니다.")
+                            return false;
+                        }
+                        else
+                        {
+                            location.replace(CONTEXT_PATH+"/main");
+                        }
+                        // if( data.Rst.expireCnt < 0 )
+                        // {
+                        //     if( confirm("비밀번호 변경후 90일이 경과하였습니다. 비밀번호를 변경해주세요. \n지금 변경하시겠습니까?") )
+                        //     {
+                        //         location.replace(CONTEXT_PATH+"/pwd");
+                        //     }
+                        //     else
+                        //     {
+                        //         location.replace(CONTEXT_PATH+"/main");
+                        //     }
+                        // }
+                        // else
+                        // {
+                        //  location.replace(CONTEXT_PATH+"/main");
+                        // }
+                    }
+
+                });
+            }
+
+        });
+
+    });
+</script>
+</body>
+<!-- END Body -->
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	let SELECTED_ROW = "";
+	$(document).ready(function() {
+		const table_moh = $('#dt_moh').DataTable({
+			data:[],
+			columns: [
+				{ "data": "resourcename" },
+				{ "data": "resourcenum" }
+			],
+			ordering: true,
+			searching: true,
+            select: false,
+			scrollY: "190px",
+			scrollCollapse: true
+		});
+
+		const table_Initial = $('#dt_Initial').DataTable({
+			data:[],
+			columns: [
+				{ "data": "resourcename" },
+				{ "data": "resourcenum" },
+				{ "data": "resourceproperty" }
+			],
+			ordering: true,
+			searching: true,
+			select: false,
+			scrollY: "190px",
+			scrollCollapse: true
+		});
+
+		const getHuntData = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mng/cti/hunt/list",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				table_moh.clear().draw();
+				table_moh.rows.add(data.MOH).draw();
+
+				table_Initial.clear().draw();
+				table_Initial.rows.add(data.Initial).draw();
+
+			});
+		}
+
+		getHuntData();
+	});
+
+
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 헌트그룹 정보
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="row">
+		<div class="col-xs-12 col-sm-12 col-md-12">
+			<div class="panel">
+				<div class="panel-hdr">
+					<h2>MOH 헌트그룹</h2>
+				</div>
+				<div class="panel-container show">
+					<div class="panel-content">
+						<table id="dt_moh" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+							<thead class="thead-themed">
+								<tr>
+									<th>이름</th>
+									<th>번호</th>
+								</tr>
+							</thead>
+						</table>		
+					</div>
+				</div>
+			</div>	
+		</div>
+		
+		<div class="col-xs-12 col-sm-12 col-md-12">
+			<div class="panel">
+				<div class="panel-hdr">
+					<h2>Initial 헌트그룹</h2>
+				</div>
+				<div class="panel-container show">
+					<div class="panel-content">
+						<table id="dt_Initial" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+							<thead class="thead-themed">
+								<tr>
+									<th>이름</th>
+									<th>번호</th>
+									<th>MOH 헌트그룹번호</th>
+								</tr>
+							</thead>
+						</table>		
+					</div>
+				</div>
+			</div>		
+		</div>
+		
+	</div>
+</main>
+</html>
+
+

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="main">
+    <select id="TempList" parameterType="hashmap" resultType="hashmap">
+    	CALL TempTable_S(#{start}, #{length}, #{SearchText})
+	</select> 
+	
+	<insert id="TempAdd" parameterType="hashmap">
+		CALL TempTable_I(#{Name}, #{Dept}, #{Email})
+	</insert>
+	
+	<update id="TempEdit" parameterType="hashmap">
+		CALL TempTable_U(#{Seq}, #{Name}, #{Dept}, #{Email})
+	</update>
+	
+	<update id="TempDel" parameterType="hashmap">
+		CALL TempTable_D (#{Seq})
+	</update>
+	
+    <select id="TempMenu" parameterType="hashmap" resultType="hashmap">
+    	CALL TempMenu_S()
+	</select> 
+	
+	<select id="TempAuthChk" parameterType="hashmap" resultType="hashmap">
+		CALL TempAuthChk(#{url}, #{emp_no})
+	</select>
+
+	<select id="TempCpuData" parameterType="hashmap" resultType="hashmap">
+		CALL TempCpuData_S()
+	</select>
+
+
+	<resultMap id="dt1" type="hashmap"></resultMap>
+	<resultMap id="dt2" type="hashmap"></resultMap>
+	<select id="DtTest" parameterType="hashmap" resultType="hashmap" resultMap="dt1, dt2">
+		CALL TempDataTableTest_S()
+	</select>
+
+	<insert id="upload" parameterType="hashmap">
+		CALL Temp_I(#{ORIGINAL_FILE_NAME}, #{FILE_NAME})
+	</insert>
+
+	<select id="ExcelStt" parameterType="hashmap" resultType="hashmap">
+		CALL ims_ifx.USP_Excel_Total_Stats_Day_S(#{Year}, #{MM})
+	</select>
+	<select id="ExcelYearStt" parameterType="hashmap" resultType="hashmap">
+		CALL ims_ifx.USP_Excel_Total_Stats_Year_S(#{Year}, #{MM})
+	</select>
+	<select id="ExcelYearTotalStt" parameterType="hashmap" resultType="hashmap">
+		CALL ims_ifx.USP_Excel_Total_Stats_TotalYear_S(#{Year})
+	</select>
+	
+	
+	
+	<select id="WeekDay" parameterType="hashmap" resultType="hashmap">
+		CALL ims_ifx.USP_Excel_Emp_WeekDay_S(#{Year}, #{Month}, #{Week})
+	</select>
+	<select id="Week" parameterType="hashmap" resultType="hashmap">
+		CALL ims_ifx.USP_Excel_Emp_Stats_S(#{Year}, #{Month}, #{Week})
+	</select>
+
+
+</mapper>

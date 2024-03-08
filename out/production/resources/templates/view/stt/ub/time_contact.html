@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+    <link rel="stylesheet" th:href="@{/css/formplugins/bootstrap-timepicker/bootstrap-timepicker.css}">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+    <script th:src="@{/js/formplugins/bootstrap-timepicker/bootstrap-timepicker.min.js}"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+            const table = $('#dt_basic').DataTable({
+                data:[],
+                columns: [
+                    { "data": "RecordTimestamp" },
+                    { "data": "entityNm" },
+                    { "data": "numreceived09" },
+                    { "data": "numanswered09" },
+                    { "data": "rate09" },
+                    { "data": "numreceived10" },
+                    { "data": "numanswered10" },
+                    { "data": "rate10" },
+                    { "data": "numreceived11" },
+                    { "data": "numanswered11" },
+                    { "data": "rate11" },
+                    { "data": "numreceived12" },
+                    { "data": "numanswered12" },
+                    { "data": "rate12" },
+                    { "data": "numreceived13" },
+                    { "data": "numanswered13" },
+                    { "data": "rate13" },
+                    { "data": "numreceived14" },
+                    { "data": "numanswered14" },
+                    { "data": "rate14" },
+                    { "data": "numreceived15" },
+                    { "data": "numanswered15" },
+                    { "data": "rate15" },
+                    { "data": "numreceived16" },
+                    { "data": "numanswered16" },
+                    { "data": "rate16" },
+                    { "data": "numreceived17" },
+                    { "data": "numanswered17" },
+                    { "data": "rate17" },
+                    { "data": "numreceived18" },
+                    { "data": "numanswered18" },
+                    { "data": "rate18" },
+                    { "data": "numreceived19" },
+                    { "data": "numanswered19" },
+                    { "data": "rate19" }
+                    // ,
+                    // { "data": "numreceived20" },
+                    // { "data": "numanswered20" },
+                    // { "data": "rate20" },
+                    // { "data": "numreceived21" },
+                    // { "data": "numanswered21" },
+                    // { "data": "rate21" }
+                ],
+                // columnDefs: [
+                //     { "targets": [6], "visible": false, className: "never"}
+                // ],
+                searching: false,
+                ordering: false,
+                //autoWidth: true,
+                bPaginate: true,
+                iDisplayLength: 30,
+                //scrollX: true,
+
+            });
+
+            //Queue
+            const getQueue = function() {
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/cmm/ajax/grantque",
+                    error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    $(".sel_queue option").remove();
+                    $.each(data.Code, function (i, item) {
+                        $(".sel_queue").append($('<option>', { value: item.Que_Code, text: item.Que_Nm }));
+                    });
+
+                    $('.sel_queue').multiselect({
+                        includeFilterClearBtn: false,
+                        enableFiltering: true,
+                        includeSelectAllOption: true,
+                        selectAllText: '전체선택',
+                        nonSelectedText: '큐번호/이름',
+                        allSelectedText: '전체 선택됨',
+                        buttonWidth: '100%',
+                        maxHeight: 400,
+                        buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+                    });
+
+                });
+            }
+
+            //검색Btn
+            $("._searchGo").click(function(){
+
+                let Queue_Key = $(".sel_queue").val().toString().replace(/,/gi, "|");
+                let Search_Type = $("._searchType:checked").val()
+                let sDate = $("#sdate").val();
+                let eDate = $("#edate").val();
+                let sTime = "";//$("#stime").val();
+                let eTime = "";//$("#etime").val();
+
+                table.clear().draw();
+
+                $(".dataTables_processing").css("display","block");
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/stt/ub/time/data",
+                    data: {
+                        Queue_Key: Queue_Key
+                        , Search_Type: Search_Type
+                        , sDate: sDate
+                        , eDate: eDate
+                        , sTime: sTime
+                        , eTime: eTime
+                    },error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    table.clear().draw();
+                    table.rows.add(data.Stt).draw();
+                    $(".dataTables_processing").css("display","none");
+                    table.DataTable().columns.adjust().draw();
+                });
+            })
+
+
+            $("#_excel").click(function(){
+                let Queue_Key = $(".sel_queue").val().toString().replace(/,/gi, "|");
+                let Search_Type = $("._searchType:checked").val()
+                let sDate = $("#sdate").val();
+                let eDate = $("#edate").val();
+                let sTime = ""; //$("#stime").val();
+                let eTime = ""; //$("#etime").val();
+
+                location.href = CONTEXT_PATH+"/stt/ub/excel/time?Queue_Key="+encodeURI(Queue_Key)+"&Search_Type="+encodeURI(Search_Type)+"&sDate="+encodeURI(sDate)+"&eDate="+encodeURI(eDate)+"&sTime="+encodeURI(sTime)+"&eTime="+encodeURI(eTime);
+
+            });
+
+            $("#sdate").val(getToday()); //오늘날짜 기본
+            $("#edate").val(getToday()); //오늘날짜 기본
+
+            getQueue();
+        });
+    </script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+    <i class="subheader-icon fal fa-window"></i> 시간대별 접촉률
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+    <div class="panel">
+        <div class="panel-hdr">
+            <h2></h2>
+            <div id="buttons" class="btn-group">
+                <button class="btn-xs btn-dark" id="_excel">Excel</button>
+            </div>
+        </div>
+        <div class="panel-container show">
+            <div class="panel-content">
+
+                <div class="form-row">
+                    <div class="col-sm-3 mb-2">
+                        <label class="form-label d-none">큐</label>
+                        <select multiple="multiple" id="Queue_Key" name="Queue_Key" class="sel_queue"></select>
+                    </div>
+
+                    <div class="col-md">
+                        <label class="form-label d-none">날짜</label>
+                        <div class="input-daterange input-group">
+                            <input type="text" class="form-control datepicker" name="sdate" id="sdate" placeholder="시작일자">
+                            <div class="input-group-append input-group-prepend">
+                                <span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>
+                            </div>
+                            <input type="text" class="form-control datepicker" name="edate" id="edate" placeholder="종료일자">
+                        </div>
+                    </div>
+<!--                    <div class="col-md">-->
+<!--                        <label class="form-label d-none">시간</label>-->
+<!--                        <div class="input-daterange input-group">-->
+<!--                            <input class="_time form-control" type="text" name="stime" id="stime" placeholder="시작 시간"  value="09:00">-->
+<!--                            <div class="input-group-append input-group-prepend">-->
+<!--                                <span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>-->
+<!--                            </div>-->
+<!--                            <input class="_time form-control" type="text" name="etime" id="etime" placeholder="종료 시간" value="19:00">-->
+<!--                        </div>-->
+<!--                    </div>-->
+
+                    <div class="col-md ">
+                        <label class="form-label d-none">&nbsp;</label>
+                        <div class="frame-wrap pt-2">
+                            <div class="custom-control custom-radio custom-control-inline">
+                                <input type="radio" class="_searchType custom-control-input" id="rdo_month" name="searchType" value="4">
+                                <label class="custom-control-label" for="rdo_month">월별</label>
+                            </div>
+                            <div class="custom-control custom-radio custom-control-inline">
+                                <input type="radio" class="_searchType custom-control-input" id="rdo_day" name="searchType" value="2" checked="">
+                                <label class="custom-control-label" for="rdo_day">일별</label>
+                            </div>
+
+                        </div>
+                    </div>
+
+
+                    <div class="col-md">
+                        <label class="form-label d-none ">&nbsp;</label>
+                        <button class="btn btn-sm btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span>Search</span></button>
+                    </div>
+                </div>
+
+                <table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+                    <thead class="thead-themed">
+                    <tr>
+                        <th rowspan="2" class="text-center">날짜</th>
+                        <th rowspan="2" class="text-center">큐이름</th>
+                        <th colspan="3" class="text-center border-bottom-0">09</th>
+                        <th colspan="3" class="text-center border-bottom-0">10</th>
+                        <th colspan="3" class="text-center border-bottom-0">11</th>
+                        <th colspan="3" class="text-center border-bottom-0">12</th>
+                        <th colspan="3" class="text-center border-bottom-0">13</th>
+                        <th colspan="3" class="text-center border-bottom-0">14</th>
+                        <th colspan="3" class="text-center border-bottom-0">15</th>
+                        <th colspan="3" class="text-center border-bottom-0">16</th>
+                        <th colspan="3" class="text-center border-bottom-0">17</th>
+                        <th colspan="3" class="text-center border-bottom-0">18</th>
+                        <th colspan="3" class="text-center border-bottom-0">19</th>
+<!--                        <th colspan="3" class="text-center border-bottom-0">20</th>-->
+<!--                        <th colspan="3" class="text-center border-bottom-0">21</th>-->
+                    </tr>
+                    <tr>
+                        <th class="text-center">A</th>
+                        <th class="text-center">S</th>
+                        <th class="text-center">R</th>
+
+                        <th class="text-center">A</th>
+                        <th class="text-center">S</th>
+                        <th class="text-center">R</th>
+
+                        <th class="text-center">A</th>
+                        <th class="text-center">S</th>
+                        <th class="text-center">R</th>
+
+                        <th class="text-center">A</th>
+                        <th class="text-center">S</th>
+                        <th class="text-center">R</th>
+
+                        <th class="text-center">A</th>
+                        <th class="text-center">S</th>
+                        <th class="text-center">R</th>
+
+                        <th class="text-center">A</th>
+                        <th class="text-center">S</th>
+                        <th class="text-center">R</th>
+
+                        <th class="text-center">A</th>
+                        <th class="text-center">S</th>
+                        <th class="text-center">R</th>
+
+                        <th class="text-center">A</th>
+                        <th class="text-center">S</th>
+                        <th class="text-center">R</th>
+
+                        <th class="text-center">A</th>
+                        <th class="text-center">S</th>
+                        <th class="text-center">R</th>
+
+                        <th class="text-center">A</th>
+                        <th class="text-center">S</th>
+                        <th class="text-center">R</th>
+
+                        <th class="text-center">A</th>
+                        <th class="text-center">S</th>
+                        <th class="text-center">R</th>
+
+<!--                        <th class="text-center">A</th>-->
+<!--                        <th class="text-center">S</th>-->
+<!--                        <th class="text-center">R</th>-->
+
+<!--                        <th class="text-center">A</th>-->
+<!--                        <th class="text-center">S</th>-->
+<!--                        <th class="text-center">R</th>-->
+                    </tr>
+                    </thead>
+
+                </table>
+
+            </div>
+        </div>
+    </div>
+
+</main>
+</html>

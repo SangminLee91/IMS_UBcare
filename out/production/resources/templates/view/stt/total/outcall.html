@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	$(document).ready(function() {
+		const table = $('#dt_basic').DataTable({
+			data:[],
+			columns: [
+				{ "data": "RecordTimestamp" },
+				{ "data": "Emp_Nm" },
+				{ "data": "UserID" },
+				{ "data": "Dept_Nm" },
+				{ "data": "NumInitiatedDirectOut" },
+				{ "data": "NumHandledNonCCOut" },
+				{ "data": "OutFail" }
+			],
+			ordering: false,
+			searching: false,
+			iDisplayLength: 20,
+			bPaginate: true,
+			footerCallback: function ( row, data, start, end, display ) {
+				let api = this.api();
+				let intVal = function ( i ) {
+					return typeof i === 'string' ?
+						i.replace(/[\$,]/g, '')*1 :
+						typeof i === 'number' ?
+							i : 0;
+				};
+
+				let Sum1 = api.column( 4, { page: 'all'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+				let Sum2 = api.column( 5, { page: 'all'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+				let Sum3 = api.column( 6, { page: 'all'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+
+				$( api.column(4).footer() ).html(Sum1);
+				$( api.column(5).footer() ).html(Sum2);
+				$( api.column(6).footer() ).html(Sum3);
+
+			}
+		});
+
+
+		let jsonEmp = null;
+		//부서
+		const getDept = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/cmm/ajax/dept/list",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				makeDept(data.Dept);
+			});
+		}
+		const makeDept = function(data) {
+			$.each(data, function (i, item) {
+				$("._deptSel").append($('<option>', { value: item.Dept_No, text: item.Dept_Nm }));
+			});
+
+			$('._deptSel').multiselect({
+				includeFilterClearBtn: false,
+				enableFiltering: true,
+				includeSelectAllOption: true,
+				selectAllText: '전체선택',
+				nonSelectedText: '부 서',
+				allSelectedText: '전체 선택됨',
+				buttonWidth: '100%',
+				maxHeight: 400,
+				buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+			});
+		}
+
+		//사원
+		const getEmp = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/cmm/ajax/emp/list",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				jsonEmp = data.Emp;
+				//$(".sel_emp option").remove();
+				makeEmp(data.Emp);
+			});
+		}
+
+		const makeEmp = function(data)
+		{
+			$.each(data, function (i, item) {
+				$("._empSel").append($('<option>', { value: item.Agent_Key, text: item.Emp_Nm +' ['+item.userid+']' }));
+			});
+
+			$('._empSel').multiselect({
+				includeFilterClearBtn: false,
+				enableFiltering: true,
+				includeSelectAllOption: true,
+				selectAllText: '전체선택',
+				nonSelectedText: '사 원',
+				allSelectedText: '전체 선택됨',
+				buttonWidth: '100%',
+				maxHeight: 400,
+				buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+			});
+			$('._empSel').multiselect('rebuild');
+		}
+
+		//부서 변경시 해당부서 사원만 노출
+		$("._deptSel").change(function(){
+			$("._empSel option").remove();
+			let data = jsonEmp;
+
+			if($(this).val() != "")
+			{
+				for(let i = 0; i < $(this).val().length; i++)
+				{
+					let val_Dept_No = $(this).val()[i];
+					data = jsonEmp.filter(function(val) { //선택된 부서의 사원만 필터
+						return (val.Dept_No == val_Dept_No);
+					});
+					makeEmp(data);
+				}
+			}
+			else
+			{
+				makeEmp(data);
+			}
+		});
+
+
+
+
+		//검색Btn
+		$("._searchGo").click(function(){
+
+			let x_Granularity = 2
+			let x_UserKey = $("._empSel").val().toString().replace(/,/gi, "|");
+			let x_DepartmentKey = $("._deptSel").val().toString().replace(/,/gi, "|");
+			let x_BeginTimestamp = $("#sdate").val();
+			let x_EndTimestamp = $("#edate").val();
+
+			$(".dataTables_processing").css("display","block");
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/stt/total/outcall/stats",
+				data: {
+						x_Granularity: x_Granularity
+						, x_UserKey: x_UserKey
+						, x_DepartmentKey: x_DepartmentKey
+						, x_BeginTimestamp: x_BeginTimestamp
+						, x_EndTimestamp: x_EndTimestamp
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				table.clear().draw();
+				table.rows.add(data.Stt).draw();
+				$(".dataTables_processing").css("display","none");
+			});
+		})
+
+		$("#sdate").val(getToday()); //오늘날짜 기본
+		$("#edate").val(getToday()); //오늘날짜 기본
+		getDept();
+		getEmp();
+	});
+	</script>
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 발신 통계
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			 <div id="buttons" class="btn-group"></div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+
+				<div class="form-row">
+					<div class="col-md">
+						<label class="form-label d-none">부서</label>
+						<select multiple="multiple" class="_deptSel">
+						</select>
+					</div>
+					<div class="col-md">
+						<label class="form-label d-none">상담원</label>
+						<select multiple="multiple" class="_empSel"></select>
+					</div>
+					<div class="col-md">
+						<label class="form-label d-none">날짜</label>
+						<div class="input-daterange input-group">
+							<input type="text" class="form-control datepicker" name="startdate" id="sdate" placeholder="시작일자">
+							<div class="input-group-append input-group-prepend">
+								<span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>
+							</div>
+							<input type="text" class="form-control datepicker" name="finishdate" id="edate" placeholder="종료일자">
+						</div>
+					</div>
+					<div class="col-md">
+						<label class="form-label d-none ">&nbsp;</label>
+						<button class="btn btn-sm btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span class="">Search</span></button>
+					</div>
+				</div>
+
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+						<tr>
+							<th class="text-center">날짜</th>
+							<th class="text-center">상담원 이름</th>
+							<th class="text-center">상담원 ID</th>
+							<th class="text-center">부서</th>
+							<th class="text-center">발신콜수</th>
+							<th class="text-center">통화성공</th>
+							<th class="text-center">통화실패</th>
+						</tr>
+					</thead>
+			        <tfoot>
+			            <tr>
+			                <th>합계</th>
+			                <th></th>
+			                <th></th>
+			                <th></th>
+			                <th></th>
+			                <th></th>
+			                <th></th>
+			            </tr>
+			        </tfoot>
+				</table>
+				
+			</div>
+		</div>
+	</div>
+	
+</main>		
+
+</html>>

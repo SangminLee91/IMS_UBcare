@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+	<link rel="stylesheet" th:href="@{/css/formplugins/bootstrap-timepicker/bootstrap-timepicker.css}">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script th:src="@{/js/formplugins/bootstrap-timepicker/bootstrap-timepicker.min.js}"></script>
+	<script type="text/javascript">
+		let SELECT_ROW = "";
+
+		$(document).ready(function() {
+			//공지불러오기
+			const getNotice = function() {
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/notice/list",// "<c:url value='/mng/ivr/noticelist.do'/>",
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					$.each(data.Notice, function (i, item) {
+						//var pid=item.SC_PROMPT.replace(/^\s+|\s+$/g,"")
+						$(".sel_notice").append($('<option>', { value: item.NT_Code, text: item.NT_NAME, desc: item.NT_PROMPT_INFO }));
+					});
+				});
+			}
+
+			const dt_emergency_scenario = $('#emergency_scenario_sel_grid').DataTable({
+				ajax: {
+					url: CONTEXT_PATH+"/mng/ivr/scenarionewlist",
+					dataSrc: "Scenario"
+				},
+				columns: [
+					{ "data": "SC_CODE" }, //0
+					{ "data": "SC_NAME" },
+					{ "data": "SC_TYPE" }, //2
+					{ "data": "SC_NOTI_YN" },
+					{ "data": "SC_END_YN" },
+					{ "data": "SC_NOTI" }, //5
+					{ "data": "SC_NOTI_NM" },
+					{ "data": "SC_NOTI_SDATE" },
+					{ "data": "SC_NOTI_STIME" }, //8
+					{ "data": "SC_NOTI_EDATE" },
+					{ "data": "SC_NOTI_ETIME" }
+				],
+				columnDefs: [
+					{
+						// The `data` parameter refers to the data for the cell (defined by the
+						// `data` option, which defaults to the column being worked with, in
+						// this case `data: 0`.
+						"render": function ( data, type, row ) {
+							if(data==1){
+								return '';
+							}
+							else{
+								return '내부';
+							}
+						},
+						"targets": [2]
+					},
+					{
+						// The `data` parameter refers to the data for the cell (defined by the
+						// `data` option, which defaults to the column being worked with, in
+						// this case `data: 0`.
+						"render": function ( data, type, row ) {
+							if(data==0){
+								return '';
+							}
+							else{
+								return '사용';
+							}
+						},
+						"targets": [3,4]
+					},
+					{
+						targets: [0,5],
+						visible: false,
+						searchable: false
+					}
+				],
+				searching: false,
+				ordering: true,
+				scrollY: "650px",
+				scrollCollapse: true
+			});
+
+			dt_emergency_scenario.on('select', function(e, dt, type, indexes){
+				console.log('=====>>> emergency scenario code : '+dt_emergency_scenario.row(indexes).data().SC_CODE);
+				SELECT_ROW=dt_emergency_scenario.row(indexes).data();
+				console.log(indexes);
+				let sel_codes='';
+				for(let i=0; i<indexes.length; i++){
+					if(i!=0){
+						sel_codes+='|';
+					}
+					sel_codes+=dt_emergency_scenario.row(i).data().SC_CODE;
+				}
+				console.log(sel_codes);
+			}).on('deselect', function(){
+				console.log('=====>>> emergency scenario code : 0');
+				SELECT_ROW="";
+			});
+
+			//긴급공지 클릭
+			$("._BtnEmgr").click(function(){
+				if(SELECT_ROW == "")
+				{
+					alert("긴급공지를 설정할 시나리오를 선택하세요.");
+					return false;
+				}
+				$("#_em_emnoti_yn").val(0)
+				$("#_em_emend_yn").val(0);
+				$("#_em_emnoti").val("0");
+				$("#_em_emnoti_info").val("");
+				$("#_em_emnoti_startdate").val(getToday());
+				$("#_em_emnoti_starttime").val("00:00");
+				$("#_em_emnoti_enddate").val(getToday());
+				$("#_em_emnoti_endtime").val("23:50");
+				$('#modal-emgr').modal('show');
+			});
+
+			//긴급공지 설정
+			$("#emgrfrm").submit(function(e){
+				if(SELECT_ROW == "")
+				{
+					alert("긴급공지를 설정할 시나리오를 선택하세요.");
+					return false;
+				}
+
+				var sel_datas=dt_emergency_scenario.rows({ selected: true }).data();
+				var sel_codes='';
+				var need_set=$("#_em_emnoti_yn").val();
+				console.log(sel_datas);
+
+				for(var i=0; i<sel_datas.length; i++){
+					if(i!=0){
+						sel_codes+="|";
+					}
+					sel_codes+=sel_datas[i].SC_CODE;
+				}
+				console.log('To be -> SC_CODES:'+sel_codes);
+				console.log("em_codes -->"+sel_codes);
+				console.log("_em_emnoti_yn -->"+need_set);
+				console.log("_em_emend_yn -->"+(need_set==1?$("#_em_emend_yn").val():0));
+				console.log("_em_emnoti -->"+$("#_em_emnoti").val());
+				console.log("_em_emnoti_startdate -->"+$("#_em_emnoti_startdate").val().replace(/-/gi, ""));
+				console.log("_em_emnoti_starttime -->"+$("#_em_emnoti_starttime").val().replace(/:/gi, ""));
+				console.log("_em_emnoti_enddate -->"+$("#_em_emnoti_enddate").val().replace(/-/gi, ""));
+				console.log("_em_emnoti_endtime -->"+$("#_em_emnoti_endtime").val().replace(/:/gi, ""));
+
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/scenarioemergencyset",
+					data: {
+						SC_CODES: sel_codes,
+						SC_NOTI_YN: need_set,
+						SC_END_YN: need_set==1?$("#_em_emend_yn").val():0,
+						SC_NOTI: need_set==1?$("#_em_emnoti").val():0,
+						SC_NOTI_SDATE: need_set==1?$("#_em_emnoti_startdate").val().replace(/-/gi, ""):null,
+						SC_NOTI_STIME: need_set==1?$("#_em_emnoti_starttime").val().replace(/:/gi, ""):null,
+						SC_NOTI_EDATE: need_set==1?$("#_em_emnoti_enddate").val().replace(/-/gi, ""):null,
+						SC_NOTI_ETIME: need_set==1?$("#_em_emnoti_endtime").val().replace(/:/gi, ""):null
+					},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function () {
+					$('#emergency_scenario_sel_grid').DataTable().ajax.reload();
+				});
+
+				e.preventDefault();
+				$('#modal-emgr').modal('hide');
+			});
+
+			$('.sel_notice').on('change', function (e) {
+				let descSelected = $("option:selected", this).attr('desc');
+				let valueSelected = this.value;
+				if(valueSelected!=="0"){
+					$("#_em_emnoti_info").val(descSelected);
+				}
+				else{
+					$("#_em_emnoti_info").val('');
+				}
+			});
+
+			getNotice();
+
+			$('._time').timepicker({
+				defaultTime: "",
+				minuteStep: 10,
+				showMeridian: false, //24시간
+				icons: {
+					up: "fal fa-caret-up",
+					down: "fal fa-caret-down"
+				}
+			});
+		});
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 시나리오 긴급공지 일괄 설정
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			<div class="panel-toolbar">
+				<button class="btn btn-xs btn-dark _BtnEmgr" data-backdrop="static">긴급공지 설정</button>
+			</div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+				<table id="emergency_scenario_sel_grid" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+					<tr>
+						<th colspan="3" class="text-center border-bottom-0">시나리오 정보</th>
+						<th colspan="8" class="text-center border-bottom-0">공지 설정</th>
+					</tr>
+					<tr>
+						<th class="table-tr-bottom-0">일련번호</th>
+						<th class="table-tr-bottom-0">시나리오이름</th>
+						<th class="table-tr-bottom-0">종류</th>
+						<th class="table-tr-bottom-0">사용여부</th>
+						<th class="table-tr-bottom-0">공지후종료</th>
+						<th class="table-tr-bottom-0">일련번호</th>
+						<th class="table-tr-bottom-0">이름</th>
+						<th class="table-tr-bottom-0">시작날짜</th>
+						<th class="table-tr-bottom-0">시작시간</th>
+						<th class="table-tr-bottom-0">종료날짜</th>
+						<th class="table-tr-bottom-0">종료시간</th>
+					</tr>
+					</thead>
+				</table>
+
+			</div>
+		</div>
+	</div>
+
+	<div id="modal-emgr" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">시나리오 긴급공지 일괄 설정</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="emgerfrm" id="emgrfrm" method="post">
+					<input id="emgr_rt_codes" name="rt_codes" type="hidden"/>
+					<div class="modal-body">
+						<div class="form-group">
+							<label>공지 사용 여부</label>
+							<select class="form-control" id="_em_emnoti_yn" name="scnoti_yn" required>
+								<option value="0">사용 안함</option>
+								<option value="1">사용</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>공지 후 종료</label>
+							<select class="form-control" id="_em_emend_yn" name="scend_yn" required>
+								<option value="0">종료 안함</option>
+								<option value="1">종료</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label>공지 선택</label>
+							<select class="form-control sel_notice" id="_em_emnoti" name="scnoti" required>
+								<option value="0">공지 없음</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label>공지 내용</label>
+							<textarea id="_em_emnoti_info" placeholder="" class="form-control" readonly></textarea>
+						</div>
+
+						<div class="form-group">
+							<label>시작 날짜 및 시간</label>
+							<i class="icon-append fa fa-calendar"></i>
+							<div class="row">
+								<div class="col-md-6">
+									<input type="text" class="datepicker form-control" value="" name="sdate" id="_em_emnoti_startdate" placeholder="시작 날짜" data-dateformat="yy-mm-dd" required>
+								</div>
+								<div class="col-md-6">
+									<input type="text" class="_time form-control" value="00:00" name="stime" id="_em_emnoti_starttime" placeholder="시작 시간" required>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label>종료 날짜 및 시간</label>
+							<i class="icon-append fa fa-calendar"></i>
+							<div class="row">
+								<div class="col-md-6">
+									<input type="text" class="datepicker form-control" value="" name="edate" id="_em_emnoti_enddate" placeholder="종료 날짜" data-dateformat="yy-mm-dd" required>
+								</div>
+								<div class="col-md-6">
+									<input type="text" class="_time form-control" value="00:00" name="etime" id="_em_emnoti_endtime" placeholder="종료 시간" required>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-dark" id="btnemgr">Apply</button>
+						<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</main>
+</html>

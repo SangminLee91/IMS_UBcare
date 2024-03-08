@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+
+	<script type="text/javascript">
+	let SELECTED_ROW = "";
+	$(document).ready(function() {
+		const table = $('#blacklist').DataTable({
+			ajax: {
+				url: CONTEXT_PATH+"/mng/ivr/black/list",
+				dataSrc: "Black"
+			},
+			columns: [
+				{ "data": "BL_SEQUENCE" },
+				{ "data": "BL_TELNO" },
+				{ "data": "BL_DESC" },
+				{ "data": "BL_DATETIME" }
+			],
+			columnDefs: [
+				{
+					"targets": [0],
+					"visible": false,
+					"searchable": false
+				}
+			],
+			searching: true,
+			ordering: false
+		});
+		table.on('select', function(e, dt, type, indexes){
+			SELECTED_ROW = table.row(indexes).data();
+		}).on('deselect', function(){
+			SELECTED_ROW = "";
+		});
+
+		//등록창 열릴때 데이터 초기화
+		$("._BtnAdd").click(function(){
+			SELECTED_ROW = "";
+			$("#add_BL_TELNO").val("");
+			$("#add_BL_DESC").val("");
+		});
+
+		//등록처리
+		$("#addfrm").submit(function(e){
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mng/ivr/black/add",
+				data: {
+					BL_TELNO: $("#add_BL_TELNO").val(),
+					BL_DESC: $("#add_BL_DESC").val()
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$('#blacklist').DataTable().ajax.reload();
+			});
+
+			e.preventDefault();
+			$('#modal-add').modal('hide');
+		});
+
+
+		//삭제
+		$("._BtnDel").click(function(){
+			if(SELECTED_ROW === "")
+			{
+				alert("삭제할 전화번호를 선택하세요.");
+				return false;
+			}
+
+			if(confirm("["+SELECTED_ROW.BL_TELNO +"] 를 삭제 하시겠습니까?"))
+			{
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/black/del",
+					data: {BL_SEQUENCE: SELECTED_ROW.BL_SEQUENCE},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					$('#blacklist').DataTable().ajax.reload();
+				});
+
+				SELECTED_ROW = "";
+			}
+			else
+			{
+				return false;
+			}
+		});
+
+
+		//getDept();
+
+	});
+	</script>
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 블랙리스트 관리
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel"> 
+		<div class="panel-hdr">
+			<h2></h2>
+			<div class="panel-toolbar">
+				<button class="btn btn-xs btn-dark _BtnAdd" data-toggle="modal" data-target="#modal-add" data-backdrop="static">Add</button>
+				<button class="btn btn-xs btn-dark ml-1 _BtnDel">Delete</button>
+			</div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+
+           		<table id="blacklist" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+           			<thead class="thead-themed">
+					<tr>
+						<th class="text-center">SEQ</th>
+						<th class="text-center">전화번호</th>
+						<th class="text-center">설명</th>
+						<th class="text-center">등록일</th>
+					</tr>
+           			</thead>
+           		</table>
+		            		
+			</div>
+		</div>
+	</div>	
+
+
+	<div id="modal-add" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">블랙리스트 전화번호 추가</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="addfrm" id="addfrm" method="post">
+				<div class="modal-body">
+					<div class="form-group">
+						<label>전화번호</label>
+						<input id="add_BL_TELNO" name="add_BL_TELNO" type="text" class="form-control" required oninvalid="this.setCustomValidity('블랙리스트 전화번호를 입력하세요.')" oninput="this.setCustomValidity('')">
+					</div>
+					<div class="form-group">
+						<label>설명</label>
+						<input id="add_BL_DESC" name="add_BL_DESC" type="text" class="form-control">
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="submit" class="btn btn-dark" id="btnadd">Save</button>
+					<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+				</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+</main>
+
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	$(document).ready(function() {
+		const table = $('#dt_basic').DataTable({
+			serverSide : true,
+			ajax: {
+				url: CONTEXT_PATH+"/cmm/hist/rec/listen/list",
+				type: "POST",
+				data: function ( d ) {
+					d.listen_sdate = $("#listen_sdate").val();
+					d.listen_edate = $("#listen_edate").val();
+					d.listen_userid = $("#listen_userid").val();
+					// d.listen_usernm = $("#listen_usernm").val();
+					// d.rec_userid = $("#rec_userid").val();
+					// d.rec_usernm = $("#rec_usernm").val();
+					// d.rec_sdate = $("#rec_sdate").val();
+					// d.rec_edate = $("#rec_edate").val();
+				}
+			},
+
+			columns: [
+				{ "data": "listen_datm" },
+				{ "data": "listen_id" },
+/*				{ "data": "listen_name" },
+				{ "data": "listen_ip" },
+				{ "data": "rec_datm" },
+				{ "data": "user_id" },*/
+				{ "data": "rec_filename" },
+/*				{ "data": "rec_dt" },
+				{ "data": "rec_keycode" },
+				{ "data": "local_no" },*/
+				{ "data": "listen" },
+				{ "data": "recdt" }
+			],
+			columnDefs: [
+				{  "targets": [4], "visible": false, className: "never" },
+			],
+			iDisplayLength: 15,
+			ordering: false,
+			searching: false,
+			bPaginate: true,
+			stateSave: false,
+			drawCallback : function(oSettings) {
+				let api = this.api();
+				let data = api.rows({ page: 'current' }).data();
+
+				for (let i = 0; i < data.length; i++) {
+					if (data[i].rec_keycode != "" && data[i].local_no !="")
+					{
+						data[i].listen = '<i class="fal fa-headphones _listen" style="cursor:pointer" data-recdt="'+data[i].recdt+'" data-keycode="'+data[i].rec_keycode+'" data-localno="'+data[i].local_no+'"></i>';
+					}
+				}
+				api.rows({ page: 'current' }).invalidate();
+			}
+		});
+
+		//녹취청취
+
+		$("#dt_basic").on('click',"._listen", function (e) {
+			let rec_dt = $(e.currentTarget).data('recdt');
+			let keycode = $(e.currentTarget).data('keycode');
+			let local_no = $(e.currentTarget).data('localno');
+
+			//청취플레이어 띄운다.
+			let listenUrl = 'https://ubrec.ubcare.co.kr/app/player_reason.jsp?date='+rec_dt+'&keycode='+keycode+'&local='+local_no
+			window.open(listenUrl,"_blank", "width=560, height=440, toolbar=no, menubar=no, location=no, status=no, resizeable=no")
+
+		});
+
+		//검색Btn
+		$("._searchGo").click(function(){
+			table.ajax.reload();
+		})
+
+		$("#listen_sdate").val(getToday()); //오늘날짜 기본
+		$("#listen_edate").val(getToday()); //오늘날짜 기본
+	});
+
+
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 녹취 청취 이력
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+			
+				<!-- BORAD SEARCH -->
+				<div class="px-4 pt-4 mb-4 search_area" style="border: 1px solid rgba(24,28,33,0.06);">
+					<div class="form-row">
+						<div class="col-md-3 mb-2">
+							<label class="form-label">청취일자</label>
+							<div class="input-daterange input-group">
+								<input type="text" class="form-control datepicker" name="listen_sdate" id="listen_sdate" placeholder="청취 시작일자">
+								<div class="input-group-append input-group-prepend">
+									<span class="input-group-text fs-xl"><i class="fal fa-tilde"></i></span>
+								</div>
+								<input type="text" class="form-control datepicker" name="listen_edate" id="listen_edate" placeholder="청취 종료일자">
+							</div>	
+						</div>
+<!--						<div class="col-md-3 mb-2">
+							<label class="form-label">청취자 ID</label>
+							<input class="form-control" type="text" name="listen_userid" id="listen_userid" placeholder="청취자 ID">
+						</div>
+						<div class="col-md-3 mb-2">
+							<label class="form-label">청취자 명</label>
+							<input class="form-control" type="text" name="listen_usernm" id="listen_usernm" placeholder="청취자 명">
+						</div>-->
+
+						<div class="col-md-3 mb-4 pt-4">
+							<button class="btn btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span class="">Search</span></button>
+						</div>
+					</div>
+					
+					<!--<div class="form-row">
+						<div class="col-md-3 mb-4">
+							<label class="form-label">녹취일자</label>
+							<div class="input-daterange input-group">
+								<input type="text" class="form-control datepicker" name="rec_sdate" id="rec_sdate" placeholder="녹취 시작일자">
+								<div class="input-group-append input-group-prepend">
+									<span class="input-group-text fs-xl"><i class="fal fa-tilde"></i></span>
+								</div>
+								<input type="text" class="form-control datepicker" name="rec_edate" id="rec_edate" placeholder="녹취 종료일자">
+							</div>	
+						</div>
+						<div class="col-md-3 mb-4">
+							<label class="form-label">상담사 ID</label>
+							<input class="form-control" type="text" name="rec_userid" id="rec_userid" placeholder="상담사 ID">
+						</div>
+						<div class="col-md-3 mb-4">
+							<label class="form-label">상담사 명</label>
+							<input class="form-control" type="text" name="rec_usernm" id="rec_usernm" placeholder="상담사 명">
+						</div>
+						<div class="col-md-3 mb-4 pt-4">
+							<button class="btn btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span class="">Search</span></button>
+						</div>
+					</div>-->
+				</div>
+	
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">             
+						<tr class="text-center">
+							<th>청취 일시</th>
+							<th>청취자 ID</th>
+<!--						<th>청취자 명</th>
+                            <th>청취자 IP</th>
+                            <th>녹취 일시</th>
+                            <th>상담사 ID</th>-->
+							<th>녹취 파일명</th>
+<!--							<th></th>
+							<th></th>
+							<th></th>-->
+							<th>듣기</th>
+							<th></th>
+						</tr>
+					</thead>
+				</table>
+			</div>	
+			
+		</div>
+	</div>
+</main>
+</html>
+			
+
+

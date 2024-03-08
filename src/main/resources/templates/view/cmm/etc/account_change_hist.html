@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+    <link rel="stylesheet" th:href="@{/css/formplugins/bootstrap-timepicker/bootstrap-timepicker.css}">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+    <script th:src="@{/js/formplugins/bootstrap-timepicker/bootstrap-timepicker.min.js}"></script>
+    <script type="text/javascript">
+        let table;
+        $(document).ready(function() {
+            table = $('#dt_basic').DataTable({
+                serverSide : true,
+                ajax: {
+                    url: CONTEXT_PATH+"/cmm/hist/rec/change/list",
+                    type: "POST",
+                    data: function ( d ) {
+                        d.sdate = $("#sdate").val();
+                        d.edate = $("#edate").val();
+                        d.change_id = $("#change_id").val();
+                        d.change_name = $("#change_name").val();
+                        d.change_type = $("#change_type").val();
+                        d.user_id = $("#user_id").val();
+                        d.user_name = $("#user_name").val();
+                    }
+                },
+                columns: [
+                    { "data": "seq" },
+                    { "data": "change_datm" },
+                    { "data": "change_type" },
+                    { "data": "change_id"},
+                    { "data": "change_name"},
+                    { "data": "change_ip"},
+                    { "data": "user_id" },
+                    { "data": "user_name"},
+                    { "data": "origin_grade"},
+                    { "data": "change_grade"}
+                ],
+                iDisplayLength: 15,
+                ordering: false,
+                searching: false,
+                bPaginate: true,
+                stateSave: false
+            });
+
+        });
+
+        //조회버튼
+        $("._searchGo").click(function(){
+            table.ajax.reload();
+        })
+
+
+        $("#listen_sdate").val(getToday()); //오늘날짜 기본
+        $("#listen_edate").val(getToday()); //오늘날짜 기본
+
+    </script>
+</th:block>
+
+<th:block layout:fragment="headertitle">
+    <i class="subheader-icon fal fa-window"></i> 계정변경 이력
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+    <div class="panel">
+        <div class="panel-hdr">
+            <h2></h2>
+        </div>
+        <div class="panel-container show">
+            <div class="panel-content">
+                <!-- BORAD SEARCH -->
+                <div class="px-4 pt-4 mb-4 search_area" style="border: 1px solid rgba(24,28,33,0.06);">
+
+                    <div class="form-row">
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label">변경일자</label>
+                            <div class="input-daterange input-group">
+                                <input type="text" class="form-control datepicker" name="sdate" id="sdate" placeholder="시작일자">
+                                <div class="input-group-append input-group-prepend">
+                                    <span class="input-group-text fs-xl"><i class="fal fa-tilde"></i></span>
+                                </div>
+                                <input type="text" class="form-control datepicker" name="edate" id="edate" placeholder="종료일자">
+                            </div>
+                        </div>
+                        <div class="col-md-1 mb-2"></div>
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label">로그인ID</label>
+                            <input class="form-control" type="text" name="change_id" id="change_id" placeholder="">
+                        </div>
+                        <div class="col-md-1 mb-2"></div>
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label">로그인명</label>
+                            <input class="form-control" type="text" name="change_name" id="change_name" placeholder="">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label">구분</label>
+                            <select class="custom-select" id="change_type">
+                                <option value="0">전체</option>
+                                <option value="1">I : 사용자등록</option>
+                                <option value="2">U: 사용자수정</option>
+                                <option value="3">D: 사용자삭제</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1 mb-2"></div>
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label">상담원ID</label>
+                            <input class="form-control" type="text" name="user_id" id="user_id" placeholder="">
+                        </div>
+                        <div class="col-md-1 mb-2"></div>
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label">상담사명</label>
+                            <input class="form-control" type="text" name="user_name" id="user_name" placeholder="">
+                        </div>
+                        <div class="col-md-1 mb-4 pt-4">
+                            <button class="btn btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span class="">Search</span></button>
+                        </div>
+                    </div>
+                </div>
+
+
+            <table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+                <thead class="thead-themed">
+                <tr class="text-center">
+                    <th>순번</th>
+                    <th>변경일시</th>
+                    <th>구분</th>
+                    <th>로그인ID</th>
+                    <th>로그인명</th>
+                    <th>로그인IP</th>
+                    <th>상담원ID</th>
+                    <th>상담사명</th>
+                    <th>기존등급</th>
+                    <th>변경등급</th>
+                </tr>
+                </thead>
+            </table>
+            </div>
+        </div>
+        </div>
+    </div>
+    </div>
+</main>
+
+</html>
+

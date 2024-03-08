@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+	<link rel="stylesheet" th:href="@{/css/formplugins/bootstrap-timepicker/bootstrap-timepicker.css}">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script th:src="@{/js/formplugins/bootstrap-timepicker/bootstrap-timepicker.min.js}"></script>
+
+	<script type="text/javascript">
+		let SELECTED_ROW = "";
+
+		$(document).ready(function() {
+			//부서
+			const getDept = function() {
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH +"/cmm/ajax/dept/list",
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					$.each(data.Dept, function (i, item) {
+						$(".sel_dept").append($('<option>', { value: item.Dept_No, text: item.Dept_Nm }));
+					});
+					$(".sel_dept")[0].sumo.reload();
+				});
+
+			}
+
+			//안내음원
+			const getPrompt = function() {
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/voice/list",
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					$.each(data.data, function (i, item) {
+						//var pid=item.SC_PROMPT.replace(/^\s+|\s+$/g,"")
+						$(".sel_prompt").append($('<option>', { value: item.SC_PROMPT, text: item.SC_FILENAME }));
+					});
+					$(".sel_prompt")[0].sumo.reload();
+					$(".sel_prompt")[1].sumo.reload();
+					$(".sel_prompt")[2].sumo.reload();
+					$(".sel_prompt")[3].sumo.reload();
+					// $(".sel_prompt")[4].sumo.reload();
+					// $(".sel_prompt")[5].sumo.reload();
+				});
+			}
+
+			//공지 Grid
+			const table = $('#ntcode_dt').DataTable({
+				ajax: {
+					url: CONTEXT_PATH+"/mng/ivr/notice/list",
+					dataSrc: "Notice"
+				},
+				columns: [
+					{ "data": "NT_Code" },
+					{ "data": "NT_NAME" },
+					{ "data": "Dept_No" }, //2
+					{ "data": "Dept_Nm" },
+					{ "data": "NT_PROMPT" },
+					{ "data": "NT_PROMPT_NM" },
+					{ "data": "NT_PROMPT_END" }, //6
+					{ "data": "NT_PROMPT_END_NM" }
+				],
+				columnDefs: [
+					{
+						"targets": [0,2,3,4,6],
+						"visible": false,
+						"searchable": false
+					}
+				]
+			});
+			//Row Click
+			table.on('select', function(e, dt, type, indexes){
+				SELECTED_ROW = table.row(indexes).data();
+			}).on('deselect', function(){
+				SELECTED_ROW = "";
+			});
+
+
+			//등록창 열릴때 데이터 초기화
+			$("._BtnAdd").click(function(){
+				SELECTED_ROW = "";
+				// $("#add_Dept_No").val("")
+				// $("#add_Dept_No")[0].sumo.reload();
+				$("#add_NT_NAME").val("");
+				$("#add_NT_PROMPT").val("");
+				$("#add_NT_PROMPT")[0].sumo.reload();
+				$("#add_NT_PROMPT_END").val("");
+				$("#add_NT_PROMPT_END")[0].sumo.reload();
+			});
+
+			//등록처리
+			$("#addfrm").submit(function(e){
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+'/mng/ivr/notice/add',
+					data: {
+						Dept_No: 8 ,//$("#add_Dept_No").val(),
+						NT_NAME: $("#add_NT_NAME").val(),
+						NT_PROMPT: $("#add_NT_PROMPT").val().replace(/^\s+|\s+$/g,""),
+						NT_PROMPT_END: $("#add_NT_PROMPT_END").val().replace(/^\s+|\s+$/g,"")
+					},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					$('#ntcode_dt').DataTable().ajax.reload();
+				});
+
+				e.preventDefault();
+				$('#modal-add').modal('hide');
+			});
+			//Edit Btn Click
+			$("._BtnEdit").click(function(){
+				if(SELECTED_ROW == "")
+				{
+					alert("공지를 선택하세요.");
+					return false;
+				}
+
+				$("#edt_NT_Code").val(SELECTED_ROW.NT_Code);
+				$("#edt_NT_NAME").val(SELECTED_ROW.NT_NAME);
+				$("#edt_NT_PROMPT").val(SELECTED_ROW.NT_PROMPT);
+				$("#edt_NT_PROMPT")[0].sumo.reload();
+				$("#edt_NT_PROMPT_END").val(SELECTED_ROW.NT_PROMPT_END);
+				$("#edt_NT_PROMPT_END")[0].sumo.reload();
+
+				$('#modal-edt').modal('show');
+			});
+			//수정 처리
+			$("#edtfrm").submit(function(e){
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/notice/edit",
+					data: {
+						NT_Code: $("#edt_NT_Code").val(),
+						Dept_No: 8 ,//$("#edt_Dept_No").val(),
+						NT_NAME: $("#edt_NT_NAME").val(),
+						NT_PROMPT: $("#edt_NT_PROMPT").val().replace(/^\s+|\s+$/g,""),
+						NT_PROMPT_END: $("#edt_NT_PROMPT_END").val().replace(/^\s+|\s+$/g,"")
+					},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					$('#ntcode_dt').DataTable().ajax.reload();
+				});
+
+				e.preventDefault();
+				SELECTED_ROW = "";
+				$('#modal-edt').modal('hide');
+			});
+			//삭제
+			$("._BtnDel").click(function(){
+				if(SELECTED_ROW == "")
+				{
+					alert("삭제할 공지를 선택하세요.");
+					return false;
+				}
+
+				if(confirm("["+SELECTED_ROW.NT_NAME +"] 공지를 삭제 하시겠습니까?")) {
+					$.ajax({
+						method: "POST",
+						url: CONTEXT_PATH+"/mng/ivr/notice/del",
+						data: {NT_Code: SELECTED_ROW.NT_Code},
+						error: function(jqXHR) { jqXHR_Process(jqXHR) }
+					}).done(function (data) {
+						$('#ntcode_dt').DataTable().ajax.reload();
+					});
+
+					SELECTED_ROW = "";
+				}
+				else {
+					return false;
+				}
+			});
+			//getDept();
+			getPrompt();
+
+			/*
+            $('.sel_dept').SumoSelect({
+                placeholder: '부서',
+                search : true,
+                forceCustomRendering: true
+            });
+            */
+
+			$('.sel_prompt').SumoSelect({
+				placeholder: '안내음원',
+				search : true,
+				forceCustomRendering: true
+			});
+		});
+	</script>
+
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 공지안내 관리
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			<div class="panel-toolbar">
+				<button class="btn btn-xs btn-dark _BtnAdd" data-toggle="modal" data-target="#modal-add" data-backdrop="static">Add</button>
+				<button class="btn btn-xs btn-dark ml-1 _BtnEdit">Edit</button>
+				<button class="btn btn-xs btn-dark ml-1 _BtnDel">Delete</button>
+			</div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+
+				<table id="ntcode_dt" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+					<tr>
+						<th colspan="4" class="text-center border-bottom-0">기본정보</th>
+						<th colspan="4" class="text-center border-bottom-0">음원정보</th>
+					</tr>
+					<tr>
+						<th class="text-center border-bottom-0">일련번호</th>
+						<th class="text-center border-bottom-0">이름</th>
+						<th class="text-center border-bottom-0">부서 번호</th>
+						<th class="text-center border-bottom-0">부서</th>
+						<th class="text-center border-bottom-0">시작안내ID</th>
+						<th class="text-center border-bottom-0">시작안내</th>
+						<th class="text-center border-bottom-0">종료안내ID</th>
+						<th class="text-center border-bottom-0">종료안내</th>
+					</tr>
+					</thead>
+				</table>
+
+			</div>
+		</div>
+	</div>
+
+
+
+	<div id="modal-add" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">공지 추가</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="addfrm" id="addfrm" method="post">
+					<div class="modal-body">
+						<div class="form-group">
+							<label>공지 명</label>
+							<input id="add_NT_NAME" name="NT_NAME" type="text" class="form-control" required oninvalid="this.setCustomValidity('공지 명을 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>공지 시작 음원 선택</label>
+							<select class="form-control sel_prompt" id="add_NT_PROMPT">
+								<option value="">음원 사용안함</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>공지 종료 음원 선택</label>
+							<select class="form-control sel_prompt" id="add_NT_PROMPT_END">
+								<option value="">음원 사용안함</option>
+							</select>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-dark" id="btnadd">Save</button>
+						<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div id="modal-edt" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">공지 수정</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+
+				<form name="edtfrm" id="edtfrm" method="post">
+					<input type="hidden" name="NT_Code" id="edt_NT_Code" />
+					<div class="modal-body">
+
+						<div class="form-group">
+							<label>공지 명</label>
+							<input id="edt_NT_NAME" name="NT_NAME" type="text" class="form-control" required oninvalid="this.setCustomValidity('공지 명을 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>공지 시작 음원 선택</label>
+							<select class="form-control sel_prompt" id="edt_NT_PROMPT">
+								<option value="">음원 사용안함</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>공지 종료 음원 선택</label>
+							<select class="form-control sel_prompt" id="edt_NT_PROMPT_END">
+								<option value="">음원 사용안함</option>
+							</select>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-dark" id="btnedt">Save</button>
+						<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+
+</main>
+
+</html>

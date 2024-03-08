@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	$(document).ready(function() {
+		const table = $('#dt_basic').DataTable({
+			processing: true,
+			data:[],
+			columns: [
+				{ "data": "DT" },
+				{ "data": "CB_DNIS" },
+				{ "data": "DNIS_NAME" },
+				//{ "data": "SERVICE_NAME" },
+				{ "data": "REQCB_CNT" },
+				{ "data": "RSTCB_CNT" },
+				{ "data": "RSTRATE" }
+			],
+			iDisplayLength: 20,
+			ordering: false,
+			bPaginate: false,
+			searching: false,
+			select: false
+		});
+
+		//Excel Btn
+		const buttons = new $.fn.dataTable.Buttons(table, {
+			 buttons: [
+			 {
+				  extend: 'excelHtml5',
+				  text: '<i class="fal fa-file-excel-o"></i> Excel',
+				  title: '콜백통계_'+getSimpleToday(),
+				  className: 'btn btn-xs btn-dark',
+				  exportOptions: {
+					modifier: {
+					  page: 'all'
+					},
+					columns: ':visible'
+				  },
+				  customize: function ( xlsx ){
+					  let sheet = xlsx.xl.worksheets['sheet1.xml'];
+					  $('row c', sheet).attr( 's', '25' ); //boder
+				  }
+				}
+			]
+		}).container().appendTo($('#buttons'));
+
+
+
+		//대표전화 가져오기
+		const getDestination = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/cmm/ajax/grantcalled",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$.each(data.Code, function (i, item) {
+					$("#origdestination").append($('<option>', { value: item.CalledNumber, text: item.Desc }));
+				});
+				$('#origdestination').multiselect({
+					includeFilterClearBtn: false,
+					enableFiltering: true,
+					includeSelectAllOption: true,
+					selectAllText: '전체선택',
+					nonSelectedText: '대표번호',
+					allSelectedText: '전체 선택됨',
+					buttonWidth: '100%',
+					maxHeight: 400,
+					buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+				});
+			});
+		}
+
+		//검색Btn
+		$("._searchGo").click(function(){
+
+			let origdestination = $("#origdestination").val().toString().replace(/,/gi, "|"); // , => | 로 replace처리
+			let Srch_Type = $("._searchType:checked").val();
+			let sDate = $("#sdate").val();
+			let eDate = $("#edate").val();
+
+			$(".dataTables_processing").css("display","block");
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/stt/ivr/callback/stat",
+				data: {
+						destinations: origdestination
+						, Srch_Type: Srch_Type
+						, Start_Dt: sDate
+						, End_Dt: eDate
+				},error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				table.clear().draw();
+				table.rows.add(data.CBStat).draw();
+				$(".dataTables_processing").css("display","none");
+			});
+		})
+
+		getDestination();
+		$("#sdate").val(getToday()); //오늘날짜 기본
+		$("#edate").val(getToday()); //오늘날짜 기본
+	});
+	</script>
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 콜백 통계
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			 <div id="buttons" class="btn-group"></div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+
+				<div class="form-row">
+					<div class="col-md-3">
+						<label class="form-label d-none">부서</label>
+						<select multiple="multiple" id="origdestination"></select>
+					</div>
+					<div class="col-md">
+						<label class="form-label d-none">날짜</label>
+						<div class="input-daterange input-group">
+							<input type="text" class="form-control datepicker" name="sdate" id="sdate" placeholder="시작일자">
+							<div class="input-group-append input-group-prepend">
+								<span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>
+							</div>
+							<input type="text" class="form-control datepicker" name="edate" id="edate" placeholder="종료일자">
+						</div>
+					</div>
+					<div class="col-sm-2">
+						<label class="form-label d-none">&nbsp;</label>
+						<div class="frame-wrap pt-2">
+							<div class="custom-control custom-radio custom-control-inline">
+								<input type="radio" class="_searchType custom-control-input" id="rdo_month" name="searchType" value="0" checked="">
+								<label class="custom-control-label" for="rdo_month">월별</label>
+							</div>
+							<div class="custom-control custom-radio custom-control-inline">
+								<input type="radio" class="_searchType custom-control-input" id="rdo_day" name="searchType" value="1">
+								<label class="custom-control-label" for="rdo_day">일별</label>
+							</div>
+							<div class="custom-control custom-radio custom-control-inline hide">
+								<input type="radio" class="_searchType custom-control-input" id="rdo_hour" name="searchType" value="2">
+								<label class="custom-control-label" for="rdo_hour">시간</label>
+							</div>
+						</div>
+					</div>
+					<div class="col-md">
+						<label class="form-label d-none ">&nbsp;</label>
+						<button class="btn btn-sm btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span class="">Search</span></button>
+					</div>
+				</div>
+
+			
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">	
+						<tr>
+							<th rowspan="2" class="text-center">날짜</th>
+							<th colspan="2" class="text-center border-bottom-0">DNIS</th>
+<!--							<th rowspan="2" class="text-center">서비스</th>-->
+							<th colspan="3" class="text-center border-bottom-0">콜백</th>
+						</tr>
+						<tr>
+							<th class="text-center">번호</th>
+							<th class="text-center">이름</th>
+							<th class="text-center">접수</th>
+							<th class="text-center">처리</th>
+							<th class="text-center">처리율%</th>
+						</tr>
+					</thead>
+				</table>
+				
+			</div>
+		</div>
+	</div>
+	
+</main>
+</html>>

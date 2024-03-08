@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+		let SELECTED_ROW = "";
+		let _DNIS=null;
+
+		$(document).ready(function() {
+			//부서
+			const getDnis = function() {
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/code/called/list", //<c:url value='/api/code/called.do'/>",
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					_DNIS=data.Code;
+					make_DNIS(data.Code);
+					//{ "data": "Seq" },{ "data": "Called_Key" },{ "data": "CalledNumber" },{ "data": "Desc" },{ "data": "Use_Stat" },{ "data": "Use_Stat_Nm" }
+					/*
+					   $.each(data.Code, function (i, item) {
+						   $(".sel_dnis").append($('<option>', { value: item.CalledNumber, text: item.CalledNumber, dn_desc:item.Desc }));
+					 });
+					   $(".sel_dnis")[0].sumo.reload();
+					*/
+				});
+
+			}
+
+			const make_DNIS = function(data) {
+				$(".sel_dnis option").remove();
+
+				$.each(data, function (i, item) {
+					$(".sel_dnis").append($('<option>', { value: item.CalledNumber, text: item.CalledNumber, dn_desc:item.Desc }));
+				});
+				$(".sel_dnis")[0].sumo.reload();
+			}
+
+			//안내음원
+			const getScenario = function() {
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/scenario/list",
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					//{ "data": "SC_CODE" },{ "data": "SC_NAME" }
+					$.each(data.Scenario, function (i, item) {
+						//var pid=item.SC_PROMPT.replace(/^\s+|\s+$/g,"")
+						$(".sel_scenario").append($('<option>', { value: item.SC_CODE, text: item.SC_NAME }));
+					});
+					$(".sel_scenario")[0].sumo.reload();
+					$(".sel_scenario")[1].sumo.reload();
+				});
+			}
+
+			//dnis Grid
+			const table = $('#dncode_dt').DataTable({
+				ajax: {
+					url: CONTEXT_PATH+"/mng/ivr/dnis/list",
+					dataSrc: "DNIS"
+				},
+				columns: [
+					{ "data": "DNIS_CODE" },
+					{ "data": "DNIS_NAME" },
+					{ "data": "DNIS_NUMBER" },
+					{ "data": "DNIS_SERVICE" },
+					{ "data": "DNIS_SC_CODE" },
+					{ "data": "DNIS_SC_CODE_NM" }
+				],
+				columnDefs: [
+					{
+						"targets": [0,4],
+						"visible": false,
+						"searchable": false
+					}
+				],
+				searching: true,
+				ordering: false,
+				scrollY: "500px",
+				scrollCollapse: true
+			});
+			table.on('select', function(e, dt, type, indexes){
+				SELECTED_ROW = table.row(indexes).data();
+			}).on('deselect', function(){
+				SELECTED_ROW = "";
+			});
+
+
+			//등록창 열릴때 데이터 초기화
+			$("._BtnAdd").click(function(){
+
+				//등록가능한 근무시간만 노출한다.
+				make_DNIS(_DNIS);
+				$.each(table.rows().data(), function (i, item) {
+					$.each($("#add_DNIS_NUMBER option"), function (j, _dnis) {
+						if (item.DNIS_NUMBER == _dnis.value)
+						{
+							$(this).attr("disabled","disabled")
+						}
+					});
+				});
+
+
+				SELECTED_ROW = "";
+				$("#add_DNIS_NUMBER").val("")
+				$("#add_DNIS_NUMBER")[0].sumo.reload();
+				$("#add_DNIS_NAME").val("");
+				$("#add_DNIS_SERVICE").val("");
+				$("#add_DNIS_SC_CODE").val("");
+				$("#add_DNIS_SC_CODE")[0].sumo.reload();
+			});
+
+			//등록처리
+			$("#addfrm").submit(function(e){
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/dnis/add",
+					data: {
+						DNIS_NAME: $("#add_DNIS_NAME").val(),
+						DNIS_NUMBER: $("#add_DNIS_NUMBER").val(),
+						DNIS_SERVICE: $("#add_DNIS_SERVICE").val(),
+						DNIS_SC_CODE: $("#add_DNIS_SC_CODE").val()
+					},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					$('#dncode_dt').DataTable().ajax.reload();
+				});
+
+				e.preventDefault();
+				$('#modal-add').modal('hide');
+			});
+
+			//Edit Btn Click
+			$("._BtnEdit").click(function(){
+				if(SELECTED_ROW === "")
+				{
+					alert("DNIS를 선택하세요.");
+					return false;
+				}
+
+				$("#edt_DNIS_NUMBER").val(SELECTED_ROW.DNIS_NUMBER);
+				$("#edt_DNIS_NAME").val(SELECTED_ROW.DNIS_NAME);
+				$("#edt_DNIS_SERVICE").val(SELECTED_ROW.DNIS_SERVICE);
+				$("#edt_DNIS_SC_CODE").val(SELECTED_ROW.DNIS_SC_CODE);
+				$("#edt_DNIS_SC_CODE")[0].sumo.reload();
+
+				$('#modal-edt').modal('show');
+			});
+			//수정 처리
+			$("#edtfrm").submit(function(e){
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/dnis/edit",
+					data: {
+						DNIS_CODE: SELECTED_ROW.DNIS_CODE,
+						DNIS_NAME: $("#edt_DNIS_NAME").val(),
+						DNIS_NUMBER:$("#edt_DNIS_NUMBER").val(),
+						DNIS_SERVICE: $("#edt_DNIS_SERVICE").val(),
+						DNIS_SC_CODE: $("#edt_DNIS_SC_CODE").val()
+					},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					$('#dncode_dt').DataTable().ajax.reload();
+				});
+
+				e.preventDefault();
+				SELECTED_ROW = "";
+				$('#modal-edt').modal('hide');
+			});
+			//삭제
+			$("._BtnDel").click(function(){
+				if(SELECTED_ROW === "")
+				{
+					alert("삭제할  DNIS를 선택하세요.");
+					return false;
+				}
+
+				if(confirm("["+SELECTED_ROW.DNIS_NAME +"] DNIS를 삭제 하시겠습니까?"))
+				{
+					$.ajax({
+						method: "POST",
+						url: CONTEXT_PATH+"/mng/ivr/dnis/del",
+						data: {DNIS_CODE: SELECTED_ROW.DNIS_CODE},
+						error: function(jqXHR) { jqXHR_Process(jqXHR) }
+					}).done(function (data) {
+						$('#dncode_dt').DataTable().ajax.reload();
+					});
+
+					SELECTED_ROW = "";
+				}
+				else
+				{
+					return false;
+				}
+			});
+
+			$('.sel_dnis').on('change', function (e) {
+				let optionSelected = $("option:selected", this);
+				$("#add_DNIS_NAME").val(optionSelected.attr('dn_desc'));
+			});
+
+			getDnis();
+			getScenario();
+
+			$('.sel_dnis').SumoSelect({
+				placeholder: 'DNIS',
+				search : true,
+				forceCustomRendering: true
+			});
+
+			$('.sel_scenario').SumoSelect({
+				placeholder: '서비스 시나리오',
+				search : true,
+				forceCustomRendering: true
+			});
+		});
+	</script>
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 대표번호별 시나리오
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			<div class="panel-toolbar">
+				<button class="btn btn-xs btn-dark _BtnAdd" data-toggle="modal" data-target="#modal-add" data-backdrop="static">Add</button>
+				<button class="btn btn-xs btn-dark ml-1 _BtnEdit" data-backdrop="static">Edit</button>
+				<button class="btn btn-xs btn-dark ml-1 _BtnDel">Delete</button>
+			</div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+				<table id="dncode_dt" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+					<tr>
+						<th colspan="3" class="text-center border-bottom-0">기본정보</th>
+						<th colspan="3" class="text-center border-bottom-0">서비스정보</th>
+					</tr>
+					<tr>
+						<th class="hide text-center">일련번호</th>
+						<th class="text-center">설명</th>
+						<th class="text-center">DID</th>
+						<th class="text-center">전화번호</th>
+						<th class="hide text-center">시나리오 번호</th>
+						<th class="text-center">시나리오 이름</th>
+					</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+	</div>
+
+	<div id="modal-add" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">DID 시나리오 추가</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="addfrm" id="addfrm" method="post">
+					<div class="modal-body">
+						<div class="form-group">
+							<label>DID</label>
+							<select class="form-control sel_dnis" id="add_DNIS_NUMBER" required>
+								<option value="">전화번호 선택</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>설명</label>
+							<input id="add_DNIS_NAME" name="DNIS_NAME" type="text" class="form-control" required oninvalid="this.setCustomValidity('설명을 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>서비스 대표번호</label>
+							<input id="add_DNIS_SERVICE" name="DNIS_SERVICE" type="text" class="form-control" required oninvalid="this.setCustomValidity('서비스될 대표번호를 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>서비스 시나리오</label>
+							<select class="form-control sel_scenario" id="add_DNIS_SC_CODE" required>
+								<option value="">서비스 시나리오</option>
+							</select>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-dark" id="btnadd">Save</button>
+						<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div id="modal-edt" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header cursor-move">
+					<h4 class="modal-title">DID 시나리오 수정</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+
+				<form name="edtfrm" id="edtfrm" method="post">
+					<div class="modal-body">
+						<div class="form-group">
+							<label>DID</label>
+							<input id="edt_DNIS_NUMBER" name="DNIS_NUMBER" type="text" class="form-control" readonly="readonly">
+						</div>
+						<div class="form-group">
+							<label>설명</label>
+							<input id="edt_DNIS_NAME" name="DNIS_NAME" type="text" class="form-control" required oninvalid="this.setCustomValidity('설명을 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>서비스 대표번호</label>
+							<input id="edt_DNIS_SERVICE" name="DNIS_SERVICE" type="text" class="form-control" required oninvalid="this.setCustomValidity('서비스될 대표번호를 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>서비스 시나리오</label>
+							<select class="form-control sel_scenario" id="edt_DNIS_SC_CODE" required>
+								<option value="">서비스 시나리오</option>
+							</select>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-dark" id="btnedt">Save</button>
+						<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+</main>
+</html>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="hist">
+
+	<!-- 이력저장 -->
+	<!-- <resultMap id="hist1" type="hashmap"></resultMap>
+	<resultMap id="hist2" type="hashmap"></resultMap>
+	<resultMap id="hist3" type="hashmap"></resultMap>
+    <select id="getHistory" parameterType="hashmap" resultType="hashmap" resultMap="hist1, hist2, hist3">
+    	CALL USP_Hist_History_S(#{start}, #{length}, #{SearchText})
+	</select>  -->
+	
+    <select id="getHistTotCnt" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Hist_History_TotCnt_S(NULLIF(#{start},''), NULLIF(#{length},''), #{SearchText})
+	</select>
+    <select id="getHistSrchCnt" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Hist_History_SrchCnt_S(NULLIF(#{start},''), NULLIF(#{length},''), #{SearchText})
+	</select>
+    <select id="getHistData" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Hist_History_Data_S(NULLIF(#{start},''), NULLIF(#{length},''), #{SearchText})
+	</select>
+	
+	
+	<insert id="addHist" parameterType="hashmap">
+    	CALL USP_Hist_History_I(#{Procedure_Nm}, #{Emp_No}, #{Parameter})
+	</insert> 
+
+	
+</mapper>

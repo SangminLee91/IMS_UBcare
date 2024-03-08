@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+	<link rel="stylesheet" th:href="@{/css/formplugins/bootstrap-timepicker/bootstrap-timepicker.css}">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script th:src="@{/js/formplugins/bootstrap-timepicker/bootstrap-timepicker.min.js}"></script>
+
+	<script type="text/javascript">
+	$(document).ready(function() {
+		//Queue
+		const getQueue = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/cmm/ajax/grantque",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$(".sel_queue option").remove();
+				$.each(data.Code, function (i, item) {
+					$(".sel_queue").append($('<option>', { value: item.Que_Code, text: item.Que_Nm }));
+				});
+
+				$('.sel_queue').multiselect({
+					includeFilterClearBtn: false,
+					enableFiltering: true,
+					includeSelectAllOption: true,
+					selectAllText: '전체선택',
+					nonSelectedText: '큐번호/이름',
+					allSelectedText: '전체 선택됨',
+					buttonWidth: '100%',
+					maxHeight: 400,
+					buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+				});
+			});
+		}
+
+		const table = $('#dt_basic').DataTable({
+			data:[],
+			columns: [
+				{ "data": "RecordTimestamp" },
+				{ "data": "entityNm" },
+				{ "data": "numreceived" },
+				{ "data": "numabandoned" },
+				{ "data": "Ratio_Abandon" },
+				{ "data": "AbandonWaitAvg" },
+				{ "data": "maxabanwaittime" },
+				{ "data": "abandoned1" },
+				{ "data": "abandoned2" },
+				{ "data": "abandoned3" },
+				{ "data": "abandoned4" },
+				{ "data": "abandoned5" }
+			],
+			searching: false,
+			iDisplayLength: 20,
+			bPaginate: true,
+			drawCallback : function(oSettings) {
+				let api = this.api();
+				let data = api.rows({ page: 'current' }).data();
+				for (let i = 0; i < data.length; i++) {
+					data[i].Ratio_Abandon = data[i].Ratio_Abandon.toString().replace(/%/gi, "") +'%';
+				}
+				api.rows({ page: 'current' }).invalidate();
+			}
+		});
+
+		//Excel Btn
+		const buttons = new $.fn.dataTable.Buttons(table, {
+			 buttons: [
+			 {
+				  extend: 'excelHtml5',
+				  text: '<i class="fal fa-file-excel-o"></i> Excel',
+				  title: '큐 포기호 프로파일_'+getSimpleToday(),
+				  className: 'btn-xs btn-dark',
+				  exportOptions: {
+					modifier: {
+					  page: 'all'
+					},
+					columns: ':visible'
+				  },
+				  customize: function ( xlsx ){
+					  let sheet = xlsx.xl.worksheets['sheet1.xml'];
+					  $('row c', sheet).attr( 's', '25' ); //boder
+				  }
+				}
+			]
+		}).container().appendTo($('#buttons'));
+
+		$('._time').timepicker({
+			defaultTime: "",
+			showMeridian: false, //24시간
+			icons: {
+				up: "fal fa-caret-up",
+				down: "fal fa-caret-down"
+			} //24시간
+		});
+
+		//검색Btn
+		$("._searchGo").click(function(){
+
+			let Queue_Key = $(".sel_queue").val().toString().replace(/,/gi, "|");
+			let Search_Type = $("._searchType:checked").val()
+			let sDate = $("#sdate").val();
+			let eDate = $("#edate").val();
+			let sTime = $("#stime").val();
+			let eTime = $("#etime").val();
+
+			$(".dataTables_processing").css("display","block");
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/stt/cti/que/stat",
+				data: {
+						Queue_Key: Queue_Key
+						, Search_Type: Search_Type
+						, sDate: sDate
+						, eDate: eDate
+						, sTime: sTime
+						, eTime: eTime
+				},error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				table.clear().draw();
+				table.rows.add(data.Stt).draw();
+				$(".dataTables_processing").css("display","none");
+			});
+		})
+
+		getQueue();
+
+		$("#sdate").val(getToday()); //오늘날짜 기본
+		$("#edate").val(getToday()); //오늘날짜 기본
+
+	});
+	</script>
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 큐 포기호 프로파일
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			 <div id="buttons" class="btn-group"></div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+				
+
+				<div class="form-row">
+					<div class="col-sm-3 mb-2">
+						<label class="form-label d-none">큐</label>
+						<select multiple="multiple" id="Queue_Key" name="Queue_Key" class="sel_queue hide"></select>
+					</div>
+					<div class="col-md mb-2">
+						<label class="form-label d-none">&nbsp;</label>
+							<div class="frame-wrap pt-2">
+								<div class="custom-control custom-radio custom-control-inline">
+									<input type="radio" class="_searchType custom-control-input" id="rdo_month" name="searchType" value="4">
+									<label class="custom-control-label" for="rdo_month">월별</label>
+								</div>
+								<div class="custom-control custom-radio custom-control-inline">
+									<input type="radio" class="_searchType custom-control-input" id="rdo_day" name="searchType" value="2" checked="">
+									<label class="custom-control-label" for="rdo_day">일별</label>
+								</div>
+								<div class="custom-control custom-radio custom-control-inline">
+									<input type="radio" class="_searchType custom-control-input" id="rdo_hour" name="searchType" value="1">
+									<label class="custom-control-label" for="rdo_hour">시간별</label>
+								</div>
+								<div class="custom-control custom-radio custom-control-inline">
+									<input type="radio" class="_searchType custom-control-input" id="rdo_time" name="searchType" value="0">
+									<label class="custom-control-label" for="rdo_time">15분별</label>
+								</div>
+							</div>
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="col-md">
+						<label class="form-label d-none">날짜</label>
+						<div class="input-daterange input-group">
+							<input type="text" class="form-control datepicker" name="sdate" id="sdate" placeholder="시작일자">
+							<div class="input-group-append input-group-prepend">
+								<span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>
+							</div>
+							<input type="text" class="form-control datepicker" name="edate" id="edate" placeholder="종료일자">
+						</div>
+					</div>
+					<div class="col-md">
+						<label class="form-label d-none">시간</label>
+						<div class="input-daterange input-group">
+							<input class="_time form-control" type="text" name="stime" id="stime" placeholder="시작 시간"  value="09:00">
+							<div class="input-group-append input-group-prepend">
+								<span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>
+							</div>
+							<input class="_time form-control" type="text" name="etime" id="etime" placeholder="종료 시간" value="19:00">
+						</div>
+					</div>
+					<div class="col-md">
+						<label class="form-label d-none ">&nbsp;</label>
+						<button class="btn btn-sm btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span>Search</span></button>
+					</div>
+				</div>
+		
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+				<thead class="thead-themed">
+					<tr>
+						<th rowspan="2" class="text-center">날짜</th>
+						<th rowspan="2" class="text-center">큐이름</th>
+						<th rowspan="2" class="text-center">인입</th>
+						<th rowspan="2" class="text-center">포기</th>
+						<th rowspan="2" class="text-center">포기율%</th>
+						<th colspan="2" class="text-center border-bottom-0">대기시간 </th>
+						<th colspan="5" class="text-center border-bottom-0">포기 콜수</th>
+					</tr>
+					<tr>
+						<th class="text-center">평균</th>
+						<th class="text-center">최장</th>
+						<th class="text-center">0~10초</th>
+						<th class="text-center">11~20초</th>
+						<th class="text-center">21~30초</th>
+						<th class="text-center">31~40초</th>
+						<th class="text-center">41~</th>
+					</tr>
+				</thead>
+				</table>
+		
+			</div>
+		</div>
+	</div>
+	
+</main>				
+</html>

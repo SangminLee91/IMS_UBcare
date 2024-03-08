@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="sttUB">
+	<!-- 총괄현황 대리점포함 -->
+    <select id="getAll" parameterType="hashmap" resultType="hashmap">
+    	CALL ims_ifx.IFX_UB_Total_Stats(#{Search_Type}, #{Queue_Key}, #{sDate}, #{eDate}, #{sTime}, #{eTime})
+	</select>
+
+	<!-- 총괄현황 본사만 -->
+	<select id="getAllHead" parameterType="hashmap" resultType="hashmap">
+		CALL ims_ifx.IFX_UB_Total_Head_Stats(#{Search_Type}, #{Queue_Key}, #{sDate}, #{eDate}, #{sTime}, #{eTime})
+	</select>
+
+	<!-- 시간대별 접촉률 - 대리점 -->
+	<select id="getTime" parameterType="hashmap" resultType="hashmap">
+		CALL ims_ifx.IFX_UB_Time_Stats(#{Search_Type}, #{Queue_Key}, #{sDate}, #{eDate}, #{sTime}, #{eTime})
+	</select>
+
+	<!-- 시간대별 접촉률 - 상담원 -->
+	<select id="getTimeAgent" parameterType="hashmap" resultType="hashmap">
+		CALL ims_ifx.IFX_UB_Time_Agent_Stats(#{Search_Type}, #{Agent_Key}, #{Dept_No}, #{sDate}, #{eDate}, #{sTime}, #{eTime})
+	</select>
+
+	<!-- 상담원 실적 현황 -->
+	<select id="getUBAgentResult" parameterType="hashmap" resultType="hashmap">
+		CALL ims_ifx.IFX_UB_Agent_Result_Stat(#{Search_Type}, #{Agent_Key}, #{Dept_No}, #{sDate}, #{eDate}, #{sTime}, #{eTime})
+	</select>
+
+	<!-- 큐별 재통화분석 -->
+	<select id="getUBQueRecall" parameterType="hashmap" resultType="hashmap">
+		CALL ims_ifx.IFX_UB_Queue_ReCall_Stats(#{Search_Type}, #{Queue_Key}, #{sDate}, #{eDate}, #{sTime}, #{eTime})
+	</select>
+
+	<!-- 큐별 재통화 리스트 -->
+	<select id="getUBQueRecallList" parameterType="hashmap" resultType="hashmap">
+		CALL ims_ifx.IFX_UB_Queue_ReCall_List_Stats(#{Queue_Key}, #{sDate}, #{eDate})
+	</select>
+
+	<!-- IVR 통계 -->
+	<select id="getUBIvrList" parameterType="hashmap" resultType="hashmap">
+		CALL ims_ifx.IFX_UB_Ivr_Stats(#{origdestination}, #{sDate}, #{eDate})
+	</select>
+
+	<!-- 통화시간 분석 보고서 -->
+	<select id="getUBCallTimeList" parameterType="hashmap" resultType="hashmap">
+		CALL ims_ifx.IFX_UB_Calltime_Stats(#{Search_Type}, #{Queue_Key}, #{sDate}, #{eDate}, #{sTime}, #{eTime})
+	</select>
+
+
+</mapper>

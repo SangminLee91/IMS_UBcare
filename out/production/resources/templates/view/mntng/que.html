@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	function reloadData(){
+		$('#dt_basic').DataTable().ajax.reload();
+	}
+
+	$(document).ready(function() {
+		const table = $('#dt_basic').DataTable({
+			ajax: {
+				url: CONTEXT_PATH+"/mntng/que/status",
+				dataSrc: "CUQueue"
+			},
+			columns: [
+				{ "data": "QueueName" },
+				// { "data": "QueueKey" },
+				{ "data": "Received" },
+				{ "data": "Answered" },
+				{ "data": "Abandoned" },
+				{ "data": "Redirected" },
+				{ "data": "AnswerRate" },
+				{ "data": "AbandonedRate" },
+				{ "data": "AverageWaitTime" },
+				{ "data": "MaximumWaitTime" }
+			],
+			columnDefs: [
+				{orderable: false, targets :[0]}
+			],
+			searching: false,
+			ordering: true,
+			select: false
+
+		});
+
+		//Excel Btn
+/*		const buttons = new $.fn.dataTable.Buttons(table, {
+			 buttons: [
+			 {
+				  extend: 'excelHtml5',
+				  text: '<i class="fa  fa-file-excel-o"></i> Excel',
+				  className: 'btn-outline-success btn-sm mr-1',
+				  title : '큐별 모니터링',
+				  exportOptions: {
+					modifier: {
+					  page: 'all'
+					}
+				  },
+				  customize: function ( xlsx ){
+					  let sheet = xlsx.xl.worksheets['sheet1.xml'];
+					  $('row c', sheet).attr( 's', '25' ); //boder
+				  }
+				}
+			]
+		}).container().appendTo($('#buttons'));*/
+
+		setInterval("reloadData()", 30000);
+	});
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 큐별 모니터링
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			<div id="buttons" class="btn-group"></div>	
+		</div>
+		
+		<div class="panel-container show">
+			<div class="panel-content">
+			
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+						<tr>
+							<th rowspan="2" class="border-bottom-0 text-center">큐 정보</th>
+							<th colspan="4" class="border-bottom-0 text-center">콜 수</th>
+							<th colspan="2" class="border-bottom-0 text-center">비율</th>
+							<th colspan="2" class="border-bottom-0 text-center">대기시간</th>
+						</tr>
+						<tr>
+<!--							<th>이름</th>-->
+<!--							<th>코드</th>-->
+							<th>인입</th>
+							<th>응대</th>
+							<th>포기</th>
+							<th>콜백</th>
+							<th>응대</th>
+							<th>포기</th>
+							<th>평균</th>
+							<th>최장</th>
+						</tr>
+					</thead>
+				</table>
+				
+			</div>
+		</div>
+	</div>	
+
+</main>
+		
+</html>
+

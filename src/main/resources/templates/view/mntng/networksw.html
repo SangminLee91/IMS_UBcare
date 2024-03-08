@@ -1,0 +1,456 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ include file="/WEB-INF/include/common_top.jsp" %>
+<script src="<c:url value='/js/plugin/flot/jquery.flot.cust.min.js'/>"></script>
+<script src="<c:url value='/js/plugin/flot/jquery.flot.resize.min.js'/>"></script>
+<script src="<c:url value='/js/plugin/flot/jquery.flot.time.min.js'/>"></script>
+<script src="<c:url value='/js/plugin/flot/jquery.flot.tooltip.min.js'/>"></script>
+
+<script type="text/javascript">
+
+var _SVR_SEQ_ = -1;
+var Cpu_DB_Data = [];//, $UpdatingChartColors = $("#cpu-chart").css('color');
+var Mem_DB_Data = [];
+var TopCnt = 100;
+
+
+$(document).ready(function() {
+	var updateInterval = 15000;
+	
+	var SwitchIP = function() {
+        $.ajax({
+            method: "POST",
+            url: "<c:url value='/mntng/getSwitch.do'/>", 
+            async: false, 
+			beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+        }).done(function (data) {
+        	
+        	if (_SVR_SEQ_ == -1) {
+	    		$.each(data.IP, function (i, item) {
+	    			if(i == 0) _SVR_SEQ_ = item.Svr_Seq;
+	    		});
+        	}
+        	
+			Make_SwitchInfo(data.IP);
+			getPort(_SVR_SEQ_);
+			getCpuData(_SVR_SEQ_);
+			
+        });
+	}
+
+	var getPort = function(svr) {
+        $.ajax({
+            method: "POST",
+            url: "<c:url value='/mntng/getSwitchPort.do'/>", 
+            data: {Svr_Seq: svr},
+			beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+        }).done(function (data) {
+        	//PortDataBind(data.IP);
+        	$("._port_1").empty();
+        	$("._port_2").empty();
+        	
+        	Make_Port(data.Port);
+        });
+	}
+	
+	
+	$(this).css("background-color","#f7f7f7"); 
+	
+	
+	var Make_SwitchInfo = function(data) {
+		var html = '';
+		var sel_bg = '';
+		var pwr_rate = 0;
+		
+		$("._svrLink").css("background-color","#ffffff");
+		
+		$.each(data, function (i, item) {
+			sel_bg = "";
+			if (_SVR_SEQ_ === item.Svr_Seq) {
+				sel_bg = ";background-color:#f7f7f7";
+			}
+			
+			pwr_rate = 0;
+			pwr_rate = (item.Pwr_Cnsum / item.Pwr_Total) * 100;
+			
+			// success-element 
+			html +='<li class="ui-sortable-handle _svrLink" data-svr_seq="'+item.Svr_Seq+'" id="sel_SW_'+item.Svr_Seq+'" style="cursor: pointer;'+sel_bg+'">';
+			html +='	<strong> ['+item.Svr_Ip+'] ('+item.Svr_Desc+')</strong>	';
+			html +='	<div class="row">';
+			html +='		<div class="col-xs-12">';
+			html +='			<small>System status : </small>';
+			html +='			<span class="icon-color-good">OK</span>';
+			html +='		</div>';
+			html +='		<div class="col-xs-12">';
+			html +='			<small>System Up Time : </small>';
+			html +='			<span class="icon-color-good">'+item.Svr_Uptime+'</span>';
+			html +='		</div>';
+			html +='		<div class="col-xs-12">';
+			html +='			<small>CPU : </small>';
+			html +='			<span class="icon-color-good">'+item.Cpu_UsgRate+' %</span>';
+			html +='		</div>';
+			html +='		<div class="col-xs-12">';
+			html +='			<small>Memory : </small>';
+			html +='			<span class="icon-color-good">'+item.Mem_Usg+'</span>';
+			html +='		</div>';
+			html +='		<div class="col-xs-12">';
+			html +='			<small>PoE Usage: </small>';
+			html +='			<span class="icon-color-good">'+item.Pwr_Cnsum+'/'+item.Pwr_Total+' W('+pwr_rate+'%)</span>'; 
+			html +='		</div>';
+			html +='	</div>';
+			html +='</li>';			
+		});
+		
+		$(".agile-list").empty().append(html);
+	}
+		
+	var Make_Port = function(info) {
+		var html = "";
+		var portnum = 1;
+		var portImgNum = 2;
+		var portBgColor = "";
+		var portstatClass = "";
+		
+		for(var i = 1; i <= 12; i++)
+		{
+
+			portBgColor = "#e7e7e7";
+			portstatClass = "";
+			
+			if(PortStat(info, portImgNum)) {
+				portBgColor = "#ffffff";
+			}
+			
+			html +='<div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 no-space port_div">';
+			html +='	<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 no-space port_img_minmax">';
+			html +='		<img src="/ims/img/port.png" class="port_img" id="port_img_'+portImgNum+'" style="background-color:'+portBgColor+';">';
+			html +='	</div>';
+			
+			portstatClass = "";
+			if(PortStat(info, portnum)) {
+				portstatClass = " blinkingdown";
+			}
+			
+			html +='	<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6 no-space text-left">';
+			html +='		<label class="port_down'+portstatClass+'" id="port_'+portnum+'"></label>';
+			html +='		<span style="vertical-align: top;"><strong>'+portnum+'</strong></span>';
+			
+			portnum += 1;
+			
+			portstatClass = "";
+			if(PortStat(info, portnum)) {
+				portstatClass = " blinkingup";
+			}
+			
+			html +='	</div>';
+			html +='	<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6 no-space text-right">';
+			html +='		<span style="vertical-align: top;"><strong>'+portnum+'</strong></span>';
+			html +='		<label class="port_up'+portstatClass+'" id="port_'+portnum+'"></label>';
+			
+			portnum += 1;
+			
+			html +='	</div>';
+			html +='</div>';
+			
+			portImgNum += 2;
+		}
+		$("._port_1").append(html);
+		
+		html = '';
+		
+		portnum = 2;
+		portImgNum = 1;
+		for(var i = 13; i <= 24; i++)
+		{
+			portBgColor = "#e7e7e7";
+			if(PortStat(info, portImgNum)) {
+				portBgColor = "#ffffff";
+			}
+			
+			html +='<div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 no-space port_div">';
+			html +='	<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 no-space port_img_minmax">';
+			html +='		<img src="/ims/img/port.png" class="port_img" id="port_img_'+portImgNum+'" style="background-color:'+portBgColor+';">';
+			html +='	</div>';
+			html +='</div>';
+			portImgNum += 2;
+		}
+		$("._port_2").append(html);
+	};
+	
+	var PortStat = function(info, port) {
+		var rtn = true;
+		
+    	var curPort = info.filter(function( obj ) {
+		    return obj.Port_No === port;
+		});
+		
+    	
+    	if (curPort.length === 0)
+   		{
+        	rtn = false;
+   		}
+    	else
+   		{
+        	if(curPort[0].Port_Link === "Down") {
+        		rtn = false;
+    		}
+  		
+   		}
+
+    	return rtn;
+	};
+
+	$(".agile-list").on('click',"._svrLink", function (e) {
+		svrSeq = $(e.currentTarget).data('svr_seq');
+		_SVR_SEQ_ = svrSeq;
+		
+		getPort(_SVR_SEQ_);
+		CpuUpdate();
+		
+		$("._svrLink").css("background-color","#ffffff");
+		$(this).css("background-color","#f7f7f7"); 
+	})
+	
+	//CPU, Memory
+	function getCpuData(svrSeq) {
+		
+        $.ajax({
+            method: "POST",
+            url: "<c:url value='/mntng/getSwitchCpu.do'/>",
+            data: {Svr_Seq: svrSeq, Top: TopCnt }, 
+            async: false, 
+			beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+        }).done(function (Rst) {
+        	Cpu_DB_Data = [];
+    		Mem_DB_Data = [];
+    		
+        	for (var i = 0; i < Rst.Cpu.length; i++) {
+        		Cpu_DB_Data.push( [ Rst.Cpu[i].Tstamp, Rst.Cpu[i].Cpu_UsgRate ] );
+        		Mem_DB_Data.push( [ Rst.Cpu[i].Tstamp, Rst.Cpu[i].Mem_Rate ] );
+        	}
+        	
+        	
+        	//delay 시키기
+        	//setTimeout(function() {}, 2000);
+        	
+        });
+        
+        return Cpu_DB_Data;
+	}
+	
+	
+	// CPU Setup plot
+	var options = {
+		yaxis: {
+		        min: 0,
+		        max: 100,        
+		        tickSize: 5,
+		        tickFormatter: function (v, axis) {
+		            if (v % 10 == 0) {
+		                return v + "%";
+		            } else {
+		                return "";
+		            }
+		        },
+		        axisLabel: "loading",
+		        axisLabelUseCanvas: true,
+		        axisLabelFontSizePixels: 12,
+		        axisLabelFontFamily: 'Verdana, Arial',
+		        axisLabelPadding: 6
+			    },
+	    xaxis: {
+	    	mode: "time",
+	        timeformat: "%H:%M"
+	    },
+		colors : ["#7e9d3a"], //$UpdatingChartColors],
+		series : {
+			lines : {
+				lineWidth : 1,
+				fill : true,
+				fillColor : {
+					colors : [{
+						opacity : 0.1
+					}, {
+						opacity : 0.15
+					}]
+				},
+				steps : false
+			}
+		}
+	};
+
+	SwitchIP();
+
+
+	var plot = $.plot($("#cpu-chart"), [getCpuData(_SVR_SEQ_)], options);
+	var plot2 = $.plot($("#mem-chart"), [Mem_DB_Data], options);
+	
+	function CpuUpdate() {
+		plot.setData([getCpuData(_SVR_SEQ_)]);
+		plot.setupGrid();
+		plot.draw();
+		
+		plot2.setData([Mem_DB_Data]);
+		plot2.setupGrid();
+		plot2.draw();
+		
+		
+	}
+	
+	/*Start*/
+	function StartMonitoring() {
+		CpuUpdate();
+		SwitchIP();
+		getPort(_SVR_SEQ_);
+		setTimeout(StartMonitoring, updateInterval);
+	}
+	
+	
+	StartMonitoring();
+});
+</script>
+
+
+<!-- MAIN PANEL -->
+<div id="main" role="main">
+
+	<div id="ribbon">
+		<ol class="breadcrumb">
+			<li>Home</li><li>모니터링</li><li>네트워크 스위치 모니터링</li>
+		</ol>
+	</div>
+
+	<!-- CONTENT -->
+	<div id="content">
+
+		<section id="widget-grid">
+
+			<div class="row">
+			
+			
+				<div class="col-sm-3 col-md-3 col-lg-3">
+					<article class="col-sm-12 col-md-12 col-lg-12 hidden-mobile">
+						<!-- new widget -->
+						<div class="jarviswidget" id="wid-id-4" 
+							data-widget-togglebutton="false" 
+							data-widget-editbutton="false" 
+							data-widget-fullscreenbutton="false" 
+							data-widget-colorbutton="false" 
+							data-widget-deletebutton="false">
+							<header>
+								<span class="widget-icon"> <i class="glyphicon glyphicon-list-alt txt-color-darken"></i> </span>
+								<h2>시스템 요약 정보</h2>
+							</header>
+							
+							<!-- widget div-->
+							<div class="no-padding">
+							
+								<div class="widget-body" style="padding-bottom: 0px;">
+									<!-- content -->
+									<div>
+										<ul class="sortable-list agile-list">
+			                            </ul>
+									</div>
+								</div>
+							</div>
+						
+							
+						</div>
+					</article>
+				</div>
+				<div class="col-sm-9 col-md-9 col-lg-9">
+				
+				
+					<article class="col-sm-12 col-md-12 col-lg-12">
+						<div class="jarviswidget" id="wid-id-0" data-widget-togglebutton="false" data-widget-editbutton="false" data-widget-fullscreenbutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false">
+							<header>
+								<span class="widget-icon"> <i class="fa fa-sitemap"></i> </span>
+								<h2>포트</h2>
+							</header>	
+							
+							<div class="no-padding">
+								<div class="widget-body">
+									<!-- content -->
+									<div>
+										<div class="fade active in padding-10 no-padding-bottom" >
+										
+											<div class="row no-space _port_1">
+											</div>
+										
+											<div class="row no-space _port_2">
+											</div>								
+	
+										</div>
+									</div>
+									
+	
+									<!-- end content -->
+								</div>
+							</div>
+						</div>
+					</article>
+					
+					<!-- CPU -->
+					<article class="col-sm-6 col-md-6 col-lg-6">
+						<div class="jarviswidget" id="wid-id-0" data-widget-togglebutton="false" data-widget-editbutton="false" data-widget-fullscreenbutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false">
+							<header>
+								<span class="widget-icon"> <i class="fa fa-sitemap"></i> </span>
+								<h2>CPU</h2>
+							</header>	
+							
+							<div class="no-padding">
+								<div class="widget-body">
+									<div>
+										<div class="fade active in padding-10 no-padding-bottom" >
+											<div class="row no-space">
+												<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+													<div id="cpu-chart" class="chart-large txt-color-blue"></div> 
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</article>
+						
+					<!-- Memory -->			
+					<article class="col-sm-6 col-md-6 col-lg-6">
+						<div class="jarviswidget" id="wid-id-0" data-widget-togglebutton="false" data-widget-editbutton="false" data-widget-fullscreenbutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false">
+							<header>
+								<span class="widget-icon"> <i class="fa fa-sitemap"></i> </span>
+								<h2>Memory</h2>
+							</header>	
+							
+							<div class="no-padding">
+								<div class="widget-body">
+									<!-- CPU -->
+									<div>
+										<div class="fade active in padding-10 no-padding-bottom" >
+											<div class="row no-space">
+												<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+													<div id="mem-chart" class="chart-large txt-color-blue"></div> 
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</article>									
+				</div>	
+			</div>
+
+		</section>
+
+	</div>
+	
+	
+	<!-- END MAIN CONTENT -->
+
+</div>
+<!-- END MAIN PANEL -->
+
+

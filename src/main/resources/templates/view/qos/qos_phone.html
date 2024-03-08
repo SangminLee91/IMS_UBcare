@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        layout:decorate="~{layouts/layout}">
+
+<link rel="stylesheet" href="<c:url value='/css/formplugins/bootstrap-timepicker/bootstrap-timepicker.css'/>">
+<link rel="stylesheet" media="screen, print" href="<c:url value='/css/formplugins/bootstrap-datepicker/bootstrap-datepicker.css'/>">
+
+<script src="<c:url value='/js/formplugins/bootstrap-datepicker/bootstrap-datepicker.js'/>"></script>
+<script src="<c:url value='/js/formplugins/bootstrap-timepicker/bootstrap-timepicker.min.js'/>"></script>
+<script src="<c:url value='/js/datagrid/datatables/datatables.export.js'/>"></script>
+
+<script type="text/javascript">
+$(document).ready(function() {
+	
+	//Subscriber
+	var getSubscriber = function() {
+        $.ajax({
+            method: "POST",
+            url: "<c:url value='/qos/subscribers.do'/>", 
+			beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+        }).done(function (data) {
+        	$(".sel_subscriber option").remove();
+       		$.each(data.Subscribers, function (i, item) {
+       			$(".sel_subscriber").append($('<option>', { value: item.LocalSubscriberNo, text: item.LocalSubscriberNo }));
+     		});
+       		$(".sel_subscriber")[0].sumo.reload();
+        });
+	}
+	
+	//Grid
+
+	$.fn.dataTable.ext.errMode = 'none'; //datatable error disabled
+
+	var table = $('#dt_basic').DataTable({
+		//"serverSide" : true,
+		"data":[],
+		"columns": [
+            { "data": "LocalSubscriberNo" },
+            { "data": "MacAddr" },
+            { "data": "Callid" },
+            { "data": "StartTime" },
+            { "data": "EndTime" },
+            { "data": "LocalIpAddr" },
+            { "data": "LocalRtpPort" },
+            { "data": "RemoteIpAddr" },
+            { "data": "RemoteRtpPort" },
+            { "data": "rvalue" },
+            { "data": "rvalue_grp" },
+            { "data": "MaxPacketSize" },
+            { "data": "GoodPackets" },
+            { "data": "LostPackets" },
+            { "data": "DiscardedPackets" },
+            { "data": "MaxJitter" },
+            { "data": "MaxInterJitter" },
+            { "data": "AvgRoundTripDelay" },
+            { "data": "Dtl"}
+        ],
+		"columnDefs": [
+            { "targets": [1,2,5,6,7,8,9,11,12,13,14,15,16,17], "visible": false, className: "never"},
+            { "targets": [10], "width": "300px"}
+        ],
+        "ordering": false,
+        "bInfo": false,
+        "searching": false,
+        "bFilter" : false,
+        "iDisplayLength": 20,
+        "bPaginate": true,
+		"autoWidth" : true,
+		//"scrollX": true,
+		"sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'r>t<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'><'col-xs-12 col-sm-6'p>>",
+		"oLanguage": {
+		    "sEmptyTable":     "데이터가 없습니다",
+		    "sLengthMenu":     "페이지당 줄수 _MENU_",
+		    "sLoadingRecords": "읽는중...",
+		    "sProcessing":     "처리중...",
+		    "sZeroRecords":    "검색 결과가 없습니다",
+			"oPaginate": {
+				"sFirst": "First",
+				"sLast": "Last",
+				"sNext": ">>",
+				"sPrevious": "<<"
+			}
+		},
+		"drawCallback" : function(oSettings) {
+			var api = this.api();
+			var data = api.rows({ page: 'current' }).data();
+			var html = "";
+            for (var i = 0; i < data.length; i++) {
+            	//html = '<div style="width:300px"><div class="progress progress-sm" style="width:'+data[i].rvalue.toString()+'%"></div></div>';
+				html = '<div class=""><div class="progress-bar" data-transitiongoal="'+data[i].rvalue.toString()+'" aria-valuenow="'+data[i].rvalue.toString()+'" style="width: '+data[i].rvalue.toString()+'%;">'+data[i].rvalue.toFixed(0)+'%</div></div>';
+            	
+            	data[i].rvalue_grp = html;
+            	data[i].Dtl = '<i class="fal fa-search-plus _dtl" style="cursor:pointer" data-dtl="'+encodeURIComponent(JSON.stringify(data[i]))+'"></i>';
+
+            } 
+            api.rows({ page: 'current' }).invalidate();
+		}
+	});
+	
+	
+	//상세보기 click
+	$("#dt_basic").on('click',"._dtl", function (e) {
+		dtlJson = JSON.parse(decodeURIComponent($(e.currentTarget).data('dtl')));
+
+		//$('#modal-detail-title').text(dtlJson.name+' 상세 채널 현황');
+		$('#modal-detail').modal('show');
+		var html = "";
+		
+		html += '<tr>';	
+		html += '	<td class="text-align-center">LocalSubscriberNo</td>';	
+		html += '	<td class="text-align-center"><span style="color:green">'+dtlJson.LocalSubscriberNo+'<span></td>';	
+		html += '</tr>';
+		html += '<tr>';	
+		html += '	<td class="text-align-center">MacAddr</td>';	
+		html += '	<td class="text-align-center"><span style="color:green">'+dtlJson.MacAddr+'<span></td>';	
+		html += '</tr>';	
+		html += '<tr>';	
+		html += '	<td class="text-align-center">Callid</td>';	
+		html += '	<td class="text-align-center"><span style="color:green">'+dtlJson.Callid+'<span></td>';	
+		html += '</tr>';	
+		html += '<tr>';	
+		html += '	<td class="text-align-center">LocalIpAddr</td>';	
+		html += '	<td class="text-align-center"><span style="color:green">'+dtlJson.LocalIpAddr+'<span></td>';	
+		html += '</tr>';	
+		html += '<tr>';	
+		html += '	<td class="text-align-center">LocalRtpPort</td>';	
+		html += '	<td class="text-align-center"><span style="color:green">'+dtlJson.LocalRtpPort+'<span></td>';	
+		html += '</tr>';	
+		html += '<tr>';	
+		html += '	<td class="text-align-center">RemoteIpAddr</td>';	
+		html += '	<td class="text-align-center"><span style="color:green">'+dtlJson.RemoteIpAddr+'<span></td>';	
+		html += '</tr>';	
+		html += '<tr>';	
+		html += '	<td class="text-align-center">RemoteRtpPort</td>';	
+		html += '	<td class="text-align-center"><span style="color:green">'+dtlJson.RemoteRtpPort+'<span></td>';	
+		html += '</tr>';	
+		html += '<tr>';	
+		html += '	<td class="text-align-center">rvalue</td>';	
+		html += '	<td class="text-align-center"><span style="color:green">'+dtlJson.rvalue+'<span></td>';	
+		html += '</tr>';	
+		html += '<tr>';	
+		html += '	<td class="text-align-center">MaxPacketSize</td>';	
+		html += '	<td class="text-align-center"><span style="color:green">'+dtlJson.MaxPacketSize+'<span></td>';	
+		html += '</tr>';	
+		html += '<tr>';	
+		html += '	<td class="text-align-center">GoodPackets</td>';	
+		html += '	<td class="text-align-center"><span style="color:green">'+dtlJson.GoodPackets+'<span></td>';	
+		html += '</tr>';
+		html += '<tr>';	
+		html += '	<td class="text-align-center">LostPackets</td>';	
+		html += '	<td class="text-align-center"><span style="color:green">'+dtlJson.LostPackets+'<span></td>';	
+		html += '</tr>';
+		html += '<tr>';	
+		html += '	<td class="text-align-center">DiscardedPackets</td>';	
+		html += '	<td class="text-align-center"><span style="color:green">'+dtlJson.DiscardedPackets+'<span></td>';	
+		html += '</tr>';
+		html += '<tr>';	
+		html += '	<td class="text-align-center">MaxJitter</td>';	
+		html += '	<td class="text-align-center"><span style="color:green">'+dtlJson.MaxJitter+'<span></td>';	
+		html += '</tr>';
+		html += '<tr>';	
+		html += '	<td class="text-align-center">MaxInterJitter</td>';	
+		html += '	<td class="text-align-center"><span style="color:green">'+dtlJson.MaxInterJitter+'<span></td>';	
+		html += '</tr>';
+		html += '<tr>';	
+		html += '	<td class="text-align-center">AvgRoundTripDelay</td>';	
+		html += '	<td class="text-align-center"><span style="color:green">'+dtlJson.AvgRoundTripDelay+'<span></td>';	
+		html += '</tr>';
+		
+		$("._qosDetailList").html("").append(html);	
+		
+	});
+
+	<c:if test="${CAPACITY_CD ne '11'}">
+	//Excel Btn
+	var buttons = new $.fn.dataTable.Buttons(table, {
+	     buttons: [
+    	 {
+    	      extend: 'excelHtml5',
+    	      text: '<i class="fa  fa-file-excel-o"></i> Excel',
+    	      title: '전화기통화품질',
+    	      className: 'btn-outline-success btn-sm mr-1',
+    	      exportOptions: {
+    	        modifier: {
+    	          page: 'all'
+    	        }
+    	      },
+              customize: function ( xlsx ){
+                  var sheet = xlsx.xl.worksheets['sheet1.xml'];
+                  $('row c', sheet).attr( 's', '25' ); //boder
+              }
+    	    }
+	    ]
+	}).container().appendTo($('#buttons'));
+	</c:if>
+
+	//$('.sel_subscriber').SumoSelect({
+	$('.sel_subscriber').SumoSelect({ 
+		selectAll: true,
+		placeholder: '전화번호',
+		search : true,
+	    noMatch : 'No matches for "{0}"',
+	    locale :  ['OK', 'Cancel', '전체선택'],
+	    captionFormat: '{0} 선택됨',
+	    captionFormatAllSelected : '{0} 전체 선택됨',
+	    forceCustomRendering: true
+	});
+	
+	$('._time').timepicker({
+		defaultTime: "",
+		showMeridian: false //24시간
+	});
+
+	//검색Btn
+	$("._searchGo").click(function(){		
+		
+		//var Queue_Key = $(".sel_queue").val().toString().replace(/,/gi, "|");
+		var Subscriber = $(".sel_subscriber").val().toString().replace(/,/gi, "|");
+		var sDate = $("#sdate").val();
+		var eDate = $("#edate").val();
+		var sTime = $("#stime").val();
+		var eTime = $("#etime").val();
+		
+        $.ajax({
+            method: "POST",
+            url: "<c:url value='/qos/subscribersQOS.do'/>",
+            data: {
+            		ntype:2
+            		, subscribers: Subscriber
+            		, Start: sDate+' '+sTime
+            		, End: eDate+' '+eTime
+            		, minr: 50
+            		, maxr: 100
+            },beforeSend:function(xmlHttpRequest){
+				xmlHttpRequest.setRequestHeader("AJAX", "true");
+                $(".jarviswidget-loader").show();
+            }
+            ,complete:function(){
+            	$(".jarviswidget-loader").hide();
+            }, 
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+        }).done(function (data) {
+        	table.clear().draw();
+        	table.rows.add(data.SubscribersQOS).draw();
+        });
+	})
+	
+	getSubscriber();
+	$("#sdate").val(getToday()); //오늘날짜 기본
+	$("#edate").val(getToday()); //오늘날짜 기본
+
+});
+</script>
+
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+	<ol class="breadcrumb page-breadcrumb">
+		<li class="breadcrumb-item"><a href="javascript:void(0);">Home</a></li>
+		<li class="breadcrumb-item">통화품질관리</li>
+		<li class="breadcrumb-item active">전화기통화품질측정현황</li>
+		<li class="position-absolute pos-top pos-right d-none d-sm-block"><span class="js-get-date"></span></li>
+	</ol>
+	
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2>상담원 콜 분석</h2>
+			 <div id="buttons" class="btn-group"></div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+				
+				<!-- BORAD SEARCH -->
+				<div class="px-4 pt-4 mb-4 search_area" style="border: 1px solid rgba(24,28,33,0.06);">
+					<div class="form-row">
+						<div class="col-md mb-2">
+							<label class="form-label d-none"></label>
+							<select multiple="multiple" id="Subscriber" name="Subscriber" class="sel_subscriber hide"></select>
+						</div>	
+						<div class="col-md mb-4">
+							<label class="form-label d-none"></label>
+							<div class="input-daterange input-group">
+								<input type="text" class="form-control datepicker" name="sdate" id="sdate" placeholder="시작일자">
+								<div class="input-group-append input-group-prepend">
+									<span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>
+								</div>
+								<input type="text" class="form-control datepicker" name="edate" id="edate" placeholder="종료일자">
+							</div>		
+						</div>
+						<div class="col-md mb-4">
+							<label class="form-label d-none"></label>
+							<div class="input-daterange input-group">
+								<input class="_time form-control" type="text" name="stime" id="stime" placeholder="시작 시간"  value="09:00">
+								<div class="input-group-append input-group-prepend">
+									<span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>
+								</div>
+								<input class="_time form-control" type="text" name="etime" id="etime" placeholder="종료 시간" value="19:00">
+							</div>
+						</div>
+						<div class="col-md mb-4">
+							<label class="form-label d-none ">&nbsp;</label>
+							<button class="btn btn-primary waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span class="">Search</span></button>
+						</div>
+					</div>
+				</div>
+			
+
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">             
+						<tr>
+							<th>전화번호</th>
+							<th>MAC</th>
+							<th>CallID</th>
+							<th class="text-center">시작시간</th>
+							<th class="text-center">종료시간</th>
+							<th class="text-center">LocalIP</th>
+							<th class="text-center">LocalRtpPort</th>
+							<th class="text-center">RemoteIP</th>
+							<th class="text-center">RemoteRtpPort</th>
+							<th class="text-center">R-Value</th>
+							<th class="text-center">R값 통화품질</th>
+							<th class="text-center">MaxPacketSize</th>
+							<th class="text-center">GoodPackets</th>
+							<th class="text-center">LostPackets</th>
+							<th class="text-center">DescardedPackets</th>
+							<th class="text-center">MaxJitter</th>
+							<th class="text-center">MaxInnerJitter</th>
+							<th class="text-center">AvgRoundTripDelay</th>
+							<th>상세보기</th>
+						</tr>
+					</thead>
+				</table>	
+			</div>
+			
+		</div>
+	</div>
+</main>
+					
+					
+<div id="modal-detail" class="modal" aria-hidden="true" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 id="modal-detail-title" class="modal-title">상세정보</h4>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true"><i class="fal fa-times"></i></span>
+				</button>
+            </div>
+			<div class="modal-body"> 
+				<table class="table-sm table-bordered table-hover table-striped w-100">
+					<thead class="thead-themed">  
+						<tr>
+							<th class="text-align-center">통화품질 항목</th>
+							<th class="text-align-center">값</th>
+						</tr>
+					</thead>
+					<tbody class="_qosDetailList"></tbody>
+				</table>
+           </div>
+
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">닫기</button>
+			</div>
+           
+        </div>
+    </div>
+</div>
+
+
+

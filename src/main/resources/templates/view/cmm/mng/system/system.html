@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+
+	<script type="text/javascript">
+	let SELECT_ROW = "";
+	let SELECT_PROC_ROW = "";
+
+	$(document).ready(function() {
+
+		const Svr_dt = $('#dt_svr').DataTable({
+			ajax: {
+				"url": CONTEXT_PATH+"<c:url value='/api/mng/system/getSvr.do'/>",
+				"dataSrc": "Svr"
+			},
+			columns: [
+				{ "data": "Svr_Seq" },
+				{ "data": "Svr_Ip" },
+				{ "data": "Svr_Desc" },
+				{ "data": "Cpu_ThresHold" },
+				{ "data": "Memory_ThresHold" }
+			],
+			columnDefs: [
+				{
+					"targets": [0],
+					"visible": false,
+					"searchable": false
+				}
+			],
+			ordering: false,
+			searching: false
+		});
+
+		const Proc_dt = $('#dt_process').DataTable({
+			ajax: {
+				url: CONTEXT_PATH+"<c:url value='/api/mng/system/getProc.do'/>",
+				dataSrc: "Proc",
+				data: function(d){
+					d.Svr_Ip = SELECT_ROW.Svr_Ip
+				}
+			},
+			columns: [
+				{ "data": "Seq" },
+				{ "data": "Process_Nm" },
+				{ "data": "Process_Cnt" }
+			],
+			columnDefs: [
+				{
+					"targets": [0],
+					"visible": false,
+					"searchable": false
+				}
+			],
+			searching: false
+		});
+
+
+		//Server Row Click
+		$('#dt_svr tbody').on('click', 'tr', function () {
+			SELECT_ROW = "";
+
+			if ( $(this).hasClass('selected') ) {
+				$(this).removeClass('selected');
+			}
+			else {
+				Svr_dt.$('tr.selected').removeClass('selected');
+				$(this).addClass('selected');
+
+				//var data = Svr_dt.row(this).data();
+				SELECT_ROW = Svr_dt.row(this).data();
+			}
+			//console.log(SELECT_ROW)
+			//해당서버 프로세스 리스트 재조회
+			$('#dt_process').DataTable().ajax.reload();
+			SELECT_PROC_ROW ="";
+		});
+
+
+		//Server Process Row Click
+		$('#dt_process tbody').on('click', 'tr', function () {
+			SELECT_PROC_ROW = "";
+
+			if ( $(this).hasClass('selected') ) {
+				$(this).removeClass('selected');
+			}
+			else {
+				Proc_dt.$('tr.selected').removeClass('selected');
+				$(this).addClass('selected');
+
+				//var data = Proc_dt.row(this).data();
+				SELECT_PROC_ROW = Proc_dt.row(this).data();
+			}
+		});
+		//_BtnSvrEdt 서버 수정 클릭시
+		$("._BtnSvrEdt").click(function(e){
+			if(SELECT_ROW === "")
+			{
+				alert("수정할 서버를 선택하세요.");
+				return false;
+			}
+			$("#edt_Svr_Ip").val(SELECT_ROW.Svr_Ip);
+			$("#edt_Svr_Desc").val(SELECT_ROW.Svr_Desc);
+			$("#edt_Cpu_ThresHold").val(SELECT_ROW.Cpu_ThresHold);
+			$("#edt_Memory_ThresHold").val(SELECT_ROW.Memory_ThresHold);
+
+			$('#modal_edtSvr').modal('show');
+
+			e.preventDefault();
+		});
+		//서버 수정 처리
+		$("#edtSvrfrm").submit(function(e){
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"<c:url value='/api/mng/system/EdtSvr.do'/>",
+				data: {
+					Svr_Seq: SELECT_ROW.Svr_Seq,
+					Svr_Ip: $("#edt_Svr_Ip").val(),
+					Svr_Desc: $("#edt_Svr_Desc").val(),
+					Cpu_ThresHold: $("#edt_Cpu_ThresHold").val(),
+					Memory_ThresHold: $("#edt_Memory_ThresHold").val()
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function () { // function (data)
+				$('#dt_svr').DataTable().ajax.reload();
+			});
+
+			e.preventDefault();
+
+			SELECT_ROW = "";
+			$('#modal_edtSvr').modal('hide');
+		});
+
+	/*
+		//서버 등록처리
+		$("#addSvrfrm").submit(function(e){
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"<c:url value='/api/mng/system/addSvr.do'/>",
+				data: {
+						Svr_Ip: $("#add_Svr_Ip").val()
+						, Svr_Desc: $("#add_Svr_Desc").val()
+						, Cpu_ThresHold: $("#add_Cpu_ThresHold").val()
+						, Memory_ThresHold: $("#add_Memory_ThresHold").val()
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$('#dt_svr').DataTable().ajax.reload();
+			});
+
+			e.preventDefault();
+
+			$("#add_Svr_Desc").val("");
+			$("#add_Svr_Ip").val("");
+			$("#add_Cpu_ThresHold").val("");
+			$("#add_Memory_ThresHold").val("");
+
+			$('#modal_addSvr').modal('hide');
+		});
+
+		//서버 삭제 처리
+		$("._BtnSvrDel").click(function(){
+			if(SELECT_ROW == "")
+			{
+				alert("삭제할 서버를 선택하세요.");
+				return false;
+			}
+
+			if(confirm("서버 삭제", "["+SELECT_ROW.Svr_Ip +"] 을 삭제 하시겠습니까?"))
+			{
+					$.ajax({
+						method: "POST",
+						url: "<c:url value='/api/mng/system/DelSvr.do'/>",
+						data: { Svr_Seq: SELECT_ROW.Svr_Seq },
+						beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+						error: function(jqXHR) { jqXHR_Process(jqXHR) }
+					}).done(function (data) {
+						$('#dt_svr').DataTable().ajax.reload();
+					});
+
+					SELECT_ROW = "";
+			else
+			{
+				return false;
+			}
+
+
+		});
+	*/
+
+
+
+		//프로세스 등록 Btn
+		$("._BtnProAdd").click(function(){
+			if(SELECT_ROW === "")
+			{
+				alert("프로세스를 등록할 서버를 선택하세요.");
+				return false;
+			}
+
+			$('#modal_addProc').modal('show');
+		});
+		//프로세스 등록 처리
+		$("#addProcfrm").submit(function(e){
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"<c:url value='/api/mng/system/AddProc.do'/>",
+				data: {
+					Svr_Ip: SELECT_ROW.Svr_Ip,
+					Process_Nm: $("#add_Proc_Nm").val(),
+					Process_Cnt: $("#add_Proc_Cnt").val()
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function () { // function (data)
+				$('#dt_process').DataTable().ajax.reload();
+			});
+
+			e.preventDefault();
+
+			$("#add_Proc_Nm").val("");
+			$("#add_Proc_Cnt").val("");
+			$('#modal_addProc').modal('hide');
+		});
+		//_BtnProEdit 프로세스 수정 클릭시
+		$("._BtnProEdit").click(function(){
+			if(SELECT_PROC_ROW === "")
+			{
+				alert("수정할 프로세스를 선택하세요.");
+				return false;
+			}
+			$("#edt_Proc_Nm").val(SELECT_PROC_ROW.Process_Nm);
+			$("#edt_Proc_Cnt").val(SELECT_PROC_ROW.Process_Cnt);
+			$('#modal_edtProc').modal('show');
+
+		});
+		//프로세스 수정 처리
+		$("#edtProcfrm").submit(function(e){
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"<c:url value='/api/mng/system/EdtProc.do'/>",
+				data: {
+					Proc_Seq: SELECT_PROC_ROW.Seq,
+					Svr_Ip: SELECT_ROW.Svr_Ip,
+					Process_Nm: $("#edt_Proc_Nm").val(),
+					Process_Cnt: $("#edt_Proc_Cnt").val()
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function () { // function (data)
+				$('#dt_process').DataTable().ajax.reload();
+			});
+
+			e.preventDefault();
+
+			SELECT_PROC_ROW = "";
+			$('#modal_edtProc').modal('hide');
+		});
+		$("._BtnProDel").click(function(){
+			if(SELECT_PROC_ROW === "")
+			{
+				alert("삭제할 프로세스를 선택하세요.");
+				return false;
+			}
+
+			if(confirm("["+SELECT_PROC_ROW.Process_Nm +"] 을 삭제 하시겠습니까?"))
+			{
+					$.ajax({
+						method: "POST",
+						url: CONTEXT_PATH+"<c:url value='/api/mng/system/DelProc.do'/>",
+						data: { Proc_Seq: SELECT_PROC_ROW.Seq },
+						error: function(jqXHR) { jqXHR_Process(jqXHR) }
+					}).done(function () { // function (data)
+						$('#dt_process').DataTable().ajax.reload();
+					});
+
+					SELECT_PROC_ROW = "";
+			}
+			else
+			{
+				return false;
+			}
+
+		});
+
+
+	});
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 서버모니터링 관리
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="row">
+		<div class="col-xs-6 col-sm-6 col-md-6">
+			<div class="panel">
+				<div class="panel-hdr">
+					<h2>모니터링 시스템</h2>
+					<div class="panel-toolbar">
+						<button class="btn btn-xs btn-default ml-1 _BtnSvrEdt"><span class="fal fa-pencil"></span> 수정</button>
+					</div>
+				</div>
+				<div class="panel-container show">
+					<div class="panel-content">
+						<table id="dt_svr" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+							<thead class="thead-themed">
+								<tr>
+									<th rowspan="2" class="table-tr-bottom-0 text-center">Seq</th>
+									<th rowspan="2" data-class="expand" class="table-tr-bottom-0 text-center">서버 IP</th>
+									<th rowspan="2" class="table-tr-bottom-0 text-center">서버 명</th>
+									<th colspan="2" class="table-tr-bottom-0 text-center">임계치</th>
+								</tr>
+								<tr>
+									<th class="text-center table-tr-bottom-0">CPU (%)</th>
+									<th class="text-center table-tr-bottom-0">MEMORY (%)</th>
+								</tr>
+							</thead>
+						</table>		
+					</div>
+				</div>
+			</div>	
+		</div>
+		<div class="col-xs-6 col-sm-6 col-md-6">
+			<div class="panel">
+				<div class="panel-hdr">
+					<h2>관리 프로세스</h2>
+					<div class="panel-toolbar">
+						<button class="btn btn-xs btn-dark _BtnProAdd" data-toggle="modal" data-backdrop="static"><span class="fal fa-plus"></span> 추가</button>
+						<button class="btn btn-xs btn-dark ml-1 _BtnProEdit" data-target="#Edit" data-backdrop="static"><span class="fal fa-pencil"></span> 수정</button>
+						<button class="btn btn-xs btn-dark ml-1 _BtnProDel"><span class="fal fa-trash"></span> 삭제</button>
+					</div>
+				</div>
+				<div class="panel-container show">
+					<div class="panel-content">
+						<table id="dt_process" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+							<thead class="thead-themed">
+								<tr>
+									<th>Seq</th>
+									<th>프로세스명</th>
+									<th>실행 프로세스 수</th>
+								</tr>
+							</thead>
+						</table>		
+					</div>
+				</div>
+			</div>		
+		</div>
+		
+	</div>
+</main>
+
+
+
+<div class="modal" id="modal_addSvr" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+    	<div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">시스템 등록</h4>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true"><i class="fal fa-times"></i></span>
+				</button>
+            </div>
+            <form name="addSvrfrm" id="addSvrfrm" method="post">
+            <div class="modal-body">
+				<div class="form-group">
+					<label>서버 아이피</label> 
+					<input type="text" id="add_Svr_Ip" placeholder="서버 아이피" maxlength="15" class="form-control" required oninvalid="this.setCustomValidity('서버 아이피를 입력하세요.')" oninput="this.setCustomValidity('')">
+				</div>
+				<div class="form-group">
+					<label>서버 설명</label> 
+					<input type="text" id="add_Svr_Desc" placeholder="서버 설명" class="form-control">
+				</div>
+				
+
+				<div class="row">
+					<div class="col-md-4">
+						<label class="control-label">CPU 임계치(%)</label>
+						<input type="text" class="form-control" maxlength="5" value="70" id="add_Cpu_ThresHold"/>
+					</div>
+
+					<div class="col-md-4">
+						<label class="control-label">메모리 임계치(%)</label>
+						<input type="text" class="form-control" maxlength="5" value="70" id="add_Memory_ThresHold"/>
+					</div>
+
+				</div>
+
+            </div>
+            <div class="modal-footer" style="padding: 5px;">
+                <button type="button" class="btn btn-dark" data-dismiss="modal">닫기</button>
+                <button type="submit" class="btn btn-dark">저장</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>	
+<div class="modal" id="modal_edtSvr" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+    	<div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">시스템 수정</h4>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true"><i class="fal fa-times"></i></span>
+				</button>
+            </div>
+            <form name="edtSvrfrm" id="edtSvrfrm" method="post">
+            <div class="modal-body">
+				<div class="form-group">
+					<label>서버 아이피</label> 
+					<input type="text" id="edt_Svr_Ip" readonly disabled placeholder="서버 아이피" maxlength="15" class="form-control" required oninvalid="this.setCustomValidity('서버 아이피를 입력하세요.')" oninput="this.setCustomValidity('')">
+				</div>
+				<div class="form-group">
+					<label>서버 설명</label> 
+					<input type="text" id="edt_Svr_Desc" placeholder="서버 설명" class="form-control">
+				</div>
+				
+				<div class="row">
+					<div class="col-md-4">
+						<label class="control-label">CPU 임계치(%)</label>
+						<input type="text" class="form-control" maxlength="5" id="edt_Cpu_ThresHold"/>
+					</div>
+
+					<div class="col-md-4">
+						<label class="control-label">메모리 임계치(%)</label>
+						<input type="text" class="form-control" maxlength="5" id="edt_Memory_ThresHold"/>
+					</div>
+
+				</div>
+            </div>
+            <div class="modal-footer" style="padding: 5px;">
+                <button type="button" class="btn btn-default" data-dismiss="modal">닫기</button>
+                <button type="submit" class="btn btn-primary">저장</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal" id="modal_addProc" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+    	<div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">감시 프로시스 등록</h4>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true"><i class="fal fa-times"></i></span>
+				</button>
+            </div>
+            <form name="addProcfrm" id="addProcfrm" method="post">
+            <div class="modal-body">
+				<div class="form-group">
+					<label>프로세스 명</label> 
+					<input type="text" id="add_Proc_Nm" placeholder="프로세스 명" maxlength="15" class="form-control" required oninvalid="this.setCustomValidity('프로세스 명 입력하세요.')" oninput="this.setCustomValidity('')">
+				</div>
+				<div class="form-group">
+					<label>실행 프로세스 수</label> 
+					<input type="number" id="add_Proc_Cnt" placeholder="프로세스 수" class="form-control" required oninvalid="this.setCustomValidity('실행 프로세스 수')" oninput="this.setCustomValidity('')">
+				</div>
+            </div>
+            <div class="modal-footer" style="padding: 5px;">
+                <button type="button" class="btn btn-dark" data-dismiss="modal">닫기</button>
+                <button type="submit" class="btn btn-dark">저장</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>	
+<div class="modal" id="modal_edtProc" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+    	<div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">감시 프로시스 수정</h4>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true"><i class="fal fa-times"></i></span>
+				</button>
+            </div>
+            <form name="edtProcfrm" id="edtProcfrm" method="post">
+            <div class="modal-body">
+				<div class="form-group">
+					<label>프로세스 명</label> 
+					<input type="text" id="edt_Proc_Nm" placeholder="프로세스 명" maxlength="15" class="form-control" required oninvalid="this.setCustomValidity('프로세스 명 입력하세요.')" oninput="this.setCustomValidity('')">
+				</div>
+				<div class="form-group">
+					<label>실행 프로세스 수</label> 
+					<input type="number" id="edt_Proc_Cnt" placeholder="프로세스 수" class="form-control" required oninvalid="this.setCustomValidity('실행 프로세스 수')" oninput="this.setCustomValidity('')">
+				</div>
+            </div>
+            <div class="modal-footer" style="padding: 5px;">
+                <button type="button" class="btn btn-dark" data-dismiss="modal">닫기</button>
+                <button type="submit" class="btn btn-dark">저장</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+</html>

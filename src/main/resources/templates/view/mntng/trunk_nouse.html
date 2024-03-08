@@ -1,0 +1,748 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ include file="/WEB-INF/include/common_top.jsp" %>
+<script src="<c:url value='/js/plugin/flot/jquery.flot.cust.min.js'/>"></script>
+<script src="<c:url value='/js/plugin/flot/jquery.flot.resize.min.js'/>"></script>
+<script src="<c:url value='/js/plugin/flot/jquery.flot.time.min.js'/>"></script>
+<script src="<c:url value='/js/plugin/flot/jquery.flot.tooltip.min.js'/>"></script>
+
+
+<script type="text/javascript">
+
+$(document).ready(function() {
+	var _TRUNKIP_ = "";
+	var updateInterval = 3000;
+
+	var _CHANNEL_=[];
+	
+	/* for today usage% bar chart */
+	var bar_data1 = []; //total
+	var bar_data2 = []; //busy
+	var bar_options={
+		colors : ["#57889c", "#a90329"],
+		grid : {
+			show : true,
+			hoverable : true,
+			clickable : true,
+			tickColor : "#efefef",
+			borderWidth : 0,
+			borderColor : "#efefef"
+		},
+		yaxis:{
+			min:0
+		},
+        xaxis: {
+            min:0,
+            max:23,
+            tickSize: 1,
+            //ticks: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],
+	        tickFormatter: function (v, axis) {
+				return v;
+		    }
+            //tickDecimals:0
+        },
+		legend : true,
+		tooltip : true,
+		tooltipOpts : {
+			content : "<span>%y</span>",
+			defaultTheme : false
+		}
+	}
+	for (var i = 0; i < 24; i += 1){
+		bar_data1.push([i, 30]);
+		bar_data2.push([i, 0]);
+	}
+	var bar_ds=[];
+	bar_ds.push({
+		data : bar_data1,
+		bars : {
+			align:'center',
+			show : true,
+			barWidth : 0.4,
+			order : 1
+		}
+	});
+
+	bar_ds.push({
+		data : bar_data2,
+		bars : {
+			align:'center',
+			show : true,
+			barWidth : 0.4,
+			order : 2
+		}
+	});
+
+	/* bar chart */
+	bar_plot = $.plot($("#updating-chart2"), bar_ds, bar_options);
+	
+	/*모니터링 Server IP*/
+	var TrunkIP = function() {
+        $.ajax({
+            method: "POST",
+            url: "<c:url value='/api/mntng/TrunkIP.do'/>", 
+			beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+        }).done(function (data) {
+        	TrunkIP_Make(data.TrunkIP);
+        });
+	}
+	var TrunkIP_Make = function(data)
+	{
+		var html = '';
+		var html_combo = '';
+		
+  		$.each(data, function (i, item) {  			
+  			if(i == 0) _TRUNKIP_ = item.Cmm_Dtl_Code;
+  			html +='<li class="success-element ui-sortable-handle _trunkLink" data-svrip="'+item.Cmm_Dtl_Code+'" id="sel_IP_'+item.Cmm_Dtl_Code.split(".").join("")+'">';
+  			html +='	<strong>'+item.Cmm_Dtl_Code_Nm+'('+item.Cmm_Dtl_Code+')</strong>';
+  			html +='	<div class="row">';
+  			html +='		<div class="col-xs-2">';
+  			html +='			<small>CPU</small>';
+  			html +='			<h3><span class="icon-color-good _svrList_Cpu'+item.Cmm_Dtl_Code.split(".").join("")+'"> --%</span></h3>';
+  			html +='		</div>';
+  			html +='		<div class="col-xs-3">';
+  			html +='			<small>Memory</small>';
+  			html +='			<h3><span class="icon-color-good _svrList_Mem'+item.Cmm_Dtl_Code.split(".").join("")+'"> --%</span></h3>';
+  			html +='		</div>';
+  			html +='		<div class="col-xs-4">';
+  			html +='			<small>Channel</small>';
+  			html +='			<h3>total&nbsp;<span class="icon-color-good _svrList_Tx'+item.Cmm_Dtl_Code.split(".").join("")+'"> --</span>';
+  			html +='			<br/>busy&nbsp;<span style="color:red" class="icon-color-good _svrList_Rx'+item.Cmm_Dtl_Code.split(".").join("")+'"> --</span></h3>';
+  			html +='		</div>';
+  			html +='		<div class="col-xs-3">';
+  			html +='			<small>Disk</small>';
+  			html +='			<h3><span class="icon-color-good _svrList_Disk'+item.Cmm_Dtl_Code.split(".").join("")+'"> --%</span>'; //<span class="icon-color-good">정상</span>
+  			html +='		</div>';
+  			html +='	</div>';
+  			html +='</li>';
+
+  			html_combo +='<li>';
+  			html_combo +='	<a href="javascript:void(0);" class="_TrunkIPLink" data-svrip="'+item.Cmm_Dtl_Code+'">'+item.Cmm_Dtl_Code+'</a>';
+  			html_combo +='</li>';		
+  			
+		});
+		$(".agile-list").html("").append(html);
+		$("._TrunkIP_List").html("").append(html_combo);
+		
+		//모니터링 시작
+		getChDetailData(_TRUNKIP_);
+		getChannelData(_TRUNKIP_);
+		getSystemData(_TRUNKIP_);
+		getTrunkStatusTimeunit(_TRUNKIP_);
+		//getSummaryData();
+		$("._curTrunkIP").text(_TRUNKIP_);
+		$("._trunkLink").css("background-color","#ffffff"); //최초 서버 자동 선택 표시
+		$("#sel_IP_"+_TRUNKIP_.split(".").join("")).css("background-color","#f7f7f7"); //최초 트렁크 자동 선택 표시
+	}
+
+
+	$("._TrunkIP_List").on("click", "._TrunkIPLink", function (e) {
+		_TRUNKIP_ = $(e.currentTarget).data('svrip');
+		//모니터링 시작
+		getChDetailData(_TRUNKIP_);
+		getChannelData(_TRUNKIP_);
+		getSystemData(_TRUNKIP_);
+		getTrunkStatusTimeunit(_TRUNKIP_);
+		//getSummaryData();
+		$("._curTrunkIP").text(_TRUNKIP_);
+		$("._trunkLink").css("background-color","#ffffff");
+		$("#sel_IP_"+_TRUNKIP_.split(".").join("")).css("background-color","#f7f7f7");
+		
+	});
+
+	
+	$(".agile-list").on('click',"._trunkLink", function (e) {
+		_TRUNKIP_ = $(e.currentTarget).data('svrip');
+		getChDetailData(_TRUNKIP_);
+		getChannelData(_TRUNKIP_);
+		getSystemData(_TRUNKIP_);
+		getTrunkStatusTimeunit(_TRUNKIP_);
+		//getSummaryData();
+		$("._curTrunkIP").text(_TRUNKIP_);
+		
+		$("._trunkLink").css("background-color","#ffffff");
+		$(this).css("background-color","#f7f7f7");
+		
+	});
+	
+	/*채널 사용량 Data*/
+	var getSummaryData = function() {
+	    $.ajax({
+	        method: "POST",
+	        url: "<c:url value='/api/mntng/TrunkStatus.do'/>", 
+			beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+			error: function(jqXHR) { jqXHR_Process(jqXHR) }
+		    }).done(function (data) { //data.Summry
+		    	$.each(data.TrunkStatus, function (i, item) {
+		    		$("._svrList_Tx"+item.ip.split(".").join("")).text(' '+item.total);
+		    		$("._svrList_Rx"+item.ip.split(".").join("")).text(' '+item.busy);
+		    	});
+		    	
+		    });
+	}
+	
+	/*Cpu, Memory, Disk* branch direct
+	var getSystemData = function(TrunkIP) {
+		if(TrunkIP!==''){
+	        $.ajax({
+	            method: "POST",
+	            url: "<c:url value='https://"+TrunkIP+"/core/chieon_sysinfo.php'/>",
+	            dataType : "jsonp",
+	            jsonpCallback : "reqCallback_sysinfo",, 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	        }).done(function (data) {
+	        	var total=data.memoryTotal/(1024*1024);
+	    		$("._svrList_Cpu"+TrunkIP.split(".").join("")).text(data.cpu+'%');
+	    		$("._svrList_Mem"+TrunkIP.split(".").join("")).text(data.memory+'%');
+	    		$("._svrList_Disk"+TrunkIP.split(".").join("")).text(data.disk+'%');
+	    		$('._pie_Cpu').data('easyPieChart').update(data.cpu);
+	    		$('._pie_Mem').data('easyPieChart').update(data.memory);
+	        	$("#_mem_Used").text((total*(data.memory/100)).toFixed(2));
+	        	$("#_mem_Total").text(total.toFixed(2));
+	        });
+		}
+	}
+	*/
+	//ims main server relay
+	var getSystemData = function(TrunkIP) {
+		if(TrunkIP!==''){
+	        $.ajax({
+	            method: "POST",
+	            url: "<c:url value='/api/mntng/TrunkSysinfo.do'/>",
+	            data: {
+            		trunkip: TrunkIP
+            	}, 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	        }).done(function (data) {
+	        	var total=data.TrunkSysinfo.memoryTotal/(1024*1024);
+	    		$("._svrList_Cpu"+TrunkIP.split(".").join("")).text(data.TrunkSysinfo.cpu+'%');
+	    		$("._svrList_Mem"+TrunkIP.split(".").join("")).text(data.TrunkSysinfo.memory+'%');
+	    		$("._svrList_Disk"+TrunkIP.split(".").join("")).text(data.TrunkSysinfo.disk+'%');
+	    		$('._pie_Cpu').data('easyPieChart').update(data.TrunkSysinfo.cpu);
+	    		$('._pie_Mem').data('easyPieChart').update(data.TrunkSysinfo.memory);
+	        	$("#_mem_Used").text((total*(data.TrunkSysinfo.memory/100)).toFixed(2));
+	        	$("#_mem_Total").text(total.toFixed(2));
+	        });
+		}
+	}
+	
+	/*Channel
+	var getChannelData = function(TrunkIP) {
+		if(TrunkIP!==''){
+	        $.ajax({
+	            method: "POST",
+	            url: "<c:url value='https://"+TrunkIP+"/core/chieon_summary_cb.php'/>",
+	            dataType : "jsonp",
+	            jsonpCallback : "reqCallback_summary", 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	        }).done(function (data) {
+	    		if(_CHANNEL_.length>100){
+	    	    	_CHANNEL_.shift();
+	    		}
+	        	_CHANNEL_.push([new Date(), data.busy===0?0:Math.round((data.busy/data.total)*100)]);//
+	        	$("#_Ch_Idle").text(data.idle);
+	        	$("#_Ch_Busy").text(data.busy);
+	        	$("#_Ch_OOS").text(data.oos);
+	        	$("#_Ch_Total").text(data.total);
+	        	//reqCallback({idle:30,busy:0,oos:0,total:30})
+	    		$("._svrList_Tx"+TrunkIP.split(".").join("")).text(' '+data.total);
+	    		$("._svrList_Rx"+TrunkIP.split(".").join("")).text(' '+data.total>0?data.busy:'Warring!!');
+	        });
+		}
+	}
+	*/
+	var getChannelData = function(TrunkIP) {
+		if(TrunkIP!==''){
+	        $.ajax({
+	            method: "POST",
+	            url: "<c:url value='/api/mntng/TrunkChannelinfo.do'/>",
+	            data: {
+            		trunkip: TrunkIP
+            	}, 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	        }).done(function (data) {
+	    		if(_CHANNEL_.length>100){
+	    	    	_CHANNEL_.shift();
+	    		}
+	        	_CHANNEL_.push([new Date(), data.TrunkChannelinfo.busy===0?0:Math.round(((data.TrunkChannelinfo.busy)/(data.TrunkChannelinfo.total))*100)]);//
+	        	$("#_Ch_Idle").text(data.TrunkChannelinfo.idle);
+	        	$("#_Ch_Busy").text(data.TrunkChannelinfo.busy);
+	        	$("#_Ch_OOS").text(data.TrunkChannelinfo.oos);
+	        	$("#_Ch_Total").text(data.TrunkChannelinfo.total);
+	        	//{TrunkChannelinfo:{idle:30,busy:0,oos:0,total:30}}
+	    		$("._svrList_Tx"+TrunkIP.split(".").join("")).text(' '+data.TrunkChannelinfo.total);
+	    		$("._svrList_Rx"+TrunkIP.split(".").join("")).text(' '+data.TrunkChannelinfo.total>0?data.TrunkChannelinfo.busy:'Warring!!');
+
+	        	
+	        });
+		}
+	}
+	
+	// CPU Setup plot
+	var options = {
+		yaxis: {
+		        min: 0,
+				max:100,
+		        tickSize: 5,
+		        tickFormatter: function (v, axis) {
+		            if (v % 10 == 0) {
+		                return v + "%";
+		            } else {
+		                return "";
+		            }
+		        },
+		        axisLabel: "loading",
+		        axisLabelUseCanvas: true,
+		        axisLabelFontSizePixels: 12,
+		        axisLabelFontFamily: 'Verdana, Arial',
+		        axisLabelPadding: 6
+			    },
+	    xaxis: {
+	    	mode: "time",
+	        timeformat: "%H:%M",
+	        timezone: "browser"
+	    },
+		colors : ["#7e9d3a"], //$UpdatingChartColors],
+		series : {
+			lines : {
+				lineWidth : 1,
+				fill : true,
+				fillColor : {
+					colors : [{
+						opacity : 0.1
+					}, {
+						opacity : 0.15
+					}]
+				},
+				steps : false
+			}
+		}
+	};
+
+	var plot = $.plot($("#updating-chart"), [_CHANNEL_], options);
+	
+	/*
+	var getChDetailData = function(TrunkIP) {
+		if(TrunkIP!==''){
+	        $.ajax({
+	            method: "POST",
+	            url: "<c:url value='https://"+TrunkIP+"/core/chieon.php'/>",
+	            dataType : "jsonp",
+	            jsonpCallback : "reqCallback", 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	        }).done(function (data) {
+	        	Make_ChDetail(data.trunk_info);
+	        });
+		}
+	}
+	*/
+	var getChDetailData = function(TrunkIP) {
+		if(TrunkIP!==''){
+	        $.ajax({
+	            method: "POST",
+	            url: "<c:url value='/api/mntng/TrunkChanneldetail.do'/>",
+	            data: {
+            		trunkip: TrunkIP
+            	}, 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+	        }).done(function (data) {
+	        	Make_ChDetail(data.TrunkChanneldetail.trunk_info);
+	        });
+		}
+	}
+	var Make_ChDetail = function(data) {
+		var html = "";
+		var status = "";
+		var status_color = "";
+		
+		$.each(data, function (i, item) {
+			status_color = "";
+			switch (item.status) {
+				case 'BUSY' : 
+					status_color = "red";
+					break;
+				case 'OOS/NE' :
+				case 'OOS/FE' :
+				case 'OOS' :
+					status_color = "blue";
+					break;
+				case 'IDLE' : 
+					status_color = "green";
+					break;
+				default:
+					status_color = "gray";
+			}
+			html += '<tr>';	
+			html += '	<td>'+item.ch_no+'</td>';	
+			html += '<td class="text-align-center"><span style="color:'+status_color+'">'+item.status+'<span></td>';	
+			html += '</tr>';	
+		});
+		
+		$("._chDetailList").html("").append(html);	
+	}
+	
+	//채널 상세현황 datatables
+	$("._channdeldtl").DataTable( {
+        "scrollY":        "300px",
+        "scrollCollapse": true,
+        "paging":         false,
+        "bInfo": false,
+        "searching": false,
+        "bFilter" : false,
+        "bPaginate": false,
+		"autoWidth" : false,
+    } );
+	
+	
+	var getTrunkStatusTimeunit=function(_TRUNKIP_){
+		//TrunkStatus_Timeunit
+		if(TrunkIP!==''){
+		    $.ajax({
+		        method: "POST",
+		        url: "<c:url value='/api/mntng/TrunkStatus_Timeunit.do'/>",
+	            data: {Trunk_Ip: _TRUNKIP_}, 
+				beforeSend : function(xmlHttpRequest){xmlHttpRequest.setRequestHeader("AJAX", "true");},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			    }).done(function (data) { //data.TrunkStatusTU
+			    	var tu=data.TrunkStatusTU;
+			    	var tu_len=tu.length;
+			    	var tu_idx=0;
+			    	var data1=[];
+			    	var data2=[];
+			    	if(tu_len>0){
+			    		for(var i=0; i<24; i++){
+			    			if(tu_idx<tu_len && tu[tu_idx].dt==i){
+			    				//같은 시간 데이터
+			    				data1.push([i,tu[tu_idx].min_total]);
+			    				data2.push([i,tu[tu_idx].max_busy]);
+			    				tu_idx++;
+			    			}
+			    			else{
+			    				data1.push([i,0]);
+			    				data2.push([i,0]);
+			    			}
+			    		}
+			    		var ds=[];
+			    		ds.push({
+			    			data : data1,
+			    			bars : {
+			    				align:'center',
+			    				show : true,
+			    				barWidth : 0.4,
+			    				order : 1
+			    			}
+			    		});
+			    		ds.push({
+			    			data : data2,
+			    			bars : {
+			    				align:'center',
+			    				show : true,
+			    				barWidth : 0.4,
+			    				order : 2
+			    			}
+			    		});
+
+			    		bar_plot.setData(ds);
+			    		bar_plot.setupGrid();
+			    		bar_plot.draw();
+			    	}		    	
+			    });
+		}
+	}
+	
+	function StartMonitoring() {		
+		getChDetailData(_TRUNKIP_);
+		getChannelData(_TRUNKIP_);
+		getSystemData(_TRUNKIP_);
+		plot.setData([_CHANNEL_]);
+		plot.setupGrid();
+		plot.draw();
+		setTimeout(StartMonitoring, updateInterval);
+	}
+	
+	function StartMonitoring2() {		
+		getTrunkStatusTimeunit(_TRUNKIP_);
+		setTimeout(StartMonitoring2, 60000);
+	}
+	
+	TrunkIP();
+	StartMonitoring();
+	StartMonitoring2();	
+});
+</script>
+
+
+<!-- MAIN PANEL -->
+<div id="main" role="main">
+
+	<div id="ribbon">
+		<ol class="breadcrumb">
+			<li>Home</li><li>모니터링</li><li>실시간 트렁크 모니터링</li>
+		</ol>
+	</div>
+
+	<!-- CONTENT -->
+	<div id="content">
+
+		<section id="widget-grid">
+
+			<div class="row">
+				<article class="col-sm-12 col-md-12 col-lg-3 hidden-mobile">
+					<!-- new widget -->
+					<div class="jarviswidget" id="wid-id-4" 
+						data-widget-togglebutton="false" 
+						data-widget-editbutton="false" 
+						data-widget-fullscreenbutton="false" 
+						data-widget-colorbutton="false" 
+						data-widget-deletebutton="false">
+						<header>
+							<span class="widget-icon"> <i class="glyphicon glyphicon-list-alt txt-color-darken"></i> </span>
+							<h2>국선 현황11</h2>
+						</header>
+						
+						<!-- widget div-->
+						<div class="no-padding">
+						
+							<div class="widget-body" style="padding-bottom: 0px;">
+								<!-- content -->
+								<div>
+									<ul class="sortable-list agile-list">
+		                            </ul>
+								</div>
+							</div>
+						</div>
+					
+						
+					</div>
+				</article>
+				
+				<article class="col-sm-12 col-md-12 col-lg-9">
+
+					<!-- new widget -->
+					<div class="jarviswidget" id="wid-id-0" data-widget-togglebutton="false" data-widget-editbutton="false" data-widget-fullscreenbutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false">
+				
+						<header>
+							<span class="widget-icon"> <i class="glyphicon glyphicon-stats txt-color-darken"></i> </span>
+							<h2>채널 사용률(%)</h2>
+
+							<div class="widget-toolbar">
+								<div class="btn-group">
+									<button class="btn dropdown-toggle btn-xs btn-default" data-toggle="dropdown">
+										<span class="_curTrunkIP"></span> <i class="fa fa-caret-down"></i>
+									</button>
+									<ul class="dropdown-menu js-status-update pull-right _TrunkIP_List"></ul>
+								</div>
+							</div>
+						</header>
+						
+						<!-- widget div-->
+						<div class="no-padding">
+						
+							<div class="widget-body">
+								<!-- content -->
+								<div>
+									<div class="fade active in padding-10 no-padding-bottom">
+										<div class="row no-space">
+											<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+												<div id="updating-chart" class="chart-large txt-color-blue"></div>
+											</div>
+											<!-- 
+											<div class="col-xs-12 col-sm-12 col-md-2 col-lg-2 show-stats">
+
+												<div class="row _updating-disk">
+													<div class="col-xs-6 col-sm-6 col-md-12 col-lg-12"> <span class="text">  <span class="pull-right"></span> </span>
+														<div class="progress">
+															<div class="progress-bar bg-color-greenLight" style="width: 0%;"></div>
+														</div>
+													</div>
+												</div>
+
+											</div>		
+											 -->
+										</div>
+
+										<div class="show-stat-microcharts">
+										
+											<div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
+												<div class="easy-pie-chart txt-color-orangeDark _pie_Cpu" data-percent="0" data-pie-size="50">
+													<span class="percent percent-sign">0</span>
+												</div>
+												
+												<span class="easy-pie-title_mntng">CPU</span>
+												<!-- 
+												<ul class="smaller-stat hidden-sm pull-right opacity1">
+													<li class="note"><span class="text-info">Today</span></li>
+													<li>
+														<span class="label bg-color-blue"><i class="fa fa-caret-up"></i> <span class="_maxcpu">0</span>%</span>
+													</li>
+													<li>
+														
+													</li>
+												</ul>
+												 -->
+											</div>
+											
+											
+											<div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
+												<div class="easy-pie-chart txt-color-greenLight _pie_Mem" data-percent="78.9" data-pie-size="50">
+													<span class="percent percent-sign">0 </span>
+												</div>
+												<span class="easy-pie-title_mntng"> Memory</span>
+												<ul class="smaller-stat hidden-sm pull-right opacity1">
+													<li class="note"><span class="text-info">Used&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;Total</span></li>
+													<li>
+														<span class="label bg-color-blue"><span id="_mem_Used">-.--</span>G / <span id="_mem_Total">-.--</span>G</span>
+													</li>
+													
+												</ul>
+											</div>
+											
+
+											<div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
+												<div style="height:55px;display: inline-block;position: relative;vertical-align: middle;"></div>
+												<span class="easy-pie-title_mntng"> Channel</span>
+												<ul class="smaller-stat hidden-sm pull-right opacity1"  style="padding-right: 5px;">
+													<li class="note"><span class="text-info"><strong >&nbsp;Total</strong></span></li>
+													<li>
+														<span class="label bg-color-blue"> <span id="_Ch_Total">--</span> </span>
+													</li>
+													
+												</ul>
+												
+												<ul class="smaller-stat hidden-sm pull-right opacity1"  style="padding-right: 5px;">
+													<li class="note"><span class="text-info"><strong >&nbsp;OOS</strong></span></li>
+													<li>
+														<span class="label bg-color-grayDark"> <span id="_Ch_OOS">--</span> </span>
+													</li>
+													
+												</ul>
+												
+												<ul class="smaller-stat hidden-sm pull-right opacity1"  style="padding-right: 5px;">
+													<li class="note"><span class="text-info"><strong >Busy</strong></span></li>
+													<li>
+														<span class="label bg-color-red"> <span id="_Ch_Busy">--</span> </span>
+													</li>
+													
+												</ul>
+												
+												<ul class="smaller-stat hidden-sm pull-right opacity1"  style="padding-right: 5px;">
+													<li class="note"><span class="text-info"><strong>&nbsp;&nbsp;Idle&nbsp;</strong></span></li>
+													<li>
+														<span class="label bg-color-green"><span id="_Ch_Idle">--</span></span>
+													</li>
+												
+												</ul>
+											</div>
+
+										</div>
+
+									</div>
+
+								</div>
+
+								<!-- end content -->
+							</div>
+
+						</div>
+						<!-- end widget div -->
+					</div>
+					<!-- end widget -->
+					
+					<!-- new widget -->
+					<div class="jarviswidget" id="wid-id-3" data-widget-togglebutton="false" data-widget-editbutton="false" data-widget-fullscreenbutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false">
+
+						<header>
+							<span class="widget-icon"> <i class="fa fa-sitemap"></i> </span>
+							<h2>금일 채널 사용률</h2>
+							
+							<div class="widget-toolbar">
+								<div class="btn-group">
+									<button class="btn dropdown-toggle btn-xs btn-default" data-toggle="dropdown">
+										<span class="_curTrunkIP"></span> <i class="fa fa-caret-down"></i>
+									</button>
+									<ul class="dropdown-menu js-status-update pull-right _TrunkIP_List"></ul>
+								</div>
+							</div>
+						</header>
+
+						<!-- widget div-->
+						<div class="no-padding">
+							<div class="widget-body">
+								<!-- content -->
+								<div>
+									<div class="fade active in padding-10 no-padding-bottom" >
+										<div class="row no-space">
+											<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+												<div id="updating-chart2" style="height:180px" class="w-100 chart-large txt-color-blue"></div> 
+											</div>
+										</div>
+									</div>
+								</div>
+								<!-- end content -->
+							</div>
+						</div>
+					</div>
+					<!-- end widget -->
+
+					<!-- new widget -->
+					<div class="jarviswidget" id="wid-id-2" data-widget-togglebutton="false" data-widget-editbutton="false" data-widget-fullscreenbutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false">
+
+						<header>
+							<span class="widget-icon"> <i class="fa fa-tasks"></i> </span>
+							<h2>채널별 상세현황</h2>
+							
+							<div class="widget-toolbar">
+								<div class="btn-group">
+									<button class="btn dropdown-toggle btn-xs btn-default" data-toggle="dropdown">
+										<span class="_curTrunkIP"></span> <i class="fa fa-caret-down"></i>
+									</button>
+									<ul class="dropdown-menu js-status-update pull-right _TrunkIP_List"></ul>
+								</div>
+							</div>
+						</header>
+
+						<!-- widget div-->
+						<div>
+						
+							<div class="widget-body no-padding">
+								<!-- content goes here -->
+								<table class="_channdeldtl table table-striped table-hover table-condensed">
+									<thead>
+										<tr>
+											<th>Channel number</th>
+											<th class="text-align-center">Status</th>
+										</tr>
+									</thead>
+									<tbody class="_chDetailList">
+
+									</tbody>
+								</table>
+								<!-- end content -->
+							</div>
+
+						</div>
+						<!-- end widget div -->
+					</div>
+					<!-- end widget -->
+
+				</article>	
+	
+			</div>
+
+		</section>
+
+	</div>
+	
+	
+	<!-- END MAIN CONTENT -->
+
+</div>
+<!-- END MAIN PANEL -->
+
+

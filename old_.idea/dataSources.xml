@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+    <data-source source="LOCAL" name="ims_ubcare" uuid="435c3721-67c2-46da-943c-132fab6412fd">
+      <driver-ref>mariadb</driver-ref>
+      <synchronize>true</synchronize>
+      <remarks>IMS_Ubcare</remarks>
+      <jdbc-driver>org.mariadb.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mariadb://127.0.0.1:3306/ims</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+    <data-source source="LOCAL" name="hppcdb@192.168.120.168" uuid="049c14aa-c829-4abb-94b1-446725995f58">
+      <driver-ref>informix</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.informix.jdbc.IfxDriver</jdbc-driver>
+      <jdbc-url>jdbc:informix-sqli://192.168.120.168:9088/hppcdb</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+    <data-source source="LOCAL" name="ubcare_real 174" uuid="d7b4382d-2272-4106-a85d-23d45a5aecd7">
+      <driver-ref>mariadb</driver-ref>
+      <synchronize>true</synchronize>
+      <remarks>ubcare_real 174</remarks>
+      <jdbc-driver>org.mariadb.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mariadb://192.168.120.174:3306/ims</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+  </component>
+</project>

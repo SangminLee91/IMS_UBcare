@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="acnt">
+	<!-- 전체 사원 -->
+	<select id="getTotalEmp" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mem_Total_Emp_S()
+	</select>
+	<!-- 전체 부서 -->
+	<select id="getTotalDept" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mem_Total_Dept_S()
+	</select>
+	
+	<!-- 권한에 따른 사원 -->
+	<select id="getEmp" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mem_Emp_S(#{_Emp_No})
+	</select>
+	<!-- 권한에 따른 부서 -->
+	<select id="getDept" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mem_Dept_S(#{_Emp_No})
+	</select>
+	
+	<!-- 상담원 사원 정보 -->
+	<select id="getAgentEmp" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mem_Agent_Emp_S()
+	</select>
+	
+	<!-- 권한에 따른 Que -->
+	<select id="getGrantQue" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Code_Grant_Que_S(#{_Emp_No})
+	</select>
+	<!-- 권한에 따른 CalledNumber -->
+	<select id="getGrantCalled" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Code_Grant_Called_S(#{_Emp_No})
+	</select>
+	
+	<!-- 상담원 어플리케이션 계정 정보 동기화 -->
+	<select id="getAppSyncEmp" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mem_Application_Sync_S(#{Emp_No})
+	</select>
+	
+	<!-- IVR SMS발송 -->
+	<select id="getSMSMsg" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Cmm_SendSMS_S(NULLIF(#{sms_code},''))
+	</select>
+	
+	<!-- 조직도 Tree -->
+	<select id="getTransTree" parameterType="hashmap" resultType="hashmap">
+		CALL oigweb.USP_Trans_Emp_S(#{nameLike})
+	</select>
+	
+	
+	<!-- 상담원 및 부서 수동 Sync -->
+	<update id="setOracleSync" parameterType="hashmap">
+    	CALL ims.USP_OracleToMaria_Sync()
+	</update>
+
+
+	
+</mapper>

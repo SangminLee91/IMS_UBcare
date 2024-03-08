@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+	<link rel="stylesheet" th:href="@{/css/formplugins/bootstrap-timepicker/bootstrap-timepicker.css}">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script th:src="@{/js/formplugins/bootstrap-timepicker/bootstrap-timepicker.min.js}"></script>
+
+	<script type="text/javascript">
+	$(document).ready(function() {
+
+		let jsonEmp = null;
+
+		//부서
+		const getDept = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/cmm/ajax/dept/list",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$.each(data.Dept, function (i, item) {
+					$(".sel_dept").append($('<option>', { value: item.Dept_No, text: item.Dept_Nm }));
+				});
+				$('.sel_dept').multiselect({
+					includeFilterClearBtn: false,
+					enableFiltering: true,
+					includeSelectAllOption: true,
+					selectAllText: '전체선택',
+					nonSelectedText: '부 서',
+					allSelectedText: '전체 선택됨',
+					buttonWidth: '100%',
+					maxHeight: 400,
+					buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+				});
+			});
+
+		}
+
+		//사원
+		const getEmp = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/cmm/ajax/emp/list",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				jsonEmp = data.Emp;
+				$(".sel_emp option").remove();
+				makeEmp(data.Emp);
+			});
+		}
+
+		let makeEmp = function(data)
+		{
+			$.each(data, function (i, item) {
+				$(".sel_emp").append($('<option>', { value: item.userid, text: item.Emp_Nm +' ['+item.userid+']' }));
+			});
+			$('.sel_emp').multiselect({
+				includeFilterClearBtn: false,
+				enableFiltering: true,
+				includeSelectAllOption: true,
+				selectAllText: '전체선택',
+				nonSelectedText: '상담원 이름',
+				allSelectedText: '전체 선택됨',
+				buttonWidth: '100%',
+				maxHeight: 400,
+				buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+			});
+			$('.sel_emp').multiselect('rebuild');
+		}
+
+		//부서 변경시 해당부서 사원만 노출
+		$(".sel_dept").change(function(){
+			$(".sel_emp option").remove();
+			let data = jsonEmp;
+
+			if($(this).val() != "")
+			{
+				for(let i = 0; i < $(this).val().length; i++)
+				{
+					let val_Dept_No = $(this).val()[i];
+					data = jsonEmp.filter(function(val) { //선택된 부서의 사원만 필터
+						return (val.Dept_No == val_Dept_No);
+					});
+					makeEmp(data);
+				}
+			}
+			else
+			{
+				makeEmp(data);
+			}
+		});
+
+		//Grid
+		const table = $('#dt_basic').DataTable({
+			//"serverSide" : true,
+			data:[],
+			columns: [
+				{ "data": "Emp_Nm" },
+				{ "data": "user_id" },
+				{ "data": "v_rec_date" },
+				{ "data": "tot_cnt" },
+				{ "data": "in_cnt" },
+				{ "data": "out_cnt" },
+				{ "data": "local_cnt" },
+				{ "data": "tot_call_time" },
+				{ "data": "avg_call_time" },
+
+				{ "data": "vw_tot_call_time" },
+				{ "data": "vw_avg_call_time" },
+
+				{ "data": "one_under_cnt" },
+				{ "data": "one_five_cnt" },
+				{ "data": "five_ten_cnt" },
+				{ "data": "ten_over_cnt" }
+			],
+			columnDefs: [
+				{ "targets": [7,8], "visible": false, className: "never"}
+			],
+			searching: false,
+			stateSave: false,
+			scrollY: "536px",
+			scrollCollapse: true,
+			bInfo: true,
+			drawCallback : function(oSettings) {
+				let api = this.api();
+				let data = api.rows({ page: 'current' }).data();
+
+				for (let i = 0; i < data.length; i++) {
+					data[i].vw_tot_call_time = SecToHHmmss(data[i].tot_call_time);
+					data[i].vw_avg_call_time = SecToHHmmss(data[i].avg_call_time);
+				}
+				api.rows({ page: 'current' }).invalidate();
+			},
+			footerCallback: function ( row, data, start, end, display ) {
+				let api = this.api();//, data;
+				let intVal = function ( i ) {
+					return typeof i === 'string' ?
+						i.replace(/[\$,]/g, '')*1 :
+						typeof i === 'number' ?
+							i : 0;
+				};
+
+				let TotCall = api.column( 3, { page: 'current'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+				let TotIn = api.column( 4, { page: 'current'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+				let TotOut = api.column( 5, { page: 'current'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+				let TotLocal = api.column( 6, { page: 'current'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+
+				let TotCallTime = api.column( 7, { page: 'current'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+				let TotAvgCallTime = api.column( 8, { page: 'current'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+				let TotOne = api.column( 11, { page: 'current'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+				let TotFive = api.column( 12, { page: 'current'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+				let TotTen = api.column( 13, { page: 'current'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+				let TotTenOver = api.column( 14, { page: 'current'} ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+
+				$( api.column(3).footer() ).html(TotCall);
+				$( api.column(4).footer() ).html(TotIn);
+				$( api.column(5).footer() ).html(TotOut);
+				$( api.column(6).footer() ).html(TotLocal);
+				$( api.column(9).footer() ).html(SecToHHmmss(TotCallTime));
+				$( api.column(10).footer() ).html(SecToHHmmss(TotAvgCallTime));
+				$( api.column(11).footer() ).html(TotOne);
+				$( api.column(12).footer() ).html(TotFive);
+				$( api.column(13).footer() ).html(TotTen);
+				$( api.column(14).footer() ).html(TotTenOver);
+			}
+		});
+
+
+
+		//Excel Btn
+		const buttons = new $.fn.dataTable.Buttons(table, {
+			 buttons: [
+			 {
+				  extend: 'excelHtml5',
+				  text: '<i class="fa  fa-file-excel-o"></i> Excel',
+				  title: '녹취 통계',
+				  className: 'btn-dark btn-xs mr-1',
+				  exportOptions: {
+					modifier: {
+					  page: 'all'
+					}
+				  },
+				  customize: function ( xlsx ){
+					  let sheet = xlsx.xl.worksheets['sheet1.xml'];
+					  $('row c', sheet).attr( 's', '25' ); //boder
+				  }
+				}
+			]
+		}).container().appendTo($('#buttons'));
+
+
+		$('._time').timepicker({
+			timeFormat: "HH",
+			showMeridian: false, //24시간
+			icons: {
+				up: "fal fa-caret-up",
+				down: "fal fa-caret-down"
+			}
+		});
+
+
+
+		//검색Btn
+		$("._searchGo").click(function(){
+
+			let Dept_No = $(".sel_dept").val().toString().replace(/,/gi, "|"); // , => | 로 replace처리
+			let Agent_Key = $(".sel_emp").val().toString().replace(/,/gi, "|");
+			let sDate = $("#sdate").val();
+			let eDate = $("#edate").val();
+			let sTime = $("#stime").val();
+			let eTime = $("#etime").val();
+
+			if(Agent_Key != "" ) Dept_No = ""; //상담원 선택시 부서정보는 날린다!!
+
+			if (Agent_Key === "") {
+				alert("조회할 상담원을 선택하세요.");
+				return false;
+			}
+			else
+			{
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/stt/rec/list",
+					data: {
+							Dept_No: Dept_No
+							, Agent_Key: Agent_Key
+							, sDate: sDate
+							, eDate: eDate
+							, sTime: sTime
+							, eTime: eTime
+					},error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					table.clear().draw();
+					table.rows.add(data.Stt).draw();
+				});
+			}
+		})
+
+		getDept();
+		getEmp();
+
+		$("#sdate").val(getToday()); //오늘날짜 기본
+		$("#edate").val(getToday()); //오늘날짜 기본
+
+	});
+	</script>
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 녹취 통계
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel"> 
+		<div class="panel-hdr">
+			<h2></h2>
+			 <div id="buttons" class="btn-group"></div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+			
+				<!-- BORAD SEARCH -->
+				<div class="px-4 pt-4 mb-4 search_area" style="border: 1px solid rgba(24,28,33,0.06);">
+					<div class="form-row">
+						<div class="col-md mb-4">
+							<label class="form-label d-none">부서</label>
+							<select multiple="multiple" class="sel_dept hide"></select>
+						</div>
+						<div class="col-md mb-4">
+							<label class="form-label d-none">상담원</label>
+							<select multiple="multiple" class="sel_emp hide"></select>
+						</div>
+						<div class="col-md mb-4">
+							<label class="form-label d-none">날짜</label>
+							<div class="input-daterange input-group">
+								<input type="text" class="form-control datepicker" name="sdate" id="sdate" placeholder="녹취 시작일자">
+								<div class="input-group-append input-group-prepend">
+									<span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>
+								</div>
+								<input type="text" class="form-control datepicker" name="edate" id="edate" placeholder="녹취 종료일자">
+							</div>		
+						</div>
+						<div class="col-md mb-4">
+							<label class="form-label d-none">시간</label>
+							<div class="input-daterange input-group">
+								<input class="_time form-control" type="text" name="stime" id="stime" placeholder="녹취 시작 시간"  value="09:00">
+								<div class="input-group-append input-group-prepend">
+									<span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>
+								</div>
+								<input class="_time form-control" type="text" name="etime" id="etime" placeholder="녹취 종료 시간" value="19:00">
+							</div>
+						</div>
+						<div class="col-md mb-4">
+							<label class="form-label d-none ">&nbsp;</label>
+							<button class="btn btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span class="">Search</span></button>
+						</div>
+					
+					</div>
+				</div>
+	
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+						<tr class="text-center border-bottom-0">
+							<th>상담원명</th>
+							<th>부서명</th>
+							<th>녹취일자</th>
+							<th>총콜수</th>
+							<th>IN</th>
+							<th>OUT</th>
+							<th>내선 </th>
+							<th>총통화 시간</th>
+							<th>평균 통화 시간</th>
+							<th>총통화 시간</th>
+							<th>평균 통화 시간</th>
+							<th>1분 미만</th>
+							<th>1분이상 5분미만</th>
+							<th>5분이상 10분미만</th>
+							<th>10분이상</th>
+						</tr>
+					</thead>
+			        <tfoot>
+			            <tr class="text-center">
+			                <th>합계</th>
+			                <th></th>
+			                <th></th>
+			                <th></th>
+			                <th></th>
+			                <th></th>
+			                <th></th>
+			                <th></th>
+			                <th></th>
+			                <th></th>
+			                <th></th>
+			                <th></th>
+			                <th></th>
+			                <th></th>
+			                <th></th>
+			            </tr>
+			        </tfoot>
+				</table>
+				
+			</div>
+		</div>
+	</div>
+</main>
+
+</html>>

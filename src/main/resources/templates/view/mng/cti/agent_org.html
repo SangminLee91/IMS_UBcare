@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	let SELECTED_ROW = "";
+	let FORM_MODE = "add";
+
+	$(document).ready(function() {
+		const table = $('#dt_agent').DataTable({
+			ajax: {
+				url: CONTEXT_PATH+"/mng/cti/agent/list",
+				dataSrc: "Emp"
+			},
+			columns: [
+				{ "data": "Extn_no" },
+				{ "data": "Emp_No" },
+				{ "data": "Emp_Nm" },
+				{ "data": "Dept_Nm" },
+				//{ "data": "Group_Nm" },
+				{ "data": "Role_Nm" },
+				{ "data": "userid" }
+			],
+			columnDefs: [
+				{  "targets": [4], "visible": false, "searchable": false },
+			],
+			iDisplayLength: 20,
+			bLengthChange: false,
+			ordering: false,
+			bPaginate: true
+		});
+		table.on('select', function(e, dt, type, indexes){
+			SELECTED_ROW = table.row(indexes).data();
+			FORM_MODE = "edit";
+
+			$("#edt_Emp_No").val(SELECTED_ROW.Emp_No);
+			$("#edt_Emp_Nm").val(SELECTED_ROW.Emp_Nm);
+			$("#edt_Role").val(SELECTED_ROW.Role_No);
+
+			$("#vw_AgentKey").text("").text(SELECTED_ROW.userid);
+
+			$("#pwdEdtStat").prop("checked", false);
+			$("#edt_Emp_Passwd").val('');
+			$("#edt_Emp_Passwd").prop("disabled", true);
+
+			$("#edt_Dept_No").val(SELECTED_ROW.Dept_No);
+
+			getAgentKey();
+
+			if($("#agent-form").css("display") === "block") $("#agent-form").css("display","none");
+			if($("#agent-edit-form").css("display") === "none") $("#agent-edit-form").css("display","block");
+
+		}).on('deselect', function(){
+			SELECTED_ROW = "";
+			FORM_MODE = "add";
+
+			if($("#agent-edit-form").css("display") === "block") $("#agent-edit-form").css("display","none");
+		});
+
+
+		//부서정보 ajax
+		const getDept = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/cmm/ajax/total/dept/list",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$("._dept option:not(option:eq(0))").remove();
+				$.each(data.Dept, function (i, item) {
+					$("._dept").append($('<option>', { value: item.Dept_No, text: item.Dept_Nm }));
+				});
+
+			});
+		}
+
+		//Role 정보 ajax
+		const getRole = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/auth/role/onlyrole",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$("._Role option:not(option:eq(0))").remove();
+				$.each(data.Role, function (i, item) {
+					$("._Role").append($('<option>', { value: item.Role_No, text: item.Role_Nm }));
+				});
+
+			});
+		}
+
+		//agent key(userkey) ajax
+		const getAgentKey = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mng/cti/agent/key/list",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$("#edt_AgentKey option:not(option:eq(0))").remove();
+
+				$.each(data.AgentKey, function (i, item) {
+					if(item.Use_Stat === "1")
+					{
+						$("._AgentKey").append($('<option>', { value: item.userkey, text: item.userid }));
+					}
+					else
+					{
+						$("._AgentKey").append($('<option>', { value: item.userkey, text: item.userid, disabled: 'disabled' }));
+					}
+				});
+
+			});
+		}
+
+		//add Click
+		$("#btn-add").click(function (){
+			if($("#agent-edit-form").css("display") === "block") $("#agent-edit-form").css("display","none");
+			if($("#agent-form").css("display") === "none") $("#agent-form").css("display","block");
+
+			FORM_MODE = "add";
+		});
+		$("#btn-add-save").click(function(){
+			if($("#add_Emp_No").val() === "") { alert("사원 번호를 입력하세요."); $("#add_Emp_No").focus(); return false; }
+			if($("#add_Emp_Nm").val() === "") { alert("사원명을 입력하세요."); $("#add_Emp_Nm").focus(); return false; }
+			if($("#add_Emp_Passwd").val() === "") { alert("Web 접속 비밀번호를 입력하세요."); $("#add_Emp_Passwd").focus(); return false; }
+			if($("#add_Dept_No").val() === "") { alert("부서를 선택하세요."); $("#add_Dept_No").focus(); return false; }
+			if($("#add_Role").val() === "") { alert("기본 Role를 선택하세요."); $("#add_Role").focus(); return false; }
+
+			//Save
+			let Group_Seq = "";
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mng/cti/agent/add",
+				data: {
+					Emp_No: $("#add_Emp_No").val()
+					, Emp_Nm: $("#add_Emp_Nm").val()
+					, Emp_Passwd: $("#add_Emp_Passwd").val()
+					, Dept_No: $("#add_Dept_No").val()
+					, Role: $("#add_Role").val()
+					, AgentKey: $("#add_AgentKey").val()
+					, Group_Seq: Group_Seq
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (rst) {
+				console.log(rst);
+				$('#dt_agent').DataTable().ajax.reload();
+
+				$("#agent-form").css("display","none");
+				$("#add_Emp_No").val("");
+				$("#add_Emp_Nm").val("");
+				$("#add_Emp_Passwd").val("");
+				$("#add_Dept_No").val("");
+				$("#add_Role").val("");
+				$("#add_AgentKey").val("");
+
+				SELECTED_ROW = "";
+			});
+		});
+
+
+
+
+		//Edit Click
+		$("#btn-edt").click(function(){
+			if(SELECTED_ROW === "")
+			{
+				alert("수정할 상담원을 선택하세요.");
+				return false;
+			}
+
+			if($("#agent-form").css("display") === "block") $("#agent-form").css("display","none");
+			if($("#agent-edit-form").css("display") === "none") $("#agent-edit-form").css("display","block");
+			FORM_MODE = "edit";
+
+			$("#edt_Emp_No").val(SELECTED_ROW.Emp_No);
+			$("#edt_Emp_Nm").val(SELECTED_ROW.Emp_Nm);
+			$("#edt_Role").val(SELECTED_ROW.Role_No);
+
+			$("#vw_AgentKey").text("").text(SELECTED_ROW.userid);
+
+			$("#pwdEdtStat").prop("checked", false);
+			$("#edt_Emp_Passwd").val('');
+			$("#edt_Emp_Passwd").prop("disabled", true);
+
+			$("#edt_Dept_No").val(SELECTED_ROW.Dept_No);
+
+			getAgentKey();
+
+		});
+		$("#btn-edit-save").click(function(){
+			if($("#edit_Emp_Nm").val() === "") { alert("사원명을 입력하세요."); $("#add_Emp_Nm").focus(); return false; }
+			if($("#edit_Dept_No").val() === "") { alert("부서를 선택하세요."); $("#add_Dept_No").focus(); return false; }
+			if($("#edit_Role").val() === "") { alert("기본 Role를 선택하세요."); $("#add_Role").focus(); return false; }
+
+			//Edit Save
+			let Group_Seq = "";
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mng/cti/agent/edit",
+				data: {
+					Emp_No: $("#edt_Emp_No").val()
+					, Emp_Nm: $("#edt_Emp_Nm").val()
+					, Emp_Passwd: $("#edt_Emp_Passwd").val()
+					, Dept_No: $("#edt_Dept_No").val()
+					, Role: $("#edt_Role").val()
+					, AgentKey: $("#edt_AgentKey").val()
+					, Group_Seq: Group_Seq
+					, pwdStat: $("#pwdEdtStat").prop("checked")
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (rst) {
+				console.log("Edit Save",rst);
+				$('#dt_agent').DataTable().ajax.reload();
+				SELECTED_ROW = "";
+
+				$("#edit_Emp_No").val("");
+				$("#edit_Emp_Nm").val("");
+				$("#edit_Emp_Passwd").val("");
+				$("#edit_Dept_No").val("");
+				$("#edit_Role").val("");
+				$("#edit_AgentKey").val("");
+
+				$("#pwdEdtStat").prop("checked", false);
+				$("#edt_Emp_Passwd").val('');
+				$("#edt_Emp_Passwd").prop("disabled", true);
+
+				$("#agent-edit-form").css("display","none");
+
+				alert("수정 되었습니다.");
+				return true;
+			});
+		});
+
+		//Delete
+		$("#btn-delete").click(function(){
+			if(SELECTED_ROW === "")
+			{
+				alert("퇴사 처리할 상담원을 선택하세요.");
+				return false;
+			}
+
+			if(confirm("["+SELECTED_ROW.Emp_Nm +"] 상담원을 퇴사 처리 하시겠습니까?"))
+			{
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/cti/agent/del",
+					data: {
+						Emp_No : SELECTED_ROW.Emp_No
+					},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					if(data.Rst.Rst)
+					{
+						$('#dt_agent').DataTable().ajax.reload();
+						SELECTED_ROW = "";
+
+						alert("처리되었습니다.");
+						return false;
+					}
+					else
+					{
+						alert("상담원을 정보를 변경할 권한이 없습니다.");
+						return false;
+					}
+				});
+			}
+			else {
+				return false;
+			}
+		});
+
+		getDept();
+		getRole();
+		getAgentKey();
+
+		$("#pwdEdtStat").change(function(){
+			$("#edt_Emp_Passwd").prop("disabled", true);
+			if($(this).prop("checked"))
+			{
+				$("#edt_Emp_Passwd").prop("disabled", false);
+			}
+
+		});
+
+	});
+
+
+	</script>
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+	<div class="subheader">
+		<h1 class="subheader-title">
+			<i class="subheader-icon fal fa-window"></i> 상담원 관리
+		</h1>
+	</div>
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			<div class="panel-toolbar">
+				<button class="btn btn-xs btn-dark" id="btn-add">Add</button>
+				<button class="btn btn-xs btn-dark ml-1" id="btn-edt">Edit</button>
+				<button class="btn btn-xs btn-dark ml-1" id="btn-delete">Delete</button>
+			</div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+				<table id="dt_agent" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+						<tr>
+							<th>내선번호</th>
+							<th>사용자 아이디</th>
+							<th>사용자 명</th>
+							<th>부서</th>
+							<!-- <th>그룹</th> -->
+							<th>권한</th>
+							<th>AGENT ID</th>
+						</tr>
+					</thead>
+				</table>		
+			</div>
+		</div>
+	</div>
+
+
+
+
+
+	<div id="agent-form" class="panel" style="display:none">
+		<div class="panel-hdr text-primary">
+			<div class="panel-toolbar">
+				<button class="btn btn-panel bg-transparent fs-xl w-auto h-auto rounded-0" data-action="hide" data-target_id="agent-form" data-offset="0,10" data-original-title="Close"><i class="fal fa-times"></i></button>
+			</div>
+		</div>
+
+		<div class="panel-container show">
+			<div class="panel-content">
+				<div class="form-row ml-0 mr-0">
+					<div class="form-group w-25 pr-3">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">사원 번호</span>
+							</div>
+							<input type="text" id="add_Emp_No" placeholder="사원 번호" class="form-control" required oninvalid="this.setCustomValidity('사원번호를 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+					</div>
+					<div class="form-group w-25 pr-3">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">이름</span>
+							</div>
+							<input type="text" id="add_Emp_Nm" placeholder="이름" class="form-control" required oninvalid="this.setCustomValidity('이름을 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+					</div>
+					<div class="form-group w-25 pr-3">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Web접속 비밀번호</span>
+							</div>
+							<input type="password" id="add_Emp_Passwd" placeholder="Web접속 비밀번호" class="form-control" required oninvalid="this.setCustomValidity('IMS Web접속 비밀번호를 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+					</div>
+				</div>
+
+				<div class="form-row ml-0 mr-0">
+					<div class="form-group w-25 pr-3">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">부서</span>
+							</div>
+							<select class="form-control _dept" id="add_Dept_No">
+								<option value="">부서</option>
+							</select>
+						</div>
+					</div>
+					<div class="form-group w-25 pr-3">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">기본 ROLE</span>
+							</div>
+							<select class="form-control _Role" id="add_Role">
+								<option value="">기본 Role</option>
+							</select>
+						</div>
+					</div>
+					<div class="form-group w-25 pr-3">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Agent Key</span>
+							</div>
+							<select class="form-control _AgentKey hide"  id="add_AgentKey">
+								<option value="">Agent Key</option>
+							</select>
+						</div>
+					</div>
+
+				</div>
+				<button class="btn btn-xs btn-dark" id="btn-add-save">Save</button>
+			</div>
+		</div>
+	</div>
+
+
+	<div id="agent-edit-form" class="panel" style="display:none">
+		<div class="panel-hdr text-primary">
+			<div class="panel-toolbar">
+				<button class="btn btn-panel bg-transparent fs-xl w-auto h-auto rounded-0" data-action="hide" data-target_id="agent-edit-form" data-offset="0,10" data-original-title="Close"><i class="fal fa-times"></i></button>
+			</div>
+		</div>
+
+		<div class="panel-container show">
+			<div class="panel-content">
+				<div class="form-row ml-0 mr-0">
+					<div class="form-group w-25 pr-3">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">사원 번호</span>
+							</div>
+							<input type="text" id="edt_Emp_No" class="form-control" readonly>
+						</div>
+					</div>
+					<div class="form-group w-25 pr-3">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">이름</span>
+							</div>
+							<input type="text" id="edt_Emp_Nm" placeholder="이름" class="form-control">
+						</div>
+					</div>
+					<div class="form-group w-25 pr-3">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<div class="input-group-text">
+									<div class="custom-control custom-checkbox">
+										<input type="checkbox" class="custom-control-input" id="pwdEdtStat">
+										<label class="custom-control-label" for="pwdEdtStat">Web접속 비밀번호</label>
+									</div>
+								</div>
+							</div>
+							<input type="password" id="edt_Emp_Passwd" class="form-control">
+						</div>
+					</div>
+				</div>
+
+				<div class="form-row ml-0 mr-0">
+					<div class="form-group w-25 pr-3">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">부서</span>
+							</div>
+							<select class="form-control _dept" id="edt_Dept_No">
+								<option value="">부서</option>
+							</select>
+						</div>
+					</div>
+					<div class="form-group w-25 pr-3">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">기본 ROLE</span>
+							</div>
+							<select class="form-control _Role" id="edt_Role">
+								<option value="">기본 Role</option>
+							</select>
+						</div>
+					</div>
+					<div class="form-group w-25 pr-3">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Agent Key</span>
+							</div>
+
+							<select class="form-control _AgentKey hide" id="edt_AgentKey">
+								<option value="">Agent Key</option>
+							</select>
+
+						</div>
+						<span class="help-block"><b>사용중  : <span id="vw_AgentKey">  </span></b></span>
+					</div>
+
+				</div>
+				<button class="btn btn-xs btn-dark" id="btn-edit-save">Save</button>
+			</div>
+		</div>
+	</div>
+
+
+
+
+
+
+
+
+
+<!--	<div class="modal fade" id="add" role="dialog" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+
+				<div class="modal-header">
+					<h4 class="modal-title">
+						상담원 추가
+					</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+
+				<form name="addfrm" id="addfrm" method="post">
+					<div class="modal-body">
+
+						<div class="form-group">
+							<label >사원 번호</label>
+							<div class="input-group">
+								<input type="text" id="add_Emp_No" placeholder="사원 번호" class="form-control" required oninvalid="this.setCustomValidity('사원번호를 입력하세요.')" oninput="this.setCustomValidity('')">
+								<div class="input-group-prepend">
+									<span class="input-group-text _empSearch"><i class="fal fa-search"></i></span>
+								</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<label>이름</label>
+							<input type="text" id="add_Emp_Nm" placeholder="이름" class="form-control" required oninvalid="this.setCustomValidity('이름을 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>Web접속 비밀번호</label>
+							<input type="password" id="add_Emp_Passwd" placeholder="Web접속 비밀번호" class="form-control" required oninvalid="this.setCustomValidity('비밀번호를 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>부서</label>
+							<select class="form-control _dept" id="add_Dept_No">
+								<option value="">부서</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>기본 Role</label>
+							<select class="form-control _Role" id="add_Role">
+								<option value="">기본 Role</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>User ID</label>
+							<select id="add_AgentKey" class="_AgentKey hide" >
+								<option value="">User ID</option>
+							</select>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-primary">저장</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">닫기</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>-->
+<!--
+
+	<div id="edt" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">
+						상담원 수정
+					</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+
+				<form name="edtfrm" id="edtfrm" method="post">
+					<div class="modal-body">
+						<div class="form-group">
+							<label >사원 번호</label>
+							<input type="text" id="edt_Emp_No" class="form-control" readonly>
+						</div>
+						<div class="form-group">
+							<label>이름</label>
+							<input type="text" id="edt_Emp_Nm" class="form-control" readonly>
+						</div>
+						<div class="form-group smart-form" style="margin-bottom: 15px;">
+							<label class="checkbox">
+								<input type="checkbox" id="pwdEdtStat">
+								<i></i>비밀번호 변경
+							</label>
+							<input type="password" id="edt_Emp_Passwd" placeholder="비밀번호" class="form-control" disabled>
+						</div>
+&lt;!&ndash;						<div class="form-group">
+							<label>부서</label>
+							<input type="hidden" id="edt_Dept_No">
+							<input type="text" id="edt_Dept_Nm" class="form-control" readonly>
+						</div>&ndash;&gt;
+
+						<div class="form-group">
+							<label>부서</label>
+							<select class="form-control _dept" id="edt_Dept_No">
+								<option value="">부서</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label>기본 Role</label>
+							<select class="form-control _Role" id="edt_Role">
+								<option value="">기본 Role</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>Agent ID [ <b>사용중  : <span id="vw_AgentKey">  </span></b> ] </label>
+							&lt;!&ndash; <input type="text" class="form-control" readonly id="vw_AgentKey">&ndash;&gt;
+							<select id="edt_AgentKey" class="_AgentKey hide">
+								<option value="">User ID</option>
+							</select>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-xs btn-dark">Save</button>
+						<button class="btn btn-xs btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+-->
+
+</main>
+</html>

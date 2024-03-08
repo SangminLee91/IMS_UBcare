@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="sttTotal">
+	<!-- 수신 -->
+    <select id="getInCallStat" parameterType="hashmap" resultType="hashmap">
+    	CALL ims_ifx.IFX_In_Stats(#{origdestination}, #{Srch_Type}, #{Start_Dt}, #{End_Dt})
+	</select>
+    <select id="getInCallDtl" parameterType="hashmap" resultType="hashmap">
+    	CALL ims_ifx.IFX_In_Dtl(#{start}, #{length}, #{origdestination}, #{Start_Dt}, #{End_Dt})
+	</select>
+    <select id="getInCallDtlCnt" parameterType="hashmap" resultType="hashmap">
+    	CALL ims_ifx.IFX_In_Dtl_Cnt_S(#{origdestination}, #{Start_Dt}, #{End_Dt})
+	</select>
+	
+	
+	<!-- 포기 -->
+    <select id="getAbandonStat" parameterType="hashmap" resultType="hashmap">
+    	CALL ims_ifx.IFX_Abandon_Stats(#{origdestination}, #{Srch_Type}, #{Start_Dt}, #{End_Dt})
+	</select>
+    <select id="getAbandonDtl" parameterType="hashmap" resultType="hashmap">
+    	CALL ims_ifx.IFX_UB_Abandon_Dtl(#{start}, #{length}, #{origdestination}, #{Start_Dt}, #{End_Dt})
+	</select>
+    <select id="getAbandonDtlCnt" parameterType="hashmap" resultType="hashmap">
+    	CALL ims_ifx.IFX_UB_Abandon_Dtl_Cnt_S(#{origdestination}, #{Start_Dt}, #{End_Dt})
+	</select>
+	<select id="getAbandonDtlExcel" parameterType="hashmap" resultType="hashmap">
+		CALL ims_ifx.IFX_UB_Abandon_Dtl_Excel(#{origdestination}, #{Start_Dt}, #{End_Dt})
+	</select>
+	
+	
+	<!-- 발신 -->
+    <select id="getOutCallStat" parameterType="hashmap" resultType="hashmap">
+    	CALL ims_ifx.IFX_Out_Stats(#{x_Granularity}, #{x_UserKey}, #{x_DepartmentKey}, #{x_BeginTimestamp}, #{x_EndTimestamp}, #{sTime}, #{eTime})
+	</select>
+    <select id="getOutCallDtl" parameterType="hashmap" resultType="hashmap">
+    	CALL ims_ifx.IFX_Out_Dtl(#{start}, #{length}, #{UserKey}, #{TeamKey}, #{Start_Dt}, #{End_Dt})
+	</select>
+    <select id="getOutCallDtlCnt" parameterType="hashmap" resultType="hashmap">
+    	CALL ims_ifx.IFX_Out_Dtl_Cnt_S(#{UserKey}, #{TeamKey}, #{Start_Dt}, #{End_Dt})
+	</select>
+</mapper>

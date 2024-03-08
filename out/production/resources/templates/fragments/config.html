@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<head th:fragment="configFragment">
+    <meta charset="UTF-8" />
+    <title>IMS</title>
+    <meta name="description" content="Login">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no, minimal-ui">
+
+    <!-- 공통 CSS -->
+    <link id="vendorsbundle" rel="stylesheet" media="screen, print" th:href="@{/css/vendors.bundle.css}">
+    <link id="appbundle" rel="stylesheet" media="screen, print" th:href="@{/css/app.bundle.css}">
+    <link id="mytheme" rel="stylesheet" media="screen, print" th:href="@{/css/themes/cust-theme-7.css}">
+    <link id="myskin" rel="stylesheet" media="screen, print" th:href="@{/css/skins/skin-master.css}">
+    <link rel="stylesheet" media="screen, print" th:href="@{/css/fa-brands.css}">
+
+    <link rel="stylesheet" media="screen, print" th:href="@{/css/site.css}">
+
+    <!-- 컨텐츠 CSS 영역 -->
+    <th:block layout:fragment="css"></th:block>
+
+</head>
+</html>

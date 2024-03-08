@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	$(document).ready(function() {
+		const table = $('#dt_basic').DataTable({
+			processing: true,
+			data:[],
+			columns: [
+				{ "data": "CB_CALLBACKDATETIME" },
+				{ "data": "Branch_Nm" },
+				// { "data": "CB_DNIS" },
+				// { "data": "DNIS_NAME" },
+				// { "data": "SERVICE_NAME" },
+				{ "data": "CB_CALLERID" },
+				{ "data": "CB_CALLBACKNUM" },
+				{ "data": "CB_CALLDATETIME" },
+				{ "data": "CB_AGENTID" },
+				{ "data": "AGENT_NAME" },
+				//,{ "data": "CB_RESULT" }
+				{ "data": "CB_TYPE"}
+			],
+			iDisplayLength: 20,
+			ordering: true,
+			bPaginate: true,
+			searching: false
+		});
+
+		//브랜치코드 가져오기
+		const getBrachCode = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/cmm/ajax/grantbranch",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$.each(data.Code, function (i, item) {
+					$("#branch").append($('<option>', { value: item.Branch_Code, text: item.Branch_Nm }));
+				});
+
+				$('#branch').multiselect({
+					includeFilterClearBtn: false,
+					enableFiltering: true,
+					includeSelectAllOption: true,
+					selectAllText: '전체선택',
+					nonSelectedText: '대표번호',
+					allSelectedText: '전체 선택됨',
+					buttonWidth: '100%',
+					maxHeight: 400,
+					buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+				});
+			});
+		}
+
+		//콜백구분 코드 가져오기
+		const getCallBack = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/cmm/ajax/getCallBack",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$.each(data.CallBack, function (i, item) {
+					$("#callback").append($('<option>', { value: item.Cmm_Dtl_Code, text: item.Cmm_Dtl_Code_Nm }));
+				});
+
+				$('#callback').multiselect({
+					includeFilterClearBtn: false,
+					enableFiltering: true,
+					includeSelectAllOption: true,
+					selectAllText: '전체',
+					nonSelectedText: '콜백구분',
+					allSelectedText: '전체 선택됨',
+					buttonWidth: '100%',
+					maxHeight: 400,
+					buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+				});
+			});
+		}
+
+
+/*		//대표전화 가져오기
+		const getDestination = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/cmm/ajax/grantcalled",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$.each(data.Code, function (i, item) {
+					$("#origdestination").append($('<option>', { value: item.CalledNumber, text: item.Desc }));
+				});
+
+				$('#origdestination').multiselect({
+					includeFilterClearBtn: false,
+					enableFiltering: true,
+					includeSelectAllOption: true,
+					selectAllText: '전체선택',
+					nonSelectedText: '대표번호',
+					allSelectedText: '전체 선택됨',
+					buttonWidth: '100%',
+					maxHeight: 400,
+					buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+				});
+			});
+		}*/
+
+
+
+		//검색Btn
+		$("._searchGo").click(function(){
+
+			let branch = $("#branch").val().toString().replace(/,/gi, "|"); // , => | 로 replace처리
+			let callback = $("#callback").val().toString().replace(/,/gi, "|"); // , => | 로 replace처리
+			let sDate = $("#sdate").val();
+			let eDate = $("#edate").val();
+
+			table.clear().draw();
+			$(".dataTables_processing").css("display","block");
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/stt/ivr/callback/list/list",
+				data: {
+						branch: branch
+						, callback: callback
+						, Start_Dt: sDate
+						, End_Dt: eDate
+				},error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				table.clear().draw();
+				table.rows.add(data.CBList).draw();
+				$(".dataTables_processing").css("display","none");
+			});
+
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/stt/ivr/callback/list/type",
+				data: {
+					branch: branch
+					, callback: callback
+					, Start_Dt: sDate
+					, End_Dt: eDate
+				},error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				let row;
+				if (data.CB_Types.length > 0) {
+					row = data.CB_Types[0];
+					for (let prop in row) {
+						$("#" + prop).text(row[prop]);
+					}
+				}
+			});
+		})
+
+		$("#_excel").click(function(){
+			let branch = $("#branch").val().toString().replace(/,/gi, "|"); // , => | 로 replace처리
+			let callback = $("#callback").val().toString().replace(/,/gi, "|"); // , => | 로 replace처리
+			let sDate = $("#sdate").val();
+			let eDate = $("#edate").val();
+
+			location.href = CONTEXT_PATH+"/stt/ub/excel/callback_list?branch="+encodeURI(branch)+"&callback="+encodeURI(callback)+"&Start_Dt="+encodeURI(sDate)+"&End_Dt="+encodeURI(eDate);
+
+		});
+
+		getBrachCode();
+		getCallBack();
+		$("#sdate").val(getToday()); //오늘날짜 기본
+		$("#edate").val(getToday()); //오늘날짜 기본
+
+
+
+	});
+	</script>
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 콜백 리스트
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			<div id="buttons" class="btn-group">
+				<button class="btn-xs btn-dark" id="_excel">Excel</button>
+			</div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+
+				<div class="form-row mb-2">
+					<div class="col-xl-2 col-md-3 col-sm-4 pl-1 pr-1">
+						<button type="text" class="btn btn-sm btn-dark btn-block" style="pointer-events: none">일반
+							<span class="badge ml-2" id="cb_type_00">0</span>
+						</button>
+					</div>
+					<div class="col-xl-2 col-md-3 col-sm-4 pl-1 pr-1">
+						<button type="button" class="btn btn-sm btn-dark btn-block" style="pointer-events: none">온라인
+							<span class="badge ml-2" id="cb_type_01">0</span>
+						</button>
+					</div>
+					<div class="col-xl-2 col-md-3 col-sm-4 pl-1 pr-1">
+						<button type="button" class="btn btn-sm btn-dark btn-block" style="pointer-events: none">얼리버드
+							<span class="badge ml-2" id="cb_type_02">0</span>
+						</button>
+					</div>
+				</div>
+
+				<div class="form-row">
+					<div class="col-md-3">
+<!--						<label class="form-label d-none">대표번호</label>-->
+<!--						<select multiple="multiple" id="origdestination"></select>-->
+						<label class="form-label d-none">대리점</label>
+						<select multiple="multiple" id="branch"></select>
+
+					</div>
+					<div class="col-md-2">
+						<label class="form-label d-none">콜백구분</label>
+						<select multiple="multiple" id="callback"></select>
+					</div>
+					<div class="col-md">
+						<label class="form-label d-none">날짜</label>
+						<div class="input-daterange input-group">
+							<input type="text" class="form-control datepicker" name="sdate" id="sdate" placeholder="시작일자">
+							<div class="input-group-append input-group-prepend">
+								<span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>
+							</div>
+							<input type="text" class="form-control datepicker" name="edate" id="edate" placeholder="종료일자">
+						</div>
+					</div>
+					<div class="col-md">
+						<label class="form-label d-none ">&nbsp;</label>
+						<button class="btn btn-sm btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span class="">Search</span></button>
+					</div>
+				</div>
+
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">		                
+						<tr>
+							<th class="text-center">접수시간</th>
+							<th class="text-center">대리점</th>
+<!--							<th rowspan="2" class="text-center">서비스</th>-->
+							<th class="text-center">발신번호</th>
+							<th class="text-center">남긴번호</th>
+							<th class="text-center">처리시간</th>
+							<th class="text-center">처리자ID</th>
+							<th class="text-center">처리자</th>
+<!--							<th rowspan="2" class="text-center">처리결과</th>-->
+							<th class="text-center">콜백 구분</th>
+						</tr><!--
+						<tr>
+							<th class="text-center">번호</th>
+							<th class="text-center">이름</th>
+						</tr>-->
+					</thead>
+				</table>
+
+			</div>
+		</div>
+	</div>
+	
+</main>
+
+</html>

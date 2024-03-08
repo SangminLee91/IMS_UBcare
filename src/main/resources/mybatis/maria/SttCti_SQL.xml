@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="sttCti">
+    <select id="getAgentData" parameterType="hashmap" resultType="hashmap">
+    	CALL ims_ifx.IFX_AgentSummary(#{Search_Type}, #{Agent_Key}, #{Dept_No}, #{sDate}, #{eDate}, #{sTime}, #{eTime})
+	</select> 
+    <select id="getAgentHistData" parameterType="hashmap" resultType="hashmap">
+    	CALL ims_ifx.IFX_AgentActivityStats(#{Agent_Key}, #{Dept_No}, #{sDate}, #{eDate})
+	</select> 
+    <select id="getAgentResultData" parameterType="hashmap" resultType="hashmap">
+    	CALL ims_ifx.IFX_AgentResult(#{Search_Type}, #{Agent_Key}, #{Dept_No}, #{sDate}, #{eDate}, #{sTime}, #{eTime})
+	</select>
+    <select id="getAgentCallData" parameterType="hashmap" resultType="hashmap">
+    	CALL ims_ifx.IFX_AgentCall(#{Search_Type}, #{Agent_Key}, #{Dept_No}, #{sDate}, #{eDate}, #{sTime}, #{eTime})
+	</select>
+    <select id="getAgentStatusData" parameterType="hashmap" resultType="hashmap">
+    	CALL ims_ifx.IFX_AgentStatus(#{Search_Type}, #{Agent_Key}, #{Dept_No}, #{sDate}, #{eDate}, #{sTime}, #{eTime})
+	</select>
+    <select id="getQueueStatsData" parameterType="hashmap" resultType="hashmap">
+    	CALL ims_ifx.IFX_QueueStats(#{Search_Type}, #{Queue_Key}, #{sDate}, #{eDate}, #{sTime}, #{eTime})
+	</select>
+	
+    <select id="sttAgentQueData" parameterType="hashmap" resultType="hashmap">
+    	CALL oigweb.IFX_UserQueueStats_yp(#{Agent_Key}, #{Dept_No}, #{sDate}, #{eDate})
+	</select>
+</mapper>

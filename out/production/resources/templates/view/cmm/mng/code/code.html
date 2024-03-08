@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ko"
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	let SELECTED_ROW = "";
+	let SELECTED_DTL_ROW = "";
+	let FORM_MODE = "add";
+	let FORM_DTL_MODE = "add";
+
+	$(document).ready(function() {
+
+		//공통 코드
+		const table = $('#cmmcode_dt').DataTable({
+			ajax: {
+				url: CONTEXT_PATH+"/code/cmm/list",
+				method: "POST",
+				dataSrc: "Code"
+			},
+			columns: [
+				{ "data": "Cmm_Code" },
+				{ "data": "Cmm_Code_Nm" }
+			],
+			searching: false,
+			ordering: false,
+			scrollY: "350px",
+			scrollCollapse: true
+		});
+		table.on('select', function(e, dt, type, indexes){
+			SELECTED_ROW = table.row(indexes).data();
+			$('#cmmcodedtl_dt').DataTable().ajax.reload();
+
+			$("#Cmm_Code_Nm").val(SELECTED_ROW.Cmm_Code_Nm);
+			SELECTED_DTL_ROW = "";
+
+			FORM_MODE = "edit";
+			$("#form-mode").text("수정");
+
+		}).on('deselect', function(){
+			SELECTED_ROW = "";
+			SELECTED_DTL_ROW = "";
+
+			FORM_MODE = "add";
+			$("#form-mode").text("등록");
+		});
+
+
+		//공통코드 상세
+		const CmmDtl_dt = $('#cmmcodedtl_dt').DataTable({
+			ajax: {
+				url: CONTEXT_PATH+"/code/cmm/dtl/list",
+				method: "POST",
+				dataSrc: "Code",
+				data: function(param) {
+					param.Cmm_Code = SELECTED_ROW.Cmm_Code
+				}
+			},
+			columns: [
+				{ "data": "Cmm_Dtl_Code_Idx" },
+				{ "data": "Cmm_Code" },
+				{ "data": "Cmm_Dtl_Code" },
+				{ "data": "Cmm_Dtl_Code_Nm" }
+			],
+			columnDefs: [
+					{ targets: [0, 1], visible: false, searchable: false }
+			],
+			searching: false,
+			ordering: false,
+			scrollY: "350px",
+			scrollCollapse: true
+		});
+		CmmDtl_dt.on('select', function(e, dt, type, indexes){
+			SELECTED_DTL_ROW = CmmDtl_dt.row(indexes).data();
+			FORM_DTL_MODE = "edit"
+
+			$("#Cmm_Code_Nm_Read").val(SELECTED_ROW.Cmm_Code_Nm);
+			$("#Cmm_Code_Nm").val(SELECTED_ROW.Cmm_Code_Nm);
+			$("#Cmm_Dtl_Code").val(SELECTED_DTL_ROW.Cmm_Dtl_Code);
+			$("#Cmm_Dtl_Code_Nm").val(SELECTED_DTL_ROW.Cmm_Dtl_Code_Nm);
+
+
+			$("#code-dtl-form").css("display", "block");
+			$("#Cmm_Dtl_Code_Nm").focus();
+
+		}).on('deselect', function(){
+			SELECTED_DTL_ROW = "";
+			FORM_DTL_MODE = "add"
+		});
+
+		//Add
+		$("#btn-add").click(function (){
+			if($("#code-form").css("display") === "none")
+			{
+				$("#code-form").css("display","block");
+			}
+
+			FORM_MODE = "add";
+			$("#form-mode").text("등록");
+
+			$("#Cmm_Code_Nm").val("");
+			$("#Cmm_Code_Nm").focus();
+		});
+
+		//Edit
+		$("#btn-edt").click(function () {
+			if(SELECTED_ROW === "") {
+				alert("수정할 코드를 선택하세요.");
+				return false;
+			}
+
+			FORM_MODE = "edit";
+			$("#form-mode").text("수정");
+
+			$("#Cmm_Code_Nm").val(SELECTED_ROW.Cmm_Code_Nm);
+			$("#code-form").css("display", "block");
+		});
+
+		//save
+		$("#btn-save").click(function(){
+			if($("#Cmm_Code_Nm").val() === "") {
+				alert($("#form-mode").text()+"할 코드를 입력하세요.")
+				return false;
+			}
+
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/code/cmm/"+FORM_MODE,
+				data: { Cmm_Code: SELECTED_ROW.Cmm_Code, Cmm_Code_Nm: $("#Cmm_Code_Nm").val() },
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (rst) {
+				console.log(rst);
+				SELECTED_ROW = "";
+				FORM_MODE = "add";
+				$("#code-form").css("display","none");
+				$("#Cmm_Code_Nm").val("");
+
+				$('#cmmcode_dt').DataTable().ajax.reload();
+			});
+		});
+
+		//delete
+		$("#btn-delete").click(function(){
+			if(SELECTED_ROW === "")
+			{
+				alert("삭제할 코드를 선택하세요.");
+				return false;
+			}
+
+			if(confirm("["+SELECTED_ROW.Cmm_Code_Nm +"] 코드를 삭제 하시겠습니까?")) {
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/code/cmm/del",
+					data: {Cmm_Code: SELECTED_ROW.Cmm_Code},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (rst) {
+					console.log(rst);
+					$('#cmmcode_dt').DataTable().ajax.reload();
+					SELECTED_ROW = "";
+				});
+			}
+		});
+
+
+
+		//공통코드 상세 Add
+		$("#btn-dtl-add").click(function(){
+			if(SELECTED_ROW === "")
+			{
+				alert("공통 코드를 선택하세요.");
+				return false;
+			}
+
+			if($("#code-dtl-form").css("display") === "none") $("#code-dtl-form").css("display","block");
+
+			FORM_DTL_MODE = "add";
+			$("#Cmm_Code_Nm_Read").val(SELECTED_ROW.Cmm_Code_Nm);
+			$("#Cmm_Dtl_Code").val("");
+			$("#Cmm_Dtl_Code_Nm").val("");
+			$("#Cmm_Dtl_Code").focus();
+		});
+
+		//Edit
+		$("#btn-dtl-edt").click(function () {
+			if(SELECTED_DTL_ROW === "") {
+				alert("수정할 코드를 선택하세요.");
+				return false;
+			}
+
+			FORM_DTL_MODE = "edit";
+			$("#Cmm_Code_Nm_Read").val(SELECTED_ROW.Cmm_Code_Nm);
+			$("#Cmm_Code_Nm").val(SELECTED_ROW.Cmm_Code_Nm);
+			$("#Cmm_Dtl_Code").val(SELECTED_DTL_ROW.Cmm_Dtl_Code);
+			$("#Cmm_Dtl_Code_Nm").val(SELECTED_DTL_ROW.Cmm_Dtl_Code_Nm);
+
+			$("#code-dtl-form").css("display", "block");
+			$("#Cmm_Dtl_Code_Nm").focus();
+		});
+
+		//Save
+		$("#btn-dtl-save").click(function(){
+			if($("#Cmm_Dtl_Code").val() === "") {
+				alert("등록할 상세 코드를 입력하세요.")
+				return false;
+			}
+			if($("#Cmm_Dtl_Code_Nm").val() === "") {
+				alert("등록할 상세 코드명를 입력하세요.")
+				return false;
+			}
+
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/code/cmm/dtl/"+FORM_DTL_MODE,
+				data: {
+					Cmm_Dtl_Code_Idx: SELECTED_DTL_ROW.Cmm_Dtl_Code_Idx,
+					Cmm_Dtl_Code: $("#Cmm_Dtl_Code").val(),
+					Cmm_Dtl_Code_Nm: $("#Cmm_Dtl_Code_Nm").val(),
+					Cmm_Code: SELECTED_ROW.Cmm_Code
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (rst) {
+				console.log(rst);
+				$("#code-dtl-form").css("display", "none");
+				$("#Cmm_Code_Nm_Read").val("");
+				$("#Cmm_Code_Nm").val("");
+				$("#Cmm_Dtl_Code").val("");
+				$("#Cmm_Dtl_Code_Nm").val("");
+
+
+				$('#cmmcodedtl_dt').DataTable().ajax.reload();
+			});
+		});
+
+		//delete
+		$("#btn-dtl-delete").click(function(){
+			if(SELECTED_DTL_ROW === "")
+			{
+				alert("삭제할 상세 코드를 선택하세요.");
+				return false;
+			}
+
+			if(confirm("["+SELECTED_DTL_ROW.Cmm_Dtl_Code_Nm +"] 코드를 삭제 하시겠습니까?")) {
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/code/cmm/dtl/del",
+					data: {Cmm_Dtl_Code_Idx: SELECTED_DTL_ROW.Cmm_Dtl_Code_Idx},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (rst) {
+					console.log(rst);
+					$('#cmmcodedtl_dt').DataTable().ajax.reload();
+					SELECTED_DTL_ROW = "";
+				});
+			}
+		});
+
+	});
+	</script>
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 공통 코드 관리
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="row">
+		<div class="col-xs-6 col-sm-6 col-md-6">
+			<div class="panel">
+				<div class="panel-container show">
+					<div class="panel-content">
+
+						<button class="btn btn-xs btn-dark mt-1" id="btn-add">Add</button>
+						<button class="btn btn-xs btn-dark mt-1" id="btn-edt">Edit</button>
+						<button class="btn btn-xs btn-dark mt-1 float-right" id="btn-delete">Delete</button>
+
+						<table id="cmmcode_dt" class="table table-bordered table-hover table-striped w-100 table-sm" style="width:100%">
+							<thead class="thead-themed">
+								<tr>
+		            			    <th data-class="expand">코드 번호</th>
+		            				<th>코드 명</th>
+								</tr>
+							</thead>
+						</table>
+					</div>
+				</div>
+			</div>
+
+
+			<div id="code-form" class="panel" style="display:none">
+				<div class="panel-hdr text-primary">
+					<h2 id="form-mode">등록</h2>
+					<div class="panel-toolbar">
+						<button class="float-right btn btn-panel bg-transparent fs-xl w-auto h-auto rounded-0" data-action="hide" data-target_id="code-form" data-offset="0,10" data-original-title="Close"><i class="fal fa-times"></i></button>
+					</div>
+				</div>
+
+				<div class="panel-container show">
+					<div class="panel-content">
+						<div class="form-row ml-0 mr-0">
+							<div class="form-group w-100">
+								<!--<label class="form-label" for="Cmm_Code_Nm">Add</label>-->
+								<div class="input-group input-group-sm">
+									<div class="input-group-prepend">
+										<span class="input-group-text">공통 코드 명</span>
+									</div>
+									<input id="Cmm_Code_Nm" type="text" class="form-control">
+								</div>
+							</div>
+						</div>
+						<button class="btn btn-xs btn-dark mt-3" id="btn-save">Save</button>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+
+		<div class="col-xs-6 col-sm-6 col-md-6">
+			<div class="panel">
+				<div class="panel-container show">
+					<div class="panel-content">
+						<button class="btn btn-xs btn-dark mt-1" id="btn-dtl-add">Add</button>
+						<button class="btn btn-xs btn-dark mt-1" id="btn-dtl-edt">Edit</button>
+						<button class="btn btn-xs btn-dark mt-1 float-right" id="btn-dtl-delete">Delete</button>
+
+						<table id="cmmcodedtl_dt" class="table table-bordered table-hover table-striped w-100 table-sm" style="width:100%">
+							<thead class="thead-themed">
+								<tr>
+		            				<th>Cmm_Dtl_Code_Idx</th>
+		            				<th>공통 코드</th>
+		            			    <th>상세 코드</th>
+		            				<th>상세 코드 명</th>
+								</tr>
+							</thead>
+						</table>
+					</div>
+				</div>
+			</div>
+
+			<div id="code-dtl-form" class="panel" style="display:none">
+				<div class="panel-hdr text-primary">
+					<div class="panel-toolbar">
+						<button class="btn btn-panel bg-transparent fs-xl w-auto h-auto rounded-0" data-action="hide" data-target_id="code-dtl-form" data-offset="0,10" data-original-title="Close"><i class="fal fa-times"></i></button>
+					</div>
+				</div>
+
+				<div class="panel-container show">
+					<div class="panel-content">
+						<div class="form-row ml-0 mr-0">
+							<div class="form-group w-50">
+								<div class="input-group input-group-sm">
+									<div class="input-group-prepend">
+										<span class="input-group-text">공통 코드 명</span>
+									</div>
+									<input id="Cmm_Code_Nm_Read" readonly type="text" class="form-control">
+								</div>
+							</div>
+							<div class="form-group pr-3">
+								<div class="input-group input-group-sm">
+									<div class="input-group-prepend">
+										<span class="input-group-text">상세 코드</span>
+									</div>
+									<input id="Cmm_Dtl_Code" type="text" class="form-control">
+								</div>
+							</div>
+							<div class="form-group pr-3">
+								<div class="input-group input-group-sm">
+									<div class="input-group-prepend">
+										<span class="input-group-text">상세 코드 명</span>
+									</div>
+									<input id="Cmm_Dtl_Code_Nm" type="text" class="form-control">
+								</div>
+							</div>
+						</div>
+						<button class="btn btn-xs btn-dark mt-3" id="btn-dtl-save">Save</button>
+					</div>
+				</div>
+			</div>
+
+		</div>
+		
+	</div>
+
+
+</main>
+
+
+</html>

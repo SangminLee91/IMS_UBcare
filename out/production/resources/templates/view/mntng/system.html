@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script th:src="@{/js/statistics/flot/flot.bundle.js}"></script>
+	<script th:src="@{/js/statistics/easypiechart/easypiechart.bundle.js}"></script>
+
+	<script type="text/javascript">
+	let _SVRIP_ = ""; //"10.50.91.25";
+
+	$(document).ready(function() {
+		// _SVRIP_ = "";
+		const updateInterval = 15000;
+
+		//단위변환 byte => bps
+		function ByteConvert(val)
+		{
+			let unit = 1000;
+			let _byte = val ;
+			if( _byte >= unit * unit * unit){ // G
+				let Gbps = _byte / (unit * unit * unit);
+				return Gbps.toFixed(2) + ' Gbps';
+
+			}else if( _byte >= unit * unit ){ // M
+				let Mbps = _byte / (unit * unit);
+				return Mbps.toFixed(1) + ' Mbps';
+
+			}else if( _byte >= unit  ){  //k
+				let kbps = _byte / unit;
+				return kbps.toFixed(0) + ' Kbps';
+
+			}else if( _byte < unit ){ //1000미만 bps
+				return _byte + ' bps';
+			}
+		}
+
+
+		/*모니터링 Server IP*/
+		const SvrIP = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mntng/system/svrip",// <c:url value='/api/mntng/svrip.do'/>",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				SvrIP_Make(data.SvrIP);
+			});
+		}
+
+		const SvrIP_Make = function(data)
+		{
+			let html = '';
+			// let html_combo = '';
+			let svr_selected = '';
+			let status = "", status_color = "";
+
+			$.each(data, function (i, item) {
+				if(i === 0) _SVRIP_ = item.Svr_Ip;
+
+				status = "";
+				status_color = "";
+				svr_selected = "";
+				switch (item.Run_Status) {
+					case 0 :
+						status = "Stop";
+						status_color = "status-danger";
+						break;
+					case 1 :
+						status = "Running";
+						status_color = "status-success";
+						break;
+					case 2 :
+						status = "Check";
+						status_color = "status-warning";
+						break;
+					default:
+						status = "";
+						status_color = "status-success";
+				}
+
+				if(item.Run_StatusChk === -1) status_color = "status-warning";
+
+				if (_SVRIP_ === item.Svr_Ip) {
+					svr_selected = "svr_selected";
+				}
+
+
+				html ='<div class="col-12 _svr_item_ '+svr_selected+'" data-cpumodel="'+item.Model+'" data-svrip="'+item.Svr_Ip+'" id="svrList_'+item.Svr_Ip.split(".").join("")+'">';
+				html +='	<div class="row no-gutters row-grid align-items-stretch">';
+				html +='		<div class="col-sm-3 col-md-3">';
+				html +='			<div class="p-3">';
+				html +='				<div class="d-flex">';
+				html +='					<div class="d-inline-flex flex-column">';
+				html +='						<a href="javascript:void(0)" class="fs-lg fw-500 d-block">'+item.Svr_Ip+' </a>';
+				html +='						<div class="d-block text-muted fs-sm">'+item.Svr_Desc+' ('+item.Host_Nm+')</div>';
+				html +='					</div>';
+				html +='				</div>';
+				html +='			</div>';
+				html +='		</div>';
+				html +='		<div class="col-sm-2 col-md-2 hidden-md-down">';
+				html +='			<div class="pl-3 pt-4"><span class="d-block text-muted" id="_svrList_Cpu'+item.Svr_Ip.split(".").join("")+'">'+parseInt(item.Cpu)+' <i>%</i></span></div>';
+				html +='		</div>';
+				html +='		<div class="col-sm-2 col-md-2 hidden-md-down">';
+				html +='			<div class="pl-3 pt-4"><span class="d-block text-muted" id="_svrList_Mem'+item.Svr_Ip.split(".").join("")+'">'+item.Memory+' <i>%</i></span></div>';
+				html +='		</div>';
+				html +='		<div class="col-sm-3 col-md-3 hidden-md-down">';
+				html +='			<div class="p-3">';
+				html +='				<div class="d-flex">';
+				html +='					<div class="d-inline-flex flex-column">';
+				html +='						<span class="d-block text-muted fs-sm" id="_svrList_Tx'+item.Svr_Ip.split(".").join("")+'"><i class="fal fa-upload"></i> '+ByteConvert(item.NetworkRx)+'</span>';
+				html +='						<div class="d-block text-muted fs-sm" id="_svrList_Rx'+item.Svr_Ip.split(".").join("")+'"><i class="fal fa-download"></i> '+ByteConvert(item.NetworkTx)+'</span></div>';
+				html +='					</div>';
+				html +='				</div>';
+				html +='			</div>';
+				html +='		</div>';
+				html +='		<div class="col-sm-2 col-md-2 hidden-md-down">';
+				html +='			<div class="pl-3 pt-5 text-center">';
+				html +='				<span class="status '+status_color+' rounded-circle" id="_svrList_Proc'+item.Svr_Ip.split(".").join("")+'"></span>';
+				html +='			</div>';
+				html +='		</div>';
+				html +='	</div>';
+				html +='</div>';
+
+				//Server Select BOX
+				$("._selectbox_svr_").append($('<option>', { value: item.Svr_Ip, text: item.Svr_Ip }));
+				$("._svrinfo_").append(html);
+				$("._selectbox_svr_").val(_SVRIP_);
+			});
+
+			//모니터링 시작
+			MemoryUpdate();
+			ProcUpdate();
+			CpuUpdate();
+			getDiskData(_SVRIP_);
+			$("#cpu_model").text($("#svrList_"+_SVRIP_.split(".").join("")).data("cpumodel"));
+		}
+
+
+		$("._svrinfo_").css("cursor","pointer").on("click", "._svr_item_", function (e) {
+			_SVRIP_ = $(e.currentTarget).data('svrip');
+
+			$("._svr_item_").removeClass("svr_selected");
+			$(this).addClass("svr_selected");
+			//select box 변경
+			$("._selectbox_svr_").val(_SVRIP_);
+
+			$("#cpu_model").text($(this).data("cpumodel"));
+
+			MemoryUpdate();
+			ProcUpdate();
+			CpuUpdate();
+			getDiskData(_SVRIP_);
+
+		});
+
+
+		// server select box
+		$("._selectbox_svr_").change(function(){
+
+			if($(this).val() !== "") {
+				_SVRIP_ = $(this).val();
+
+				$("._svr_item_").removeClass("svr_selected");
+				$("#svrList_"+_SVRIP_.split(".").join("")).addClass("svr_selected");
+				$("#cpu_model").text($("#svrList_"+_SVRIP_.split(".").join("")).data("cpumodel"));
+
+
+				MemoryUpdate();
+				ProcUpdate();
+				CpuUpdate();
+				getDiskData(_SVRIP_);
+			}
+		});
+
+
+		/*모니터링 최종 Summary Data*/
+		const getSummaryData = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mntng/system/summry", //<c:url value='/api/mntng/SummryData.do'/>",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) { //data.Summry
+
+				let status = "", status_color = "";
+				$.each(data.Summry, function (i, item) {
+					status = "";
+					status_color = "";
+					switch (item.Run_Status) {
+						case 0 :
+							status = "Stop";
+							status_color = "status-danger";
+							break;
+						case 1 :
+							status = "Running";
+							status_color = "status-success";
+							break;
+						case 2 :
+							status = "Check";
+							status_color = "status-warning";
+							break;
+						default:
+							status = "";
+							status_color = "status-success";
+					}
+
+					if(item.Run_StatusChk === -1) status_color = "status-warning";
+
+
+					$("#_svrList_Cpu"+item.Svr_Ip.split(".").join("")).html(parseInt(item.Cpu)+" <i>%</i>");
+					$("#_svrList_Mem"+item.Svr_Ip.split(".").join("")).html(item.Memory+" <i>%</i>");
+					$("#_svrList_Tx"+item.Svr_Ip.split(".").join("")).html('<i class="fal fa-upload"></i> '+ByteConvert(item.NetworkRx));
+					$("#_svrList_Rx"+item.Svr_Ip.split(".").join("")).html('<i class="fal fa-download"></i> '+ByteConvert(item.NetworkTx));
+					$("#_svrList_Proc"+item.Svr_Ip.split(".").join("")).removeClass("status-danger").removeClass("status-success").removeClass("status-warning").addClass(status_color);
+
+					//$("._svrStat"+item.Svr_Ip.split(".").join("")).css("border-left","3px solid "+status_color)
+
+				});
+
+			});
+		}
+
+		/*Disk*/
+		const getDiskData = function(SvrIP) {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mntng/system/disk",//<c:url value='/api/mntng/DiskData.do'/>",
+				data: {Svr_Ip: SvrIP},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+
+				let html = '';
+				let mt2 = '';
+				$.each(data.Disk, function (i, item) {
+
+					mt2= '';
+					if( i === 0) mt2 = 'mt-2';
+
+					html +='			<div class="d-flex '+mt2+'">';
+					html +='				'+item.Disk_Nm+'';
+					html +='				<span class="d-inline-block ml-auto">'+item.Use_Psbl_Qty+' G / '+item.Total_Qty+' G</span>';
+					html +='			</div>';
+					html +='			<div class="progress progress-sm mb-3">';
+					html +='				<div class="progress-bar bg-primary-300 role="progressbar" style="width: '+item.Use_Pct+'%;" aria-valuenow="'+item.Use_Pct+'" aria-valuemin="0" aria-valuemax="100"></div>';
+					html +='			</div>';
+
+				});
+				$("._updating-disk").html("").append(html);
+			});
+		}
+
+
+		/*CPU*/
+		let data = [], $UpdatingChartColors = $("#updating-chart").css('color');
+		let TopCnt = 100;
+
+		function getCpuData(SvrIP) {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mntng/system/cpu",//<c:url value='/api/mntng/CpuData.do'/>",
+				data: {Svr_Ip: SvrIP, Top: TopCnt },
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (Rst) {
+				data = [];
+
+				for (let i = 0; i < Rst.Cpu.length; i++) {
+					data.push( [ Rst.Cpu[i].Timestamp, Rst.Cpu[i].UseData ] );
+
+					//CPU easyPie
+					if (i+1 === Rst.Cpu.length)
+					{
+						window.chart = $('._cpu_pie_').data('easyPieChart').update(Math.floor(Rst.Cpu[i].UseData));
+					}
+
+				}
+
+			});
+			return data;
+		}
+
+
+		// CPU Setup plot
+		const options = {
+			yaxis: {
+				min: 0,
+			max: 100,
+			tickSize: 5,
+			tickFormatter: function (v, axis) {
+				if (v % 10 === 0) {
+					return v + "%";
+				} else {
+					return "";
+				}
+			},
+			axisLabel: "loading",
+			axisLabelUseCanvas: true,
+			axisLabelFontSizePixels: 12,
+			axisLabelFontFamily: 'Verdana, Arial',
+			axisLabelPadding: 6
+			},
+			xaxis: {
+				mode: "time",
+				timeformat: "%H:%M"
+			},
+			colors : [color.primary._700], //$UpdatingChartColors],
+			series : {
+				lines : {
+					lineWidth : 1,
+					fill : true,
+					fillColor : {
+						colors : [{
+							opacity : 0.1
+						}, {
+							opacity : 0.15
+						}]
+					},
+					steps : false
+				}
+			}
+		};
+
+		let plot = $.plot($("#updating-chart"), [getCpuData(_SVRIP_)], options);
+
+		function CpuUpdate() {
+			plot.setData([getCpuData(_SVRIP_)]);
+			plot.setupGrid();
+			plot.draw();
+		}
+
+		/*Memory*/
+		function getMemoryData(SvrIP)
+		{
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mntng/system/memory",//<c:url value='/api/mntng/MemoryData.do'/>",
+				data: {Svr_Ip: SvrIP},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (Rst) {
+				if(Rst.Mem != null)
+				{
+					//$('._pie_Mem').data('easyPieChart').update(Math.floor(Rst.Mem.Last_Mem_Use));
+					$("#_mem_Used").text(Rst.Mem.Used_Qty +" G");
+					$("#_mem_Total").text(Rst.Mem.Total_Qty +" G");
+
+					window.chart = $('._memory_pie_').data('easyPieChart').update(Math.floor(Rst.Mem.Last_Mem_Use));
+
+				}
+			});
+		}
+
+
+		/*Process*/
+		const getProcData = function(SvrIP) {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mntng/system/process",//<c:url value='/api/mntng/ProcData.do'/>",
+				data: {Svr_Ip: SvrIP},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				Make_Process(data.Proc);
+			});
+		}
+		const Make_Process = function(data) {
+			let html = "";
+			let status = "";
+			let status_color = "";
+			// let svrchk = "";
+
+			$.each(data, function (i, item) {
+				status = "";
+				status_color = "";
+				switch (item.Run_Status) {
+					case 0 :
+						status = "Terminate/Stop";
+						status_color = "red";
+						break;
+					case 1 :
+						status = "Running";
+						status_color = "blue";
+						break;
+					case 2 :
+						status = "Running(Check)";
+						status_color = "green";
+						break;
+					default:
+						status = "";
+						status_color = "blue";
+				}
+
+				if (item.SvrChk < 0)
+				{
+					status = "Server Chceck";
+					status_color = "red";
+				}
+
+				html += '<tr>';
+				html += '	<td><a href="javascript:void(0);">'+item.Process_Nm+'</a></td>';
+				html += '	<td class="hidden-mobile text-align-center">'+item.Process_Cnt+'</td>';
+				html += '	<td class="hidden-mobile text-align-center">'+item.Run_Process_Cnt+'</td>';
+				html += '<td class="text-align-center"><span style="color:'+status_color+'">'+status+'<span></td>';
+				html += '</tr>';
+			});
+
+			$("._procList").html("").append(html);
+		}
+		const ProcUpdate = function(){
+			getProcData(_SVRIP_);
+		}
+		const MemoryUpdate = function(){
+			getMemoryData(_SVRIP_);
+		}
+
+		/*Start*/
+		function StartMonitoring() {
+			MemoryUpdate();
+			ProcUpdate();
+			CpuUpdate();
+			getSummaryData();
+
+			setTimeout(StartMonitoring, updateInterval);
+		}
+
+		SvrIP();
+
+		StartMonitoring();
+	});
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 시스템 모니터링
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+<!--	<ol class="breadcrumb page-breadcrumb">-->
+<!--		<li class="breadcrumb-item"><a href="javascript:void(0);">Home</a></li>-->
+<!--		<li class="breadcrumb-item">모니터링</li>-->
+<!--		<li class="breadcrumb-item active">통합 모니터링</li>-->
+<!--		<li class="position-absolute pos-top pos-right d-none d-sm-block"><span class="js-get-date"></span></li>-->
+<!--	</ol>-->
+<!--	-->
+	
+	<div class="row">
+	
+		<div class="col-xs-12 col-sm-12 col-md-5">
+			<div class="panel">
+				<div class="panel-hdr">
+					<h2>시스템 요약 정보</h2>
+					<div class="panel-toolbar">
+						<select class="custom-select custom-select-sm _selectbox_svr_">
+							<option value="" selected>Server select</option>
+						</select>
+					</div>
+				</div>
+				<div class="panel-container show">
+					<div class="panel-content">
+							
+							<div class="card mb-g border shadow-0">
+								<div class="card-header p-0">
+									<div class="row no-gutters row-grid align-items-stretch">
+										<div class="col-sm-3 col-md-3">
+											<div class="text-muted py-2 px-3">IP</div>
+										</div>
+										<div class="col-sm-2 col-md-2 hidden-md-down">
+											<div class=" text-muted py-2 px-3">CPU</div>
+										</div>
+										<div class="col-sm-2 col-md-2 hidden-md-down">
+											<div class="text-muted py-2 px-3">Memory</div>
+										</div>
+										<div class="col-sm-3 col-md-3 hidden-md-down">
+											<div class=" text-muted py-2 px-3">Ethernet</div>
+										</div>
+										<div class="col-sm-2 col-md-2 hidden-md-down">
+											<div class="text-muted py-2 px-3">Process</div>
+										</div>
+									</div>
+								</div>
+
+								<div class="card-body p-0">
+									<div class="row no-gutters row-grid _svrinfo_">
+									</div>
+								</div>								
+							
+						</div>
+					
+					</div>
+				</div>
+			</div>	
+		</div>
+
+
+
+		<div class="col-xs-12 col-sm-12 col-md-7">
+			
+			<!-- CPU Realtime -->
+			<div class="col-xs-12 col-sm-12 col-md-12">
+				<div class="panel">
+					<div class="panel-hdr">
+						<h2>CPU <span class="fw-300" id="cpu_model"></span></h2>
+						<div class="panel-toolbar">
+							<h2>Memory <span class="fw-300" id="_mem_Used"></span> /<span class="fw-300" id="_mem_Total"></span></h2>
+						</div>
+					</div>
+					
+	        	
+	        	
+					<div class="panel-container show">
+						<div class="panel-content p-0">	
+							
+							<div class="row row-grid no-gutters">
+								<div class="col-sm-12 col-md-12 col-lg-7 pl-1">
+									<div id="updating-chart" style="height:200px"></div>
+								</div>
+								
+								
+								<div class="col-sm-12 col-md-12 col-lg-5">
+								
+									<div class="row row-grid no-gutters pt-4">
+									
+										<div class="col-sm-12 col-md-6 col-lg-6">
+											<div class="_cpu_pie_ js-easy-pie-chart color-primary-300 position-relative d-inline-flex align-items-center justify-content-center" data-percent="0" data-piesize="150" data-linewidth="20" data-trackcolor="#ccbfdf" data-scalelength="8">
+												<div class="d-flex flex-column align-items-center justify-content-center position-absolute pos-left pos-right pos-top pos-bottom fw-300 fs-xl">
+													<span class="js-percent d-block text-dark"></span>
+													<div class="d-block fs-xs text-dark opacity-70">
+														<small>CPU</small>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="col-sm-12 col-md-6 col-lg-6">
+											<div class="_memory_pie_ js-easy-pie-chart color-primary-300 position-relative d-inline-flex align-items-center justify-content-center" data-percent="0" data-piesize="150" data-linewidth="20" data-trackcolor="#ccbfdf" data-scalelength="8">
+												<div class="d-flex flex-column align-items-center justify-content-center position-absolute pos-left pos-right pos-top pos-bottom fw-300 fs-xl">
+													<span class="js-percent d-block text-dark"></span>
+													<div class="d-block fs-xs text-dark opacity-70">
+														<small>Memory</small>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									
+								</div>
+								
+							</div>
+							
+						</div>
+						
+					</div>
+				</div>
+			</div>
+			<!-- CPU Realtime -->
+
+			<!-- disk -->
+			<div class="col-xs-12 col-sm-12 col-md-12">
+				<div class="panel">
+					<div class="panel-hdr">
+						<h2>Disk</h2>
+					</div>
+					<div class="panel-container show">
+						<div class="panel-content">	
+							<div class="col-lg-12 col-xl-12 pl-lg-12 _updating-disk">
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- DISK -->
+			
+			
+			<!-- PROCESS Status -->
+			<div class="col-xs-12 col-sm-12 col-md-12">
+				<div class="panel">
+					<div class="panel-hdr">
+						<h2>Process 상태</h2>
+					</div>
+					<div class="panel-container show">
+						<div class="panel-content">	
+							<table class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+								<thead class="thead-themed">
+									<tr>
+										<th>Process 명</th>
+										<th>전체 Process 수</th>
+										<th>실행 Process 수</th>
+										<th>상태</th>
+									</tr>
+								</thead>
+								<tbody class="_procList">
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- PROCESS Status -->
+
+		</div>
+		
+	</div>
+
+</main>
+
+</html>

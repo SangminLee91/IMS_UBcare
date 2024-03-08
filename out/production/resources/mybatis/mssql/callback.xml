@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mssql">
+    <select id="getCallBack" parameterType="hashmap" resultType="hashmap">
+        SELECT COUNT(1) as Cnt
+        FROM dbo.tblCTI_Callback
+        WHERE endDate IS NULL
+        AND RegDate > = Convert(varchar(10), getdate(), 121)
+        AND domain_num in(<foreach collection="list" item="item" separator=",">#{item.domain_num}</foreach>
+        )
+    </select>
+
+    <select id="GET_tblCTI_Callback" parameterType="hashmap" resultType="hashmap">
+         EXEC dbo.USP_CallbackSync_S
+    </select>
+
+    <insert id="SET_tblCTI_Callback" parameterType="hashmap">
+        <if test="list.size != 0">
+            INSERT INTO mng_ivr_callback VALUES
+            <foreach collection="list" item="item" separator=",">
+                (#{item.num}, #{item.callid}, #{item.regDate, jdbcType=TIMESTAMP}, #{item.dnis}, #{item.CallerID}, '', '', #{item.inputNum}, #{item.CalleeID}, #{item.endDate, jdbcType=TIMESTAMP}, 0, #{item.skind}, #{item.domain_num}, #{item.CbType})
+            </foreach>
+        </if>
+    </insert>
+
+    <update id="SET_SyncYn_CallBack" parameterType="hashmap">
+        UPDATE dbo.tblCTI_Callback
+        SET SyncStat = 1
+        WHERE num in(<foreach collection="list" item="item" separator=",">#{item.num}</foreach>)
+    </update>
+
+
+    <select id="GET_Process_Callback" parameterType="hashmap" resultType="hashmap">
+        EXEC USP_CallbackProcess_S
+    </select>
+
+    <update id="SET_Process_Callback" parameterType="hashmap">
+
+        <foreach collection="list" item="item">
+        call USP_Mng_Ivr_CallBackProcess_U(#{item.endDate, jdbcType=TIMESTAMP}, #{item.CalleeID}, #{item.num});
+<!--        UPDATE mng_ivr_callback-->
+
+<!--        SET CB_CALLDATETIME = #{item.endDate, jdbcType=TIMESTAMP}, CB_AGENTID = #{item.CalleeID}, CB_RESULT = 1-->
+<!--        WHERE CB_SEQUENCE  = #{item.num} AND CB_RESULT = 0--></foreach>
+    </update>
+
+
+
+    <select id="getMatchDept" parameterType="hashmap" resultType="hashmap">
+        EXEC dbo.USP_DeptList_S
+    </select>
+
+    <select id="getMatchBranch" parameterType="hashmap" resultType="hashmap">
+        EXEC dbo.USP_BranchList_S
+    </select>
+
+    <select id="getMatchAgent" parameterType="hashmap" resultType="hashmap">
+        EXEC dbo.USP_AgentList_S
+    </select>
+
+    <update id="MatchAgentEdt" parameterType="hashmap">
+        EXEC dbo.USP_AgentBranchDept_U #{code}, #{teamkey}, #{branch}
+    </update>
+
+    <select id="getMatchBranchCallback" parameterType="hashmap" resultType="hashmap">
+        EXEC dbo.USP_BranchCallbackCnt_S
+    </select>
+
+    <insert id="MatchAgentAdd" parameterType="hashmap">
+        EXEC dbo.USP_MT_MatchAgent_I #{code}, #{name}, #{hangul}, #{teamkey}
+    </insert>
+
+    <select id="requestService" parameterType="hashmap" resultType="hashmap">
+        EXEC dbo.USP_OnlineCallback_I #{callback}, #{dnis}
+    </select>
+
+</mapper>

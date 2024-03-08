@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+	<link rel="stylesheet" th:href="@{/css/formplugins/bootstrap-timepicker/bootstrap-timepicker.css}">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script th:src="@{/js/formplugins/bootstrap-timepicker/bootstrap-timepicker.min.js}"></script>
+
+	<script type="text/javascript">
+
+		/*<![CDATA[*/
+		let _USER_INFO_EMP_NO_ = "[[${UserInfo.Emp_No}]]";
+		let _USER_INFO_EMP_NM_ = "[[${UserInfo.Emp_Nm}]]";
+		/*]]>*/
+
+		$(document).ready(function() {
+
+			let jsonEmp = null;
+
+			//부서
+			const getDept = function() {
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/cmm/ajax/dept/list",
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					$.each(data.Dept, function (i, item) {
+						$(".sel_dept").append($('<option>', { value: item.Dept_No, text: item.Dept_Nm }));
+					});
+					$('.sel_dept').multiselect({
+						includeFilterClearBtn: false,
+						enableFiltering: true,
+						includeSelectAllOption: true,
+						selectAllText: '전체선택',
+						nonSelectedText: '부 서',
+						allSelectedText: '전체 선택됨',
+						buttonWidth: '100%',
+						maxHeight: 400,
+						buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+					});
+				});
+
+			}
+
+			//사원
+			const getEmp = function() {
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/cmm/ajax/emp/list",
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					jsonEmp = data.Emp;
+					$(".sel_emp option").remove();
+					makeEmp(data.Emp);
+				});
+			}
+			let makeEmp = function(data)
+			{
+				$.each(data, function (i, item) {
+					$(".sel_emp").append($('<option>', { value: item.userid, text: item.Emp_Nm +' ['+item.userid+']' }));
+				});
+				$('.sel_emp').multiselect({
+					includeFilterClearBtn: false,
+					enableFiltering: true,
+					includeSelectAllOption: true,
+					selectAllText: '전체선택',
+					nonSelectedText: '상담원 이름',
+					allSelectedText: '전체 선택됨',
+					buttonWidth: '100%',
+					maxHeight: 400,
+					buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+				});
+				$('.sel_emp').multiselect('rebuild');
+			}
+
+			//부서 변경시 해당부서 사원만 노출
+			$(".sel_dept").change(function(){
+				$(".sel_emp option").remove();
+				let data = jsonEmp;
+
+				if($(this).val() != "")
+				{
+					for(let i = 0; i < $(this).val().length; i++)
+					{
+						let val_Dept_No = $(this).val()[i];
+						data = jsonEmp.filter(function(val) { //선택된 부서의 사원만 필터
+							return (val.Dept_No == val_Dept_No);
+						});
+						makeEmp(data);
+					}
+				}
+				else
+				{
+					makeEmp(data);
+				}
+			});
+
+			getDept();
+			getEmp();
+
+			$("#sdate").val(getToday()); //오늘날짜 기본
+			$("#edate").val(getToday()); //오늘날짜 기본
+
+			//Grid
+
+			const table = $('#dt_basic').DataTable({
+				serverSide : true,
+				ajax: {
+					url: CONTEXT_PATH+"/mng/rec/list", //<c:url value='/api/rec/getrecord.do'/>",
+					type: "POST",
+					data: function ( d ) {
+						d.sdate = $("#sdate").val();
+						d.edate = $("#edate").val();
+						d.stime = $("#stime").val();
+						d.etime = $("#etime").val();
+						// d.userid = $("#userid").val();
+						// d.usernm = $("#usernm").val();
+						d.slocalno = $("#slocalno").val();
+						d.elocalno = $("#elocalno").val();
+						d.stalk = $("#stalk").val();
+						d.etalk = $("#etalk").val();
+						d.tel = $("#tel").val();
+						d.inout = $("#inout").val();
+						// d.dept_no = $(".sel_dept").val().toString().replace(/,/gi, "|");
+						d.userid = $(".sel_emp").val().toString().replace(/,/gi, "|");
+
+					}
+				},
+				columns: [
+					{ "data": "rec_datm" },
+					{ "data": "rec_start_time" },
+					{ "data": "rec_end_time" },
+					{ "data": "rec_call_time" },
+					{ "data": "local_no" },
+					{ "data": "rec_inout" },
+					{ "data": "user_id" },
+					{ "data": "user_name" },
+					{ "data": "cust_tel" },
+					{ "data": "rec_date" },
+					{ "data": "rec_keycode" },
+					{ "data": "listen" },
+					//{ "data": "down" },
+					{ "data": "rec_filename" },
+					{ "data": "recdt" }
+
+
+				],
+				columnDefs: [
+					{  "targets": [9, 10, 12, 13], "visible": false, className: "never" },
+				],
+				iDisplayLength: 15,
+				ordering: false,
+				searching: false,
+				bPaginate: true,
+				drawCallback : function(oSettings) {
+					let api = this.api();
+					let data = api.rows({ page: 'current' }).data();
+					for (let i = 0; i < data.length; i++) {
+						if (data[i].rec_keycode != "" && data[i].local_no !="")
+						{
+							data[i].listen = '<i class="fal fa-headphones _listen" style="cursor:pointer" data-recdt="'+data[i].rec_date+'" data-keycode="'+data[i].rec_keycode+'" data-localno="'+data[i].local_no+'"></i>';
+						}
+						//data[i].down = '<i class="fal fa-download _down" style="cursor:pointer" data-recdate="'+data[i].rec_date+'" data-localno="'+data[i].local_no+'" data-keycode="'+data[i].rec_keycode+'"></i>';
+					}
+					api.rows({ page: 'current' }).invalidate();
+				}
+			});
+
+			//녹취청취
+			$("#dt_basic").on('click',"._listen", function (e) {
+				let rec_dt = $(e.currentTarget).data('recdt');
+				let keycode = $(e.currentTarget).data('keycode');
+				let local_no = $(e.currentTarget).data('localno');
+
+				//청취플레이어 띄운다.
+				const listenUrl = 'https://ubrec.ubcare.co.kr/app/player_reason.jsp?date='+rec_dt+'&keycode='+keycode+'&local='+local_no+"&listen_id="+_USER_INFO_EMP_NO_+"&listen_name="+_USER_INFO_EMP_NM_ ;
+				window.open(listenUrl,"_blank", "width=560, height=440, toolbar=no, menubar=no, location=no, status=no, resizeable=no");
+
+			});
+
+			//다운로드
+			// $("#dt_basic").on('click',"._down", function (e) {
+			// 	let recdate = $(e.currentTarget).data('recdate');
+			// 	let localno = $(e.currentTarget).data('localno');
+			// 	let keycode = $(e.currentTarget).data('keycode');
+			//
+			// 	//파일 다운로드
+			// 	const downUrl = 'https://ubrec.ubcare.co.kr/cnet/player/download_app.php?info='+recdate+'&keycode='+keycode+'&local='+localno;
+			// 	location.href = ""+downUrl+"";
+			// 	//window.open(downUrl,"_blank", "width=0, height=0, toolbar=no, menubar=no, location=no, status=no, resizeable=no")
+			//
+			// });
+
+
+			//검색Btn
+			$("._searchGo").click(function(){
+				let Agent_Key = $(".sel_emp").val().toString().replace(/,/gi, "|");
+				if (Agent_Key === "") {
+					alert("조회할 상담원을 선택하세요.");
+					return false;
+				}
+				else
+				{
+					table.ajax.reload();
+				}
+			})
+
+			//시간표시
+			$('._time').timepicker({
+				defaultTime: "",
+				showMeridian: false, //24시간
+				icons: {
+					up: "fal fa-caret-up",
+					down: "fal fa-caret-down"
+				}
+			});
+
+		});
+
+
+	</script>
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 녹취 정보 관리
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel"> 
+		<div class="panel-hdr">
+			<h2></h2>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+				<!-- BORAD SEARCH -->
+				<div class="px-4 pt-4 mb-4 search_area" style="border: 1px solid rgba(24,28,33,0.06);">
+<!--					<div class="form-group">-->
+<!--						<label class="form-label" for="basic-addon1"></label>-->
+<!--						<div class="input-group">-->
+<!--							<div class="input-group-prepend">-->
+<!--								<span class="input-group-text">일자</span>-->
+<!--							</div>-->
+<!--							<input type="text" id="basic-addon1" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+<!--						</div>-->
+<!--					</div>-->
+
+					<div class="form-row">
+						<div class="col-md-3 mb-2">
+							<label class="form-label">일자</label>
+							<div class="input-daterange input-group">
+								<input type="text" class="form-control datepicker" name="sdate" id="sdate" placeholder="시작일자">
+								<div class="input-group-append input-group-prepend">
+									<span class="input-group-text fs-xl"><i class="fal fa-tilde"></i></span>
+								</div>
+								<input type="text" class="form-control datepicker" name="edate" id="edate" placeholder="종료일자">
+							</div>	
+						</div>
+						<div class="col-md-2 mb-2">
+							<label class="form-label">녹취 시간</label>
+							<div class="input-daterange input-group">
+								<input class="_time form-control" type="text" name="stime" id="stime" placeholder="녹취 시작 시간"  value="00:00">
+								<div class="input-group-append input-group-prepend">
+									<span class="input-group-text fs-xl"><i class="fal fa-tilde"></i></span>
+								</div>
+								<input class="_time form-control" type="text" name="etime" id="etime" placeholder="녹취 종료 시간" value="23:59">
+							</div>
+						</div>
+						<div class="col-md-2 mb-2">
+							<label class="form-label">통화 시간</label>
+							<div class="input-daterange input-group">
+								<select class="custom-select" id="stalk">
+									<th:block th:each="num : ${#numbers.sequence(0,59)}">
+										<option th:value="${num}" th:text="${num}"></option>
+									</th:block>
+									<option value="60">1분</option>
+									<option value="120">2분</option>
+									<option value="180">3분</option>
+									<option value="300">5분</option>
+									<option value="600">10분</option>
+									<option value="1200">20분</option>
+									<option value="1800">30분</option>
+									<option value="3600">60분</option>
+								</select>
+								<div class="input-group-append input-group-prepend">
+									<span class="input-group-text fs-xl"><i class="fal fa-tilde"></i></span>
+								</div>
+								<select class="custom-select" id="etalk">
+									<th:block th:each="num : ${#numbers.sequence(0,59)}">
+										<option th:value="${num}" th:text="${num}"></option>
+									</th:block>
+									<option value="60">1분</option>
+									<option value="120">2분</option>
+									<option value="180">3분</option>
+									<option value="300">5분</option>
+									<option value="600">10분</option>
+									<option value="1200">20분</option>
+									<option value="1800">30분</option>
+									<option value="3600" selected>60분</option>
+									<option value="36000">60분이상</option>
+								</select>
+							</div>
+						</div>
+						<div class="col-md-3 mb-2">
+							<label class="form-label">내선 번호</label>
+							<div class="input-daterange input-group">
+								<input class="form-control" type="text" name="slocalno" id="slocalno" placeholder="내선번호">
+								<div class="input-group-append input-group-prepend">
+									<span class="input-group-text fs-xl"><i class="fal fa-tilde"></i></span>
+								</div>
+								<input class="form-control" type="text" name="elocalno" id="elocalno" placeholder="내선번호">
+							</div>
+						</div>
+						<div class="col-md-2 mb-2">
+							<label class="form-label">인아웃</label>
+							<select class="custom-select" id="inout">
+								<option value="">전체</option>
+								<option value="I">인</option>
+								<option value="O">아웃</option>
+								<option value="L">내선</option>
+							</select>
+						</div>			
+					</div>
+					
+					<div class="form-row">
+						<div class="col-md-3 mb-4">
+							<label class="form-label">부서</label>
+							<select multiple="multiple" class="sel_dept hide"></select>
+						</div>
+						<div class="col-md-3 mb-4">
+							<label class="form-label">상담원</label>
+							<select multiple="multiple" class="sel_emp hide"></select>
+						</div>
+
+
+<!--						<div class="col-md-3 mb-4">-->
+<!--							<label class="form-label">상담원 ID</label>-->
+<!--							<input class="form-control" type="text" name="userid" id="userid" placeholder="">-->
+<!--						</div>-->
+<!--						<div class="col-md-3 mb-4">-->
+<!--							<label class="form-label">상담원 명</label>-->
+<!--							<input class="form-control" type="text" name="usernm" id="usernm" placeholder="">-->
+<!--						</div>-->
+
+
+
+
+						<div class="col-md-3 mb-4">
+							<label class="form-label">발신 전화번호</label>
+							<input class="form-control" type="text" name="tel" id="tel" placeholder="">
+						</div>
+						<div class="col-md-3 mb-4 pt-4">
+							<button class="btn btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span class="">Search</span></button>
+						</div>
+					</div>
+				</div>
+					
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">			                
+						<tr class="text-center">
+							<th>일자</th>
+							<th>시작시간</th>
+							<th>종료시간</th>
+							<th>경과시간</th>
+							<th>내선번호</th>
+							<th>인아웃</th>
+							<th>상담원 ID</th>
+							<th>상담원명</th>
+							<th>발신번호</th>
+							<th></th>
+							<th></th>
+							<th>듣기</th>
+							<!-- <th>다운로드</th> -->
+							<th></th>
+							<th></th>
+						</tr>
+					</thead>
+				</table>
+					
+			</div>
+		</div>
+	</div>
+</main>	
+
+</html>
+

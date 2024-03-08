@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	let SELECTED_ROW = "";
+	$(document).ready(function() {
+		$('#dt_que').DataTable({
+			ajax: {
+				url: CONTEXT_PATH+"/mng/cti/queue/target/list",
+				dataSrc: "Que"
+			},
+			columns: [
+				{ "data": "resourcename" },
+				{ "data": "resourcenum" },
+				{ "data": "requeue" }
+			],
+			ordering: true,
+			searching: true,
+			select: false,
+			scrollY: "536px",
+			scrollCollapse: true
+		});
+
+	});
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 큐 타겟 정보
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-container show">
+			<div class="panel-content">
+				<table id="dt_que" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+						<tr>
+							<th>큐타겟명</th>
+							<th>큐타겟 번호</th>
+							<th>Requeue 타겟</th>
+						</tr>
+					</thead>
+				</table>		
+			</div>
+		</div>
+	</div>	
+			
+			
+</main>
+</html>
+	
+	
+
+

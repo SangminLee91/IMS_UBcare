@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	function reloadData(){
+		$('#dt_basic').DataTable().ajax.reload();
+	}
+
+	$(document).ready(function() {
+		const queue_dt = $('#dt_basic').DataTable({
+			ajax: {
+				url: CONTEXT_PATH+"/mntng/realtime/queuegrant",//<c:url value='/api/mntng/OSCCRealtimeQueueGrant.do'/>",
+				dataSrc: "RTQueue"
+			},
+			columns: [
+				{ "data": "QueueName" },
+				{ "data": "QueueKey" },
+				{ "data": "Contacts" },
+				{ "data": "AbandonedRate" },
+				{ "data": "OldestContactWaitTime" },
+				{ "data": "AverageAnsweredWaitTime" },
+				{ "data": "ServiceLevel" },
+				{ "data": "EstimatedAnsweredWaitTime" },
+				{ "data": "EstimatedServiceLevel" }
+			],
+			columnDefs: [
+				{  "targets": [1], "visible": false, className: "never", "searchable": false }
+			],
+			searching: false,
+			ordering: true,
+			select: false,
+			// scrollY: "600px",
+			// scrollCollapse: true,
+			createdRow: function ( row, data, index ) {
+				let vw_Text = "";
+				if(data.Contacts.toString() != "0")
+				{
+					$('td', row).eq(1)
+					.css("font-weight","700")
+					.css("font-size","15px")
+					.addClass("text-center")
+					.html(data.Contacts.toString());
+				}
+				else
+				{
+					$('td', row).eq(1)
+					.addClass("text-center")
+					.html(data.Contacts.toString());
+				}
+			}
+		});
+
+		//Excel Btn
+/*		const buttons = new $.fn.dataTable.Buttons(queue_dt, {
+			 buttons: [
+			 {
+				  extend: 'excelHtml5',
+				  text: '<i class="fa fa-file-excel-o"></i> Excel',
+				  className: 'btn-outline-success btn-sm mr-1',
+				  title : '대기콜 모니터링',
+				  exportOptions: {
+					modifier: {
+					  page: 'all'
+					}
+				  },
+				  customize: function ( xlsx ){
+					  let sheet = xlsx.xl.worksheets['sheet1.xml'];
+					  $('row c', sheet).attr( 's', '25' ); //boder
+				  }
+				}
+			]
+		}).container().appendTo($('#buttons'));*/
+
+		setInterval("reloadData()", 5000);
+	});
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 대기콜 모니터링
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			<div id="buttons" class="btn-group"></div>	
+		</div>
+		
+		<div class="panel-container show">
+			<div class="panel-content">
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+						<tr class="text-center">
+							<th colspan="4" class="border-bottom-0">큐 정보</th>
+							<th colspan="2" class="border-bottom-0">대기시간</th>
+							<th rowspan="2">서비스레벨</th>
+							<th colspan="2" class="border-bottom-0">예상 대기시간 및 서비스레벨</th>
+						</tr>
+						<tr class="text-center">
+							<th>큐</th>
+							<th class="d-none">큐코드</th>
+							<th>대기콜</th>
+							<th>포기율 %</th>
+							<th>최장</th>
+							<th>응대호평균</th>
+							<th>응대호대기시간 </th>
+							<th>서비스레벨 </th>
+						</tr>
+					</thead>
+				</table>
+			
+			</div>
+		</div>
+	</div>
+	
+</main>		
+
+</html>

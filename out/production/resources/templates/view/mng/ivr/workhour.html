@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+	<link rel="stylesheet" th:href="@{/css/formplugins/bootstrap-timepicker/bootstrap-timepicker.css}">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+
+	<script th:src="@{/js/formplugins/bootstrap-timepicker/bootstrap-timepicker.min.js}"></script>
+
+	<script type="text/javascript">
+	let SELECTED_ROW = "";
+	let SELECTED_DTL_ROW = "";
+	//var _Week = null;
+
+	$(document).ready(function() {
+		//부서
+		const getDept = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/cmm/ajax/dept/list",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$.each(data.Dept, function (i, item) {
+					$(".sel_dept").append($('<option>', { value: item.Dept_No, text: item.Dept_Nm }));
+				});
+				$(".sel_dept")[0].sumo.reload();
+			});
+
+		}
+
+		//기본 공휴일
+		const getHolidate = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mng/ivr/holiday/set/list",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$.each(data.HDSet, function (i, item) {
+					$(".sel_holidate").append($('<option>', { value: item.HD_Code, text: item.HD_Code_Nm }));
+				});
+				$(".sel_holidate")[0].sumo.reload();
+				$(".sel_holidate")[1].sumo.reload();
+			});
+		}
+
+		//근무시간 종류 : code-8, 1-평일, 2-토요일, 3-일요일, 4-공휴일
+		const getWHType = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/code/cmm/dtl/list",
+				data: { Cmm_Code : 8 },
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				//_Week = data.Code;
+
+				//makeWhtype(data.Code);
+
+				$.each(data.Code, function (i, item) {
+					$(".sel_whtype").append($('<option>', { value: item.Cmm_Dtl_Code, text: item.Cmm_Dtl_Code_Nm }));
+				});
+				$(".sel_whtype")[0].sumo.reload();
+
+			});
+		}
+		/*
+		var makeWhtype = function(data) {
+			$(".sel_whtype option").remove();
+
+			$.each(data, function (i, item) {
+				$(".sel_whtype").append($('<option>', { value: item.Cmm_Dtl_Code, text: item.Cmm_Dtl_Code_Nm }));
+			});
+			$(".sel_whtype")[0].sumo.reload();
+		}
+		*/
+
+		//근무시간 Set Grid
+
+		//근무시간 Grid
+		const table = $('#whcode_dt').DataTable({
+			ajax: {
+				url: CONTEXT_PATH+"/mng/ivr/workhour/set/list",
+				dataSrc: "WHSet"
+			},
+			columns: [
+				{ "data": "WH_Code" },
+				{ "data": "WH_Code_Nm" },
+				{ "data": "HD_Code" },
+				{ "data": "HD_Code_Nm" }
+
+			],
+			columnDefs: [{ "targets": [0, 2], "visible": false, "searchable": false}],
+			searching: true,
+			ordering: true,
+			scrollY: "200px",
+			scrollCollapse: true
+		});
+
+
+		//근무시간Set 상세 Grid
+		const CmmDtl_dt = $('#whcodedtl_dt').DataTable({
+			ajax: {
+				url: CONTEXT_PATH+"/mng/ivr/workhour/list",
+				dataSrc: "WH",
+				data: function(d){
+					d.WH_Code = SELECTED_ROW.WH_Code
+				}
+			},
+			columns: [
+				{ "data": "WH_Seq"},
+				{ "data": "WH_Code" },
+				{ "data": "WH_Type" },
+				{ "data": "WH_Type_Name" },
+				{ "data": "WH_START" },
+				{ "data": "WH_END" },
+				{ "data": "WH_LUNCH_YN" },
+				{ "data": "WH_LUNCH_START" },
+				{ "data": "WH_LUNCH_END" },
+				{ "data": "EARLY_BIRD_YN" },
+				{ "data": "EARLY_BIRD_START" },
+				{ "data": "EARLY_BIRD_END" }
+			],
+			columnDefs: [
+				{
+					render: function ( data, type, row ) {
+						if(data==0){
+							return '';
+						}
+						else{
+							return '사용';
+						}
+					},
+					targets: 6
+				},
+				{
+					targets: [0,1,2,6,9],
+					visible: false,
+					searchable: false
+				}
+			],
+			searching: false,
+			ordering: false,
+			scrollY: "300px",
+			scrollCollapse: true
+		});
+
+		//근무시간 Row Click
+		table.on('select', function(e, dt, type, indexes){
+			SELECTED_ROW = table.row(indexes).data();
+			//상세데이타 재조회
+			$('#whcodedtl_dt').DataTable().ajax.reload();
+			SELECTED_DTL_ROW = "";
+
+		}).on('deselect', function(){
+			SELECTED_ROW = "";
+		});
+
+		//근무시간 상세 Row  Click
+		CmmDtl_dt.on('select', function(e, dt, type, indexes){
+			SELECTED_DTL_ROW = CmmDtl_dt.row(indexes).data();
+		}).on('deselect', function(){
+			SELECTED_DTL_ROW = "";
+		});
+
+
+		//등록처리
+		$("#addSetfrm").submit(function(e){
+			let HD_Code = $("#addHoliday").val();
+			if (HD_Code == "" || HD_Code == null) HD_Code = -1;
+
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mng/ivr/workhour/set/add",
+				data: {
+					WH_Code_Nm: $("#addSet_WH_Code_Nm").val(),
+					Dept_No: 0,
+					HD_Code: HD_Code
+				}, //$("#addSet_Dept_No").val()},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$('#whcode_dt').DataTable().ajax.reload();
+			});
+
+			e.preventDefault();
+
+			SELECTED_ROW = "";
+			// $("#addSet_Dept_No").val("")
+			$("#addSet_WH_Code_Nm").val("");
+			// $("#addSet_Dept_No")[0].sumo.reload();
+			$('#modal-addset').modal('hide');
+		});
+
+		//Edit Btn Click
+		$("._BtnEditSet").click(function(){
+			if(SELECTED_ROW == "")
+			{
+				alert("근무시간 그룹을 선택하세요.");
+				return false;
+			}
+
+			$("#edtSet_WH_Code").val(SELECTED_ROW.WH_Code);
+			// $("#edtSet_Dept_No").val(SELECT_ROW.Dept_No);
+			$("#edtSet_WH_Code_Nm").val(SELECTED_ROW.WH_Code_Nm);
+			// $("#edtSet_Dept_No")[0].sumo.reload();
+
+			$("#edtHoliday").val(SELECTED_ROW.HD_Code);
+			$("#edtHoliday")[0].sumo.reload();
+
+			$('#modal-edtset').modal('show');
+		});
+
+		//수정 처리
+		$("#edtSetfrm").submit(function(e){
+			let HD_Code = $("#edtHoliday").val();
+			if (HD_Code == "" || HD_Code == null) HD_Code = -1;
+
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mng/ivr/workhour/set/edit",
+				data: {
+					WH_Code: $("#edtSet_WH_Code").val(),
+					Dept_No: 0, //$("#edtSet_Dept_No").val(),
+					WH_Code_Nm: $("#edtSet_WH_Code_Nm").val(),
+					HD_Code: HD_Code
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$('#whcode_dt').DataTable().ajax.reload();
+			});
+
+			e.preventDefault();
+			SELECTED_ROW = "";
+			$('#modal-edtset').modal('hide');
+		});
+
+		//삭제
+		$("._BtnDelSet").click(function(){
+			if(SELECTED_ROW == "")
+			{
+				alert("삭제할  그룹을 선택하세요.");
+				return false;
+			}
+
+			if(confirm("["+SELECTED_ROW.WH_Code_Nm +"] 그룹을 삭제 하시겠습니까?"))
+			{
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/workhour/set/del",
+					data: {WH_Code: SELECTED_ROW.WH_Code},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function () {
+					$('#whcode_dt').DataTable().ajax.reload();
+				});
+
+				SELECTED_ROW = "";
+			}
+			else
+			{
+				return false;
+			}
+
+		});
+
+		//근무시간 등록 Btn
+		$("._BtnAdd").click(function(){
+
+			//등록가능한 근무시간만 노출한다.
+			/*
+			makeWhtype(_Week);
+			$.each(CmmDtl_dt.rows().data(), function (i, item) {
+				$.each($("#add_WH_Type option"), function (j, week) {
+					if (item.WH_Type == week.value)
+					{
+						$(this).attr("disabled","disabled")
+					}
+				});
+			});
+			*/
+			if(SELECTED_ROW == "")
+			{
+				alert("근무시간 그룹을 선택하세요.");
+				return false;
+			}
+
+			$("#add_WH_Code_Nm").val(SELECTED_ROW.WH_Code_Nm);
+			$("#add_WH_Type").val("");
+			$("#add_WH_Type")[0].sumo.reload();
+			$("#add_WH_START").val("09:00");
+			$("#add_WH_END").val("18:00");
+			$("#add_WH_LUNCH_YN").val("");
+			$("#add_WH_LUNCH_YN")[0].sumo.reload();
+			$("#add_WH_LUNCH_START").val("12:00");
+			$("#add_WH_LUNCH_END").val("13:00");
+			$("#add_EARLY_BIRD_YN")[0].sumo.reload();
+			$("#add_EARLY_BIRD_START").val("08:30");
+			$("#add_EARLY_BIRD_END").val("09:00");
+
+			//초기값
+			$("._sel_lunch").attr( 'disabled', true ); //초기값은 사용안함이다.
+			$("._sel_early_bird").attr( 'disabled', true ); //초기값은 사용안함이다.
+			$('#modal-add').modal('hide');
+		});
+
+
+		//등록처리
+		$("#addfrm").submit(function(e){
+			let use_lunch_yn=$("#add_WH_LUNCH_YN").val();
+			let use_early_bird_yn=$("#add_EARLY_BIRD_YN").val();
+
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mng/ivr/workhour/add",
+				data: {
+					WH_Code: SELECTED_ROW.WH_Code,
+					WH_Type: $("#add_WH_Type").val(),
+					WH_START: $("#add_WH_START").val().replace(/:/gi, ""),
+					WH_END: $("#add_WH_END").val().replace(/:/gi, ""),
+					WH_LUNCH_YN: use_lunch_yn,
+					WH_LUNCH_START: use_lunch_yn==1?$("#add_WH_LUNCH_START").val().replace(/:/gi, ""):"0000",
+					WH_LUNCH_END: use_lunch_yn==1?$("#add_WH_LUNCH_END").val().replace(/:/gi, ""):"0000",
+					EARLY_BIRD_YN: use_early_bird_yn,
+					EARLY_BIRD_START: use_early_bird_yn==1?$("#add_EARLY_BIRD_START").val().replace(/:/gi, ""):"0000",
+					EARLY_BIRD_END: use_early_bird_yn==1?$("#add_EARLY_BIRD_END").val().replace(/:/gi, ""):"0000"
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$('#whcodedtl_dt').DataTable().ajax.reload();
+			});
+
+			e.preventDefault();
+
+			$('#modal-add').modal('hide');
+
+		});
+
+		//근무시간 그룹의 근무시간 Edit Btn Click
+		$("._BtnEdit").click(function(){
+
+			//등록가능한 근무시간만 노출한다.
+			/*
+			makeWhtype(_Week);
+			$.each(CmmDtl_dt.rows().data(), function (i, item) {
+				$.each($("#edt_WH_Type option"), function (j, week) {
+					if (item.WH_Type == week.value && SELECT_DTL_ROW.WH_Type != week.value)
+					{
+						$(this).attr("disabled","disabled")
+					}
+				});
+			});
+			*/
+
+			if(SELECTED_DTL_ROW == "")
+			{
+				alert("수정할 근무시간을 선택하세요.");
+				return false;
+			}
+
+			if(SELECTED_DTL_ROW.WH_LUNCH_YN==1){
+				$("._sel_lunch").attr( 'disabled', false ); //초기값은 사용안함이다.
+			}
+			else{
+				$("._sel_lunch").attr( 'disabled', true ); //초기값은 사용안함이다.
+			}
+
+			if(SELECTED_DTL_ROW.EARLY_BIRD_YN==1){
+				$("._sel_early_bird").attr( 'disabled', false ); //초기값은 사용안함이다.
+			}
+			else{
+				$("._sel_early_bird").attr( 'disabled', true ); //초기값은 사용안함이다.
+			}
+
+			$("#edt_WH_Code_Nm").val(SELECTED_ROW.WH_Code_Nm);
+			$("#edt_WH_Type").val(SELECTED_DTL_ROW.WH_Type);
+			$("#edt_WH_Type")[0].sumo.reload();
+			$("#edt_WH_START").val(SELECTED_DTL_ROW.WH_START);
+			$("#edt_WH_END").val(SELECTED_DTL_ROW.WH_END);
+			$("#edt_WH_LUNCH_YN").val(SELECTED_DTL_ROW.WH_LUNCH_YN);
+			$("#edt_WH_LUNCH_YN")[0].sumo.reload();
+			$("#edt_WH_LUNCH_START").val(SELECTED_DTL_ROW.WH_LUNCH_START);
+			$("#edt_WH_LUNCH_END").val(SELECTED_DTL_ROW.WH_LUNCH_END);
+			$("#edt_EARLY_BIRD_YN").val(SELECTED_DTL_ROW.EARLY_BIRD_YN);
+			$("#edt_EARLY_BIRD_YN")[0].sumo.reload();
+			$("#edt_EARLY_BIRD_START").val(SELECTED_DTL_ROW.EARLY_BIRD_START);
+			$("#edt_EARLY_BIRD_END").val(SELECTED_DTL_ROW.EARLY_BIRD_END);
+
+			$('#modal-edt').modal('show');
+		});
+
+		//수정 처리
+		$("#edtfrm").submit(function(e){
+			let use_lunch_yn=$("#edt_WH_LUNCH_YN").val();
+			let use_early_bird_yn=$("#edt_EARLY_BIRD_YN").val();
+
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mng/ivr/workhour/edit",
+				data: {
+					WH_Seq: SELECTED_DTL_ROW.WH_Seq,
+					WH_Type: $("#edt_WH_Type").val(),
+					WH_START: $("#edt_WH_START").val().replace(/:/gi, ""),
+					WH_END: $("#edt_WH_END").val().replace(/:/gi, ""),
+					WH_LUNCH_YN: use_lunch_yn,
+					WH_LUNCH_START: use_lunch_yn==1?$("#edt_WH_LUNCH_START").val().replace(/:/gi, ""):"0000",
+					WH_LUNCH_END: use_lunch_yn==1?$("#edt_WH_LUNCH_END").val().replace(/:/gi, ""):"0000",
+					EARLY_BIRD_YN: use_early_bird_yn,
+					EARLY_BIRD_START: use_early_bird_yn==1?$("#edt_EARLY_BIRD_START").val().replace(/:/gi, ""):"0000",
+					EARLY_BIRD_END: use_early_bird_yn==1?$("#edt_EARLY_BIRD_END").val().replace(/:/gi, ""):"0000"
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$('#whcodedtl_dt').DataTable().ajax.reload();
+			});
+
+			e.preventDefault();
+			SELECTED_DTL_ROW = "";
+			$('#modal-edt').modal('hide');
+
+		});
+
+		//삭제
+		$("._BtnDel").click(function(){
+			if(SELECTED_DTL_ROW == "")
+			{
+				alert("삭제할  근무시간을 선택하세요.");
+				return false;
+			}
+
+			if(confirm("["+SELECTED_DTL_ROW.WH_Type_Name +"] 근무시간을 삭제 하시겠습니까?"))
+			{
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/mng/ivr/workhour/del",
+					data: {WH_Seq: SELECTED_DTL_ROW.WH_Seq},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+					$('#whcodedtl_dt').DataTable().ajax.reload();
+				});
+
+				SELECTED_DTL_ROW = "";
+			}
+			else
+			{
+				return false;
+			}
+		});
+
+		$('._lunchyn').on('change', function (e) {
+			var optionSelected = $("option:selected", this);
+			var valueSelected = this.value;
+			if(valueSelected==1){
+				$("._sel_lunch").attr( 'disabled', false );
+				$("#add_WH_IN_LUNCH")[0].sumo.reload();
+				$("#edt_WH_IN_LUNCH")[0].sumo.reload();
+			}
+			else{
+				$("._sel_lunch").attr( 'disabled', true );
+				$("#add_WH_IN_LUNCH")[0].sumo.reload();
+				$("#edt_WH_IN_LUNCH")[0].sumo.reload();
+			}
+		});
+
+		$('._early_bird_yn').on('change', function (e) {
+			var optionSelected = $("option:selected", this);
+			var valueSelected = this.value;
+			if(valueSelected==1){
+				$("._sel_early_bird").attr( 'disabled', false );
+				// $("#add_WH_IN_LUNCH")[0].sumo.reload();
+				// $("#edt_WH_IN_LUNCH")[0].sumo.reload();
+			}
+			else{
+				$("._sel_early_bird").attr( 'disabled', true );
+				// $("#add_WH_IN_LUNCH")[0].sumo.reload();
+				// $("#edt_WH_IN_LUNCH")[0].sumo.reload();
+			}
+		});
+
+
+		//getDept();
+		getWHType();
+		getHolidate();
+
+		$("._sel_lunch").attr( 'disabled', true ); //초기값은 사용안함이다.
+		$("._sel_early_bird").attr( 'disabled', true ); //초기값은 사용안함이다.
+
+		/*
+		$('.sel_dept').SumoSelect({
+			placeholder: '부서',
+			search : true,
+			forceCustomRendering: true
+		});
+		*/
+
+		$('.sel_whtype').SumoSelect({
+			placeholder: '요일 종류',
+			search : true,
+			forceCustomRendering: true
+		});
+
+		$('._lunchyn').SumoSelect({
+			placeholder: '점심시간 사용여부',
+			forceCustomRendering: true
+		});
+
+		$('._early_bird_yn').SumoSelect({
+			placeholder: '얼리버드시간 사용여부',
+			forceCustomRendering: true
+		});
+
+		$('._time').timepicker({
+			defaultTime: "",
+			minuteStep: 10,
+			showMeridian: false //24시간
+		});
+
+
+		$('.sel_holidate').SumoSelect({
+			placeholder: '기본 공휴일 선택',
+			forceCustomRendering: true
+		});
+
+	});
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 근무시간 관리
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="row">
+		<div class="col-xs-12 col-sm-12 col-md-12">
+			<div class="panel">
+				<div class="panel-hdr">
+					<h2></h2>
+					<div class="panel-toolbar">
+						<button class="btn btn-xs btn-dark _BtnAddSet" data-toggle="modal" data-target="#modal-addset" data-backdrop="static">Add</button>
+						<button class="btn btn-xs btn-dark ml-1 _BtnEditSet">Edit</button>
+						<button class="btn btn-xs btn-dark ml-1 _BtnDelSet">Delete</button>
+					</div>
+				</div>
+				<div class="panel-container show">
+					<div class="panel-content">
+	            		<table id="whcode_dt" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+	            			<thead class="thead-themed">
+	            			<tr>
+	            			    <th class="d-none text-center">그룹 번호</th>
+	            				<th class="text-center">그룹 명</th>
+	            				<th class="d-none text-center">공휴일 번호</th>
+	            				<th class="text-center">공휴일 명</th>
+	            			</tr>
+	            			</thead>
+	            		</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	
+		<div class="col-xs-12 col-sm-12 col-md-12">
+			<div class="panel">
+				<div class="panel-hdr">
+					<h2>근무시간</h2>
+					<div class="panel-toolbar">
+						<button class="btn btn-xs btn-dark _BtnAdd" data-toggle="modal" data-target="#modal-add" data-backdrop="static">Add</button>
+						<button class="btn btn-xs btn-dark ml-1 _BtnEdit">Edit</button>
+						<button class="btn btn-xs btn-dark ml-1 _BtnDel">Delete</button>
+					</div>
+				</div>
+				<div class="panel-container show">
+					<div class="panel-content">
+	            		<table id="whcodedtl_dt" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+	            			<thead class="thead-themed">
+							<tr>
+								<th colspan="6" class="text-center border-bottom-0">기본 근무시간 정보</th>
+								<th colspan="3" class="text-center border-bottom-0">점심시간 정보</th>
+								<th colspan="3" class="text-center border-bottom-0">얼리버드 정보</th>
+							</tr>
+	            			<tr>
+								<th class="d-none border-bottom-0">일련번호</th>
+								<th class="d-none border-bottom-0">그룹번호</th>
+								<th class="d-none border-bottom-0">종류 번호</th>
+								<th class="border-bottom-0">종류</th>
+								<th class="border-bottom-0">시작</th>
+								<th class="border-bottom-0">종료</th>
+								<th class="d-none border-bottom-0">사용</th>
+								<th class="border-bottom-0">시작</th>
+								<th class="border-bottom-0">종료</th>
+								<th class="d-none border-bottom-0">사용</th>
+								<th class="border-bottom-0">시작</th>
+								<th class="border-bottom-0">종료</th>
+	            			</tr>
+	            			</thead>
+	            		</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	
+	</div>
+
+
+	<div id="modal-add" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">근무시간 추가</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="addfrm" id="addfrm" method="post">
+					<div class="modal-body">
+						<div class="form-group">
+							<label>근무시간 그룹 명</label>
+							<input id="add_WH_Code_Nm" type="text" class="form-control" value="" readonly>
+						</div>
+						<div class="form-group">
+							<label>근무시간 종류</label>
+							<select class="form-control sel_whtype" id="add_WH_Type" required>
+								<option value="">종류</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>근무시간</label>
+							<i class="icon-append fal fa-clock-o"></i>
+							<div class="row">
+								<div class="col-md-6">
+									<input class="_time form-control" type="text" name="WH_START" id="add_WH_START" placeholder="시작 시간"  value="09:00" required>
+								</div>
+								<div class="col-md-6">
+									<input class="_time form-control" type="text" name="WH_END" id="add_WH_END" placeholder="종료 시간" value="18:00" required>
+								</div>
+							</div>
+						</div>
+						<div class="form-group" >
+							<label>점심시간 사용 여부</label>
+							<select class="form-control _lunchyn" id="add_WH_LUNCH_YN" required>
+								<option value="0">사용 안함</option>
+								<option value="1">사용</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>점심시간</label>
+							<i class="icon-append fal fa-clock-o"></i>
+							<div class="row">
+								<div class="col-md-6">
+									<input class="_time form-control _sel_lunch" type="text" name="WH_LUNCH_START" id="add_WH_LUNCH_START" placeholder="시작 시간"  value="12:00">
+								</div>
+								<div class="col-md-6">
+									<input class="_time form-control _sel_lunch" type="text" name="WH_LUNCH_END" id="add_WH_LUNCH_END" placeholder="종료 시간" value="13:00">
+								</div>
+							</div>
+						</div>
+						<div class="form-group" >
+							<label>얼리버드 사용 여부</label>
+							<select class="form-control _early_bird_yn" id="add_EARLY_BIRD_YN" required>
+								<option value="0">사용 안함</option>
+								<option value="1">사용</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>얼리버드시간</label>
+							<i class="icon-append fal fa-clock-o"></i>
+							<div class="row">
+								<div class="col-md-6">
+									<input class="_time form-control _sel_early_bird" type="text" name="EARLY_BIRD_START" id="add_EARLY_BIRD_START" placeholder="시작 시간"  value="08:30">
+								</div>
+								<div class="col-md-6">
+									<input class="_time form-control _sel_early_bird" type="text" name="EARLY_BIRD_END" id="add_EARLY_BIRD_END" placeholder="종료 시간" value="09:00">
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-dark" id="btnadd">Save</button>
+						<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div id="modal-edt" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">근무시간 수정</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+
+				<form name="edtfrm" id="edtfrm" method="post">
+					<div class="modal-body">
+						<div class="form-group">
+							<label>근무시간 그룹 명</label>
+							<input id="edt_WH_Code_Nm" type="text" class="form-control" value="" readonly>
+						</div>
+						<div class="form-group">
+							<label>근무시간 종류</label>
+							<select class="form-control sel_whtype" id="edt_WH_Type" required>
+								<option value="">종류</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>근무시간</label>
+							<i class="icon-append fal fa-clock-o"></i>
+							<div class="row">
+								<div class="col-md-6">
+									<input class="_time form-control" type="text" name="WH_START" id="edt_WH_START" placeholder="시작 시간"  value="09:00" required>
+								</div>
+								<div class="col-md-6">
+									<input class="_time form-control" type="text" name="WH_END" id="edt_WH_END" placeholder="종료 시간" value="18:00" required>
+								</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<label>점심시간 사용 여부</label>
+							<select class="form-control _lunchyn" id="edt_WH_LUNCH_YN" required>
+								<option value="0">사용 안함</option>
+								<option value="1">사용</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>점심시간</label>
+							<i class="icon-append fal fa-clock-o"></i>
+							<div class="row">
+								<div class="col-md-6">
+									<input class="_time form-control _sel_lunch" type="text" name="WH_LUNCH_START" id="edt_WH_LUNCH_START" placeholder="시작 시간"  value="12:00">
+								</div>
+								<div class="col-md-6">
+									<input class="_time form-control _sel_lunch" type="text" name="WH_LUNCH_END" id="edt_WH_LUNCH_END" placeholder="종료 시간" value="13:00">
+								</div>
+							</div>
+						</div>
+						<div class="form-group" >
+							<label>얼리버드 사용 여부</label>
+							<select class="form-control _early_bird_yn" id="edt_EARLY_BIRD_YN" required>
+								<option value="0">사용 안함</option>
+								<option value="1">사용</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>얼리버드시간</label>
+							<i class="icon-append fal fa-clock-o"></i>
+							<div class="row">
+								<div class="col-md-6">
+									<input class="_time form-control _sel_early_bird" type="text" name="EARLY_BIRD_START" id="edt_EARLY_BIRD_START" placeholder="시작 시간"  value="08:30">
+								</div>
+								<div class="col-md-6">
+									<input class="_time form-control _sel_early_bird" type="text" name="EARLY_BIRD_END" id="edt_EARLY_BIRD_END" placeholder="종료 시간" value="09:00">
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-dark" id="btnedt">Save</button>
+						<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+					</div>
+
+				</form>
+			</div>
+		</div>
+	</div>
+
+
+	<div id="modal-addset" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">근무시간 그룹 추가</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="addSetfrm" id="addSetfrm" method="post">
+					<div class="modal-body">
+						<!--
+                            <div class="form-group">
+                                <label>사용 부서</label>
+                                <select class="form-control sel_dept" id="addSet_Dept_No" required>
+                                    <option value="">부서</option>
+                                </select>
+                            </div>
+                         -->
+						<div class="form-group">
+							<label>그룹 명</label>
+							<input id="addSet_WH_Code_Nm" name="WH_Code_Nm" type="text" class="form-control" required oninvalid="this.setCustomValidity('근무시간 그룹명을 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>기본 공휴일</label>
+							<select class="form-control sel_holidate" id="addHoliday"><!-- required oninvalid="this.setCustomValidity('기본 공휴일을 선택하세요.')" oninput="this.setCustomValidity('')" -->
+								<option value="">공휴일 선택</option>
+							</select>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-dark" id="btnaddset">Save</button>
+						<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div id="modal-edtset" class="modal" aria-hidden="true" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">근무시간 그룹 수정</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+
+				<form name="edtSetfrm" id="edtSetfrm" method="post">
+					<input type="hidden" name="WH_Code" id="edtSet_WH_Code" />
+					<div class="modal-body">
+						<!--
+                            <div class="form-group">
+                                <label>사용 부서</label>
+                                <select class="form-control sel_dept" id="edtSet_Dept_No" required>
+                                    <option value="">부서</option>
+                                </select>
+                            </div>
+                         -->
+						<div class="form-group">
+							<label>그룹 명</label>
+							<input id="edtSet_WH_Code_Nm" name="WH_Code_Nm" type="text" class="form-control" required oninvalid="this.setCustomValidity('근무시간 그룹명을 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+						<div class="form-group">
+							<label>기본 공휴일</label>
+							<select class="form-control sel_holidate" id="edtHoliday">
+								<option value="">공휴일 선택</option>
+							</select>
+						</div>
+
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-dark" id="btnedtset">Save</button>
+						<button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</main>
+
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+    <link rel="stylesheet" th:href="@{/css/formplugins/bootstrap-timepicker/bootstrap-timepicker.css}">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+    <script th:src="@{/js/formplugins/bootstrap-timepicker/bootstrap-timepicker.min.js}"></script>
+    <script type="text/javascript">
+        let table;
+        $(document).ready(function() {
+            let usergroup_org = null;
+
+            // const table = $('#dt_basic').DataTable({
+            //     data: [],
+            //     columns: [
+            //         {"data": "seq"},
+            //         {"data": "login_id"},
+            //         {"data": "bpart_name"},
+            //         {"data": "mpart_name"},
+            //         {"data": "spart_name"},
+            //         {"data": "login_name"},
+            //         {"data": "local_no"},
+            //         {"data": "tot_cnt"}
+            //     ],
+            //     iDisplayLength: 15,
+            //     ordering: false,
+            //     searching: false,
+            //     bPaginate: true,
+            //     stateSave: false
+            // });
+
+            const getUserGroup = function () {
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH + "/cmm/ajax/usergroup/list",
+                    error: function (jqXHR) {
+                        jqXHR_Process(jqXHR)
+                    }
+                }).done(function (data) {
+                    const bigCategorySelect = $(".sel_big_category");
+                    const mediumCategorySelect = $(".sel_medium_category");
+                    const smallCategorySelect = $(".sel_small_category");
+                    usergroup_org = data.userGroup;
+
+                    const depth1 = usergroup_org.filter(function (val) {
+                        return val.part_depth == 1;
+                    });
+
+                    $.each(depth1, function (i, item) {
+                        bigCategorySelect.append($('<option>', {value: item.bpart_code, text: item.part_name}));
+                    });
+
+                    bigCategorySelect.on('change', function () {
+                        const selectedBigCategory = $(this).val();
+                        if (selectedBigCategory) {
+                            const mediumCategories = usergroup_org.filter(function (val) {
+                                return val.part_depth == 2 && selectedBigCategory.includes(val.bpart_code);
+                            });
+
+                            mediumCategorySelect.empty();
+                            smallCategorySelect.empty();
+
+                            $.each(mediumCategories, function (i, item) {
+                                mediumCategorySelect.append($('<option>', {
+                                    value: item.mpart_code,
+                                    text: item.part_name
+                                }));
+                            });
+
+                            mediumCategorySelect.multiselect('rebuild');
+                            smallCategorySelect.multiselect('rebuild');
+                        }
+                    });
+
+                    mediumCategorySelect.on('change', function () {
+                        const selectedMediumCategory = $(this).val();
+                        if (selectedMediumCategory) {
+                            const smallCategories = usergroup_org.filter(function (val) {
+                                return val.part_depth == 3 && selectedMediumCategory.includes(val.mpart_code);
+                            });
+
+                            smallCategorySelect.empty();
+
+                            $.each(smallCategories, function (i, item) {
+                                smallCategorySelect.append($('<option>', {
+                                    value: item.spart_code,
+                                    text: item.part_name
+                                }));
+                            });
+
+                            smallCategorySelect.multiselect('rebuild');
+                        }
+                    });
+
+                    bigCategorySelect.multiselect({
+                        includeFilterClearBtn: false,
+                        enableFiltering: true,
+                        includeSelectAllOption: true,
+                        selectAllText: '전체선택',
+                        nonSelectedText: '대분류',
+                        allSelectedText: '전체 선택됨',
+                        buttonWidth: '100%',
+                        maxHeight: 400,
+                        buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+                    });
+
+                    mediumCategorySelect.multiselect({
+                        includeFilterClearBtn: false,
+                        enableFiltering: true,
+                        includeSelectAllOption: true,
+                        selectAllText: '전체선택',
+                        nonSelectedText: '중분류',
+                        allSelectedText: '전체 선택됨',
+                        buttonWidth: '100%',
+                        maxHeight: 400,
+                        buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+                    });
+
+                    smallCategorySelect.multiselect({
+                        includeFilterClearBtn: false,
+                        enableFiltering: true,
+                        includeSelectAllOption: true,
+                        selectAllText: '전체선택',
+                        nonSelectedText: '소분류',
+                        allSelectedText: '전체 선택됨',
+                        buttonWidth: '100%',
+                        maxHeight: 400,
+                        buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+                    });
+                });
+            };
+
+            // // 조회버튼
+            // $("._searchGo").click(function () {
+            //     let sdate = $("#sdate").val();
+            //     let edate = $("#edate").val();
+            //     let login_id = $("#login_id").val();
+            //     let bpart_code = $(".sel_big_category").val().toString().replace(/,/gi, "|");
+            //     let mpart_code = $(".sel_medium_category").val().toString().replace(/,/gi, "|");
+            //     let spart_code = $(".sel_small_category").val().toString().replace(/,/gi, "|");
+            //
+            //     if (bpart_code === "") {
+            //         alert("조회할 대분류를 선택하세요.");
+            //         return false;
+            //     }
+            //     if (mpart_code === "") {
+            //         alert("조회할 중분류를 선택하세요.");
+            //         return false;
+            //     }
+            //     if (spart_code === "") {
+            //         alert("조회할 소분류를 선택하세요.");
+            //         return false;
+            //     } else {
+            //         $.ajax({
+            //             method: "POST",
+            //             url: CONTEXT_PATH + "/cmm/hist/rec/loginhisttot/list",
+            //             data : {
+            //                 sdate: sdate,
+            //                 edate: edate,
+            //                 login_id: login_id,
+            //                 bpart_code: bpart_code,
+            //                 mpart_code: mpart_code,
+            //                 spart_code: spart_code
+            //             },
+            //             error: function (jqXHR) {
+            //                 jqXHR_Process(jqXHR);
+            //             }
+            //         }).done(function (data) {
+            //             table.clear().draw();
+            //             table.rows.add(data.data).draw();
+            //         });
+            //     }
+            // });
+            getUserGroup();
+
+            $("#sdate").val(getToday()); // 오늘날짜 기본
+            $("#edate").val(getToday()); // 오늘날짜 기본
+
+            table = $('#dt_basic').DataTable({
+                serverSide: true,
+                ajax: {
+                    url: CONTEXT_PATH + "/cmm/hist/rec/loginhisttot/list",
+                    type: "POST",
+                    data: function (d) {
+                        d.sdate = $("#sdate").val();
+                        d.edate = $("#edate").val();
+                        d.login_id = $("#login_id").val();
+                        d.bpart_code = $(".sel_big_category").val().toString().replace(/,/gi, "|");
+                        d.mpart_code = $(".sel_medium_category").val().toString().replace(/,/gi, "|");
+                        d.spart_code = $(".sel_small_category").val().toString().replace(/,/gi, "|");
+                    }
+                },
+                columns: [
+                    {"data": "seq"},
+                    {"data": "login_id"},
+                    {"data": "bpart_name"},
+                    {"data": "mpart_name"},
+                    {"data": "spart_name"},
+                    {"data": "login_name"},
+                    {"data": "local_no"},
+                    {"data": "tot_cnt"}
+                ],
+                iDisplayLength: 15,
+                ordering: false,
+                searching: false,
+                bPaginate: true,
+                stateSave: false
+            });
+        });
+            //조회버튼
+            $("._searchGo").click(function () {
+                let bpart_code = $(".sel_big_category").val().toString().replace(/,/gi, "|");
+                let mpart_code = $(".sel_medium_category").val().toString().replace(/,/gi, "|");
+                let spart_code = $(".sel_small_category").val().toString().replace(/,/gi, "|");
+
+                if (bpart_code === "") {
+                    alert("조회할 대분류를 선택하세요.");
+                    return false;
+                }
+                if (mpart_code === "") {
+                    alert("조회할 중분류를 선택하세요.");
+                    return false;
+                }
+                if (spart_code === "") {
+                    alert("조회할 소분류를 선택하세요.");
+                    return false;
+                } else {
+                    {
+                        table.ajax.reload();
+                    }
+                }
+            });
+    </script>
+</th:block>
+
+<th:block layout:fragment="headertitle">
+    <i class="subheader-icon fal fa-window"></i> 로그인 이력(건수)
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+    <div class="panel">
+        <div class="panel-hdr">
+            <h2></h2>
+        </div>
+        <div class="panel-container show">
+            <div class="panel-content">
+                <!-- BOARD SEARCH -->
+                <div class="px-4 pt-4 mb-4 search_area" style="border: 1px solid rgba(24,28,33,0.06);">
+
+                    <div class="form-row">
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label">일자</label>
+                            <div class="input-daterange input-group">
+                                <input type="text" class="form-control datepicker" name="sdate" id="sdate" placeholder="시작일자">
+                                <div class="input-group-append input-group-prepend">
+                                    <span class="input-group-text fs-xl"><i class="fal fa-tilde"></i></span>
+                                </div>
+                                <input type="text" class="form-control datepicker" name="edate" id="edate" placeholder="종료일자">
+                            </div>
+                        </div>
+                        <div class="col-md-2 mb-2"></div>
+                        <div class="col-md-2 mb-2">
+                            <label class="form-label">조직도</label>
+                            <select multiple="multiple" class="sel_user_group hide sel_big_category"></select>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label class="form-label">ᅠ</label>
+                            <select multiple="multiple" class="sel_user_group hide sel_medium_category"></select>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label class="form-label">ᅠ</label>
+                            <select multiple="multiple" class="sel_user_group hide sel_small_category"></select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label">로그인ID</label>
+                            <input class="form-control" type="text" name="login_id" id="login_id" placeholder="">
+                        </div>
+                        <div class="col-md-3 mb-4 pt-4">
+                            <button class="btn btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span class="">Search</span></button>
+                        </div>
+                    </div>
+                </div>
+
+            <table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+                <thead class="thead-themed">
+                <tr class="text-center">
+                    <th>순번</th>
+                    <th>로그인ID</th>
+                    <th>대분류</th>
+                    <th>중분류</th>
+                    <th>소분류</th>
+                    <th>로그인명</th>
+                    <th>내선번호</th>
+                    <th>건수</th>
+                </tr>
+                </thead>
+            </table>
+        </div>
+        </div>
+    </div>
+    </div>
+    </div>
+</main>
+
+</html>

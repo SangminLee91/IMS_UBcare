@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+
+	$(document).ready(function() {
+		//Grid
+		const table = $('#dt_basic').DataTable({
+			serverSide : true,
+			ajax: {
+				url: CONTEXT_PATH+"/api/hist/rec/down/list",
+				type: "POST",
+				data: function ( d ) {
+					d.down_sdate = $("#down_sdate").val();
+					d.down_edate = $("#down_edate").val();
+/*					d.loginid = $("#loginid").val();
+					d.loginnm = $("#loginnm").val();
+					d.rec_sdate = $("#rec_sdate").val();
+					d.rec_edate = $("#rec_edate").val();
+					d.userid = $("#userid").val();
+					d.usernm = $("#usernm").val();*/
+				}
+			},
+			columns: [
+				{ "data": "Log_DateTime" },
+				{ "data": "Log_User_Code" },
+				{ "data": "Record_Filename" },
+				{ "data": "Log_IP" }
+			],
+			iDisplayLength: 15,
+			ordering: false,
+			searching: false,
+			bPaginate: true,
+			stateSave: false
+		});
+
+		//검색Btn
+		$("._searchGo").click(function(){
+			table.ajax.reload();
+		})
+
+		$("#down_sdate").val(getToday()); //오늘날짜 기본
+		$("#down_edate").val(getToday()); //오늘날짜 기본
+	});
+
+
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 녹취 다운로드 이력
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel"> 
+		<div class="panel-hdr">
+			<h2></h2>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+			
+				<!-- BORAD SEARCH -->
+				<div class="px-4 pt-4 mb-4 search_area" style="border: 1px solid rgba(24,28,33,0.06);">
+					<div class="form-row">
+						<div class="col-md-3 mb-2">
+							<label class="form-label">다운로드 일자</label>
+							<div class="input-daterange input-group">
+								<input type="text" class="form-control datepicker" name="down_sdate" id="down_sdate" placeholder="다운 시작일자">
+								<div class="input-group-append input-group-prepend">
+									<span class="input-group-text fs-xl"><i class="fal fa-tilde"></i></span>
+								</div>
+								<input type="text" class="form-control datepicker" name="down_edate" id="down_edate" placeholder="다운 종료일자">
+							</div>	
+						</div>
+<!--						<div class="col-md-3 mb-2">
+							<label class="form-label">로그인 ID</label>
+							<input class="form-control" type="text" name="loginid" id="loginid" placeholder="로그인 ID">
+						</div>
+						<div class="col-md-3 mb-2">
+							<label class="form-label">로그인명</label>
+							<input class="form-control" type="text" name="loginnm" id="loginnm" placeholder="로그인 명">
+						</div>-->
+
+						<div class="col-md-3 mb-4 pt-4">
+							<button class="btn btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span class="">Search</span></button>
+						</div>
+					</div>
+					
+<!--					<div class="form-row">
+						<div class="col-md-3 mb-4">
+							<label class="form-label">녹취일자</label>
+							<div class="input-daterange input-group">
+								<input type="text" class="form-control datepicker" name="rec_sdate" id="rec_sdate" placeholder="녹취 시작일자">
+								<div class="input-group-append input-group-prepend">
+									<span class="input-group-text fs-xl"><i class="fal fa-tilde"></i></span>
+								</div>
+								<input type="text" class="form-control datepicker" name="rec_edate" id="rec_edate" placeholder="녹취 종료일자">
+							</div>	
+						</div>
+						<div class="col-md-3 mb-4">
+							<label class="form-label">상담사 ID</label>
+							<input class="form-control" type="text" name="userid" id="userid" placeholder="상담사 ID">
+						</div>
+						<div class="col-md-3 mb-4">
+							<label class="form-label">상담사 명</label>
+							<input class="form-control" type="text" name="usernm" id="usernm" placeholder="상담사 명">
+						</div>
+						<div class="col-md-3 mb-4 pt-4">
+							<button class="btn btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span class="">Search</span></button>
+						</div>
+					</div>-->
+				</div>
+			
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">              
+						<tr class="text-center">
+							<th>다운로드 일시</th>
+							<th>로그인 ID</th>
+							<th>녹취파일명</th>
+							<th>IP</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+		
+		</div>
+	</div>
+</main>
+</html>>
+

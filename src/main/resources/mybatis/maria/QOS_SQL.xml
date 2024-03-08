@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="qos">
+	<!-- QOS 수집 서버설정 -->
+	<select id="getConfig" parameterType="hashmap" resultType="hashmap">
+		CALL USP_QOS_Config_S()
+	</select>
+	<!-- QOS 수집 서버설정 변경-->
+	<update id="setConfig" parameterType="hashmap">
+    	CALL USP_QOS_Config_U(#{ntype}, #{value})
+	</update>
+	<!-- QOS 수집된 전화번호 가져오기 -->
+	<select id="getSubscribers" parameterType="hashmap" resultType="hashmap">
+		CALL USP_QOS_Subscribers_S()
+	</select>
+	<!-- QOS 선택한 전화번호들의 통화품질 가져오기 -->
+	<select id="getSubscribersQOS" parameterType="hashmap" resultType="hashmap">
+		CALL USP_QOS_Calc_S(#{ntype}, #{Start}, #{End}, #{minr}, #{maxr}, #{subscribers})
+	</select>
+</mapper>

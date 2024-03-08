@@ -1,0 +1,2 @@
+#n:USP_Mem_Emp_I
+#i:(varchar(10),varchar(20),varchar(30),varchar(50),int(11),int(11),int(11),varchar(4000))

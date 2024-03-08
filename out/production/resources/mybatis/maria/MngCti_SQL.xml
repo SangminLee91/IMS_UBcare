@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="mngCti">
+  
+  	<!-- 상담원 관리 -->
+
+	<select id="getAgentEmp" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mem_Agent_Emp_S()
+	</select>
+
+	<insert id="AgentAdd" parameterType="hashmap">
+    	CALL USP_Mem_Emp_I(#{Emp_No}, #{Emp_Nm}, #{Emp_Passwd}, NULLIF(#{Dept_No},''), NULLIF(#{Role},''), NULLIF(#{AgentKey},''), #{Group_Seq})
+	</insert> 
+	<update id="AgentEdt" parameterType="hashmap">
+    	CALL USP_Mem_Emp_U(#{Emp_No}, #{Emp_Nm}, #{Emp_Passwd}, NULLIF(#{Dept_No},''), NULLIF(#{Role},''), NULLIF(#{AgentKey},''), #{Group_Seq}, #{pwdStat})
+	</update>
+	<select id="AgentDel" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Mem_Emp_D(#{Emp_No}, #{_EMP_NO}, #{Apply_End_Dt})
+	</select>
+    <select id="AgentKeyList" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Mem_Agent_Key_S()
+	</select> 
+  
+  
+  
+	<!-- 그룹 -->
+    <select id="GroupList" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Mng_CtiGroup_S()
+	</select> 
+	<insert id="GroupAdd" parameterType="hashmap">
+    	CALL USP_Mng_CtiGroup_I(NULLIF(#{Dept_No},''), #{Group_Nm}, #{Group_Desc}, NULLIF(#{Group_Key},''), #{Emp_No})
+	</insert> 
+	<update id="GroupEdt" parameterType="hashmap">
+    	CALL USP_Mng_CtiGroup_U(NULLIF(#{Group_Seq},''), NULLIF(#{Dept_No},''), #{Group_Nm}, #{Group_Desc}, NULLIF(#{Group_Key},''), #{Emp_No})
+	</update>
+	<update id="GroupDel" parameterType="hashmap">
+    	CALL USP_Mng_CtiGroup_D(NULLIF(#{Group_Seq},''))
+	</update>
+    <select id="GroupEmp" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Mng_CtiGroup_Emp_S(NULLIF(#{Group_Seq},''))
+	</select> 
+    <select id="EmpGroup" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Mng_CtiGroup_Group_S(#{Emp_No})
+	</select>
+    <select id="grantGroupList" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Mng_CtiGrantGroup_S(#{_EMP_NO})
+	</select> 
+	
+	<!-- 헌트그룹 -->
+	<!-- 
+	<resultMap id="group1" type="hashmap"></resultMap>
+	<resultMap id="group2" type="hashmap"></resultMap>
+    <select id="HuntList" parameterType="hashmap" resultType="hashmap" resultMap="group1, group2">
+    	CALL USP_Mng_CtiHuntGroup_S()
+	</select> 
+	 -->
+    <select id="HuntListMOH" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Mng_CtiHuntGroup_MOH_S()
+	</select> 
+    <select id="HuntListInitial" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Mng_CtiHuntGroup_Initial_S()
+	</select> 
+	
+    <select id="QueueTarget" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Mng_CtiQueueTarget_S()
+	</select>
+
+	<select id="DnisBranchList" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_CtiDnisBranch_S()
+	</select>
+	<insert id="DnisBranchAdd" parameterType="hashmap">
+		CALL USP_Mng_CtiDnisBranch_I(#{Dnis}, #{Dept_No}, #{Div})
+	</insert>
+	<update id="DnisBranchEdt" parameterType="hashmap">
+		CALL USP_Mng_CtiDnisBranch_U(#{Dnis}, #{Dept_No}, #{Div})
+	</update>
+	<select id="DnisBranchDel" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mng_CtiDnisBranch_D(#{Dnis})
+	</select>
+	
+</mapper>

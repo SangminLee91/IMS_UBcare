@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	let SELECTED_ROW = "";
+	$(document).ready(function() {
+
+		//IFX CallType
+		const getCallType = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/code/ifx/calltype/list",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$(".calltype option:not(option:eq(0))").remove();
+				$.each(data.CallType, function (i, item) {
+					$(".calltype").append($('<option>', { value: item.calltypekey, text: item.calltypename }));
+				});
+				// $(".calltype")[0].sumo.reload();
+				// $(".calltype")[1].sumo.reload();
+			});
+		}
+		// $('.calltype').SumoSelect({
+		// 	placeholder: 'Queue Code(OSCC calltype)',
+		// 	search : true,
+		// 	forceCustomRendering: true
+		// });
+
+
+		const table = $('#dt_basic').DataTable({
+			ajax: {
+				url: CONTEXT_PATH+"/code/que/list",
+				dataSrc : "Code"
+			},
+			columns: [
+				{ "data": "Seq" },
+				{ "data": "Que_Code" },
+				{ "data": "Que_Nm" },
+				{ "data": "Trans_Group_No" },
+				{ "data": "Use_Stat" },
+				{ "data": "Use_Stat_Nm" },
+				{ "data": "OSCC_Que_Nm" }
+			],
+			columnDefs: [
+				{ "targets": [0, 1, 4, 5], "visible": false, className: "never", "searchable": false}
+			],
+			searching: true,
+			ordering: true,
+			scrollY: "536px",
+			scrollCollapse: true
+		});
+		table.on('select', function(e, dt, type, indexes){
+			SELECTED_ROW = table.row(indexes).data();
+		}).on('deselect', function(){
+			SELECTED_ROW = "";
+		});
+
+
+		//Add Modal Open
+		$('#Add').on('show.bs.modal', function () {
+			$("#add_Que_Code").val("");
+			$("#add_Que_Nm").val("");
+			//$("#add_Trans_Group_No").val("");
+			$("#add_Use_Stat").val("0");
+			$(".calltype").val("");
+			//
+			// let num = $('#add_Que_Code option').length;
+			// for(let i=0; i<num; i++){
+			//   $(".calltype")[0].sumo.unSelectItem(i);
+			// }
+		});
+
+		//Add
+		$("#addfrm").submit(function(e){
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/code/que/add",
+				data: {
+					Que_Code: $("#add_Que_Code").val()
+					, Que_Nm: $("#add_Que_Nm").val()
+					, Trans_Group_No : $("#add_Trans_Group_No").val()
+					, Use_Stat: $("#add_Use_Stat").val()
+					},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function () { // function (data)
+				$('#dt_basic').DataTable().ajax.reload();
+			});
+
+			e.preventDefault();
+			$('#Add').modal('hide');
+		});
+
+
+		//Edit Btn Click
+		$("._BtnEdit").click(function(){
+			if(SELECTED_ROW === "")
+			{
+				alert("수정할 대상을 선택하세요.");
+				return false;
+			}
+
+			$('#Edit').modal('show');
+		});
+		//Edit Modal Open
+		$('#Edit').on('show.bs.modal', function () {
+			$("#edt_Seq").val(SELECTED_ROW.Seq);
+			$("#edt_Que_Code").val(SELECTED_ROW.Que_Code);
+			$("#edt_Que_Nm").val(SELECTED_ROW.Que_Nm);
+			$("#edt_Trans_Group_No").val(SELECTED_ROW.Trans_Group_No);
+			$("#edt_Use_Stat").val(SELECTED_ROW.Use_Stat);
+
+			//$("#edt_Que_Code")[0].sumo.reload();
+		});
+		$("#edtfrm").submit(function(e){
+			//Save
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/code/que/edit",
+				data: {
+					Seq : $("#edt_Seq").val()
+					, Que_Code: $("#edt_Que_Code").val()
+					, Que_Nm: $("#edt_Que_Nm").val()
+					, Trans_Group_No : $("#edt_Trans_Group_No").val()
+					, Use_Stat: $("#edt_Use_Stat").val()
+				},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function () { // function (data)
+				$('#dt_basic').DataTable().ajax.reload();
+			});
+
+			e.preventDefault();
+
+			SELECTED_ROW = "";
+			$('#Edit').modal('hide');
+
+		});
+
+		//Del Btn Click
+		$("._BtnDel").click(function(){
+			if(SELECTED_ROW === "")
+			{
+				alert("삭제할 대상을 선택하세요.");
+				return false;
+			}
+
+			if(confirm("["+SELECTED_ROW.Que_Nm +"] 코드를 삭제 하시겠습니까?")) {
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/code/que/del",
+					data: {
+						Seq : SELECTED_ROW.Seq
+					},
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function () { // function (data)
+					$('#dt_basic').DataTable().ajax.reload();
+				});
+
+				SELECTED_ROW = "";
+			}
+			else
+			{
+				return  false;
+			}
+		});
+
+		// $('._usestat').SumoSelect({
+		// 	placeholder: '사용여부',
+		// 	forceCustomRendering: true
+		// });
+
+
+		getCallType();
+	});
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 큐 코드 정보
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			<div class="panel-toolbar">
+				<button class="btn btn-xs btn-dark _BtnAdd" data-toggle="modal" data-target="#Add" data-backdrop="static">Add</button>
+				<button class="btn btn-xs btn-dark ml-1 _BtnEdit" data-target="#Edit" data-backdrop="static">Edit</button>
+				<button class="btn btn-xs btn-dark ml-1 _BtnDel">Delete</button>
+			</div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+						<tr>
+							<th>Seq</th>
+							<th>Queue Code</th>
+							<th>Queue 명</th>
+							<th>호전환 그룹 번호</th>
+							<th>Use_Stat</th>
+							<th>사용 여부</th>
+							<th>OSCC Calltype명</th>
+						</tr>
+					</thead>
+				</table>		
+			</div>
+		</div>
+	</div>	
+
+	<div class="modal" id="Add" role="dialog" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content animated " >
+				<div class="modal-header cursor-move">
+					<h4 class="modal-title">Queue Add</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="addfrm" id="addfrm" method="post">
+				<div class="modal-body">
+
+					<div class="form-group">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Queue Code(OSCC calltype)</span>
+							</div>
+							<select class="form-control calltype" id="add_Que_Code" required oninvalid="this.setCustomValidity('OSCC calltype을 선택하세요.')" oninput="this.setCustomValidity('')">
+								<option value="">Queue Code(OSCC calltype)</option>
+							</select>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Queue 명</span>
+							</div>
+							<input type="text" id="add_Que_Nm" placeholder="Queue 명" class="form-control" required oninvalid="this.setCustomValidity('Queue 명 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text width-76px">호전환 그룹번호</span>
+							</div>
+							<input type="text" id="add_Trans_Group_No" placeholder="Queue 명" class="form-control">
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">사용 여부</span>
+							</div>
+							<select class="form-control _usestat" id="add_Use_Stat">
+								<option value="" disabled selected hidden> -선택- </option>
+								<option value="0">사용</option>
+								<option value="1">사용 안함</option>
+							</select>
+						</div>
+					</div>
+				</div>
+
+				<div class="modal-footer">
+					<button type="submit" class="btn btn-xs btn-dark">Save</button>
+					<button type="button" class="btn btn-xs btn-dark" data-dismiss="modal">Close</button>
+				</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal" id="Edit" role="dialog" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content animated " >
+				<div class="modal-header cursor-move">
+					<h4 class="modal-title">Queue Edit</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true"><i class="fal fa-times"></i></span>
+					</button>
+				</div>
+				<form name="edtfrm" id="edtfrm" method="post">
+				<div class="modal-body">
+					<input type="hidden" name="edt_Seq" id="edt_Seq">
+
+					<div class="form-group">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Queue Code(OSCC calltype)</span>
+							</div>
+							<select class="form-control calltype" id="edt_Que_Code" required oninvalid="this.setCustomValidity('OSCC calltype을 선택하세요.')" oninput="this.setCustomValidity('')">
+								<option value="">Queue Code(OSCC calltype)</option>
+							</select>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Queue 명</span>
+							</div>
+							<input type="text" id="edt_Que_Nm" placeholder="Queue 명" class="form-control" required oninvalid="this.setCustomValidity('Queue 명 입력하세요.')" oninput="this.setCustomValidity('')">
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text width-76px">호전환 그룹번호</span>
+							</div>
+							<input type="text" id="edt_Trans_Group_No" placeholder="Queue 명" class="form-control">
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">사용 여부</span>
+							</div>
+							<select class="form-control _usestat" id="edt_Use_Stat">
+								<option value="" disabled selected hidden> -선택- </option>
+								<option value="0">사용</option>
+								<option value="1">사용 안함</option>
+							</select>
+						</div>
+					</div>
+
+				</div>
+				<div class="modal-footer">
+					<button type="submit" class="btn btn-xs btn-dark">Save</button>
+					<button type="button" class="btn btn-xs btn-dark" data-dismiss="modal">Close</button>
+				</div>
+
+				</form>
+			</div>
+		</div>
+	</div>
+
+</main>
+
+</html>

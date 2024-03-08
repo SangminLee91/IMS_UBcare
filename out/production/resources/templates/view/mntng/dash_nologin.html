@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+
+<th:block layout:fragment="css">
+	<link rel="stylesheet" th:href="@{/css/statistics/chartist/chartist.css}">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script th:src="@{/js/statistics/peity/peity.bundle.js}"></script>
+	<script th:src="@{/js/statistics/flot/flot.bundle.js}"></script>
+	<script th:src="@{/js/statistics/chartist/chartist.js}"></script>
+	<script th:src="@{/js/statistics/chartist/chartist-bar-labels.js}"></script>
+
+	<script th:src="@{/js/statistics/easypiechart/easypiechart.bundle.js}"></script>
+
+
+	<script type="text/javascript">
+		let _DeptCode = [];
+
+		function getWaitCallStatus() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mntng/dash/call/wait",
+				data: {Dept_No: _DeptCode.join(',')},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (Rst) {
+
+				let totWaitCall = 0;
+
+				$('#in10').html("0");
+				$('#in20').html("0");
+				$('#in30').html("0");
+				$('#in40').html("0");
+				$('#in50').html("0");
+				$('#in60').html("0");
+				$('#over60').html("0");
+
+				if(Rst.DashWaitCall[0] !== null){
+					totWaitCall = totWaitCall + Rst.DashWaitCall[0].IN10 + Rst.DashWaitCall[0].IN20;
+					totWaitCall = totWaitCall + Rst.DashWaitCall[0].IN30 + Rst.DashWaitCall[0].IN40;
+					totWaitCall = totWaitCall + Rst.DashWaitCall[0].IN50 + Rst.DashWaitCall[0].IN60;
+					totWaitCall = totWaitCall + Rst.DashWaitCall[0].OVER60;
+
+					$('#in10').html(Rst.DashWaitCall[0].IN10);
+					$('#in20').html(Rst.DashWaitCall[0].IN20);
+					$('#in30').html(Rst.DashWaitCall[0].IN30);
+					$('#in40').html(Rst.DashWaitCall[0].IN40);
+					$('#in50').html(Rst.DashWaitCall[0].IN50);
+					$('#in60').html(Rst.DashWaitCall[0].IN60);
+					$('#over60').html(Rst.DashWaitCall[0].OVER60);
+
+
+					$("#_in10_bar").css("width", "0%");
+					$("#_in20_bar").css("width", "0%");
+					$("#_in30_bar").css("width", "0%");
+					$("#_in40_bar").css("width", "0%");
+					$("#_in50_bar").css("width", "0%");
+					$("#_in60_bar").css("width", "0%");
+					$("#_over60_bar").css("width", "0%");
+
+					$("#_in10_bar").css("width", (Rst.DashWaitCall[0].IN10 / totWaitCall) * 100+"%");
+					$("#_in20_bar").css("width", (Rst.DashWaitCall[0].IN20 / totWaitCall) * 100+"%");
+					$("#_in30_bar").css("width", (Rst.DashWaitCall[0].IN30 / totWaitCall) * 100+"%");
+					$("#_in40_bar").css("width", (Rst.DashWaitCall[0].IN40 / totWaitCall) * 100+"%");
+					$("#_in50_bar").css("width", (Rst.DashWaitCall[0].IN50 / totWaitCall) * 100+"%");
+					$("#_in60_bar").css("width", (Rst.DashWaitCall[0].IN60 / totWaitCall) * 100+"%");
+					$("#_over60_bar").css("width", (Rst.DashWaitCall[0].OVER60 / totWaitCall) * 100+"%");
+
+				}
+
+			});
+		}
+
+		function getAgentStatus() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mntng/dash/agent/status",
+				data: {Dept_No: _DeptCode.join(',')},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (Rst) {
+				if(typeof Rst.DashAgent[0] !== "undefined"){
+					$('#agent_Login').html(Rst.DashAgent[0].LOGIN);
+					$('#agent_Work').html(Rst.DashAgent[0].WORK);
+					$('#agent_Busy').html(Rst.DashAgent[0].BUSY);
+					$('#agent_Away').html(Rst.DashAgent[0].AWAY);
+					$('#agent_Idle').html(Rst.DashAgent[0].IDLE);
+				}
+
+			});
+			return 0;
+		}
+
+		function getCallStatus() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mntng/dash/call/status",
+				data: {Dept_No: _DeptCode.join(',')},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (Rst) {
+				if(Rst.DashCall[0] !== null){
+					$('#call_Wait').text(Rst.DashCall[0].WaitCalls);
+					$('#call_AbandoneRate').text(Rst.DashCall[0].AbandonedRate +'%');
+					$('.call_MaxWaitTime').text(Rst.DashCall[0].OldestContactWaitTime);
+					$('#call_AvgAnswerTime').text(Rst.DashCall[0].AverageAnsweredWaitTime);
+					$('#call_ServiceLevel').text(Rst.DashCall[0].ServiceLevel);
+					$('.call_EstWaitTime').text(Rst.DashCall[0].EstimatedAnsweredWaitTime);
+					$('#call_EstServiceLevel').text(Rst.DashCall[0].EstimatedServiceLevel);
+				}
+
+				//var ansrate=((pEarned/pPos) * 100).toFixed(3);
+				//var abdrate;
+				//$('#answerRatePie').data('easyPieChart').update(40);
+				//$('#abandoneRatePie').data('easyPieChart').update(40);
+			});
+		}
+
+		function getRstRate() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mntng/dash/call/rstrate",
+				data: {Dept_No: _DeptCode.join(',')},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (Rst) {
+				let _AnswerRate = 0;
+				let _AbandoneRate = 0;
+
+				if(Rst.DashRate.length > 0) {
+					_AnswerRate = Rst.DashRate[0].AnswerRate
+					_AbandoneRate = Rst.DashRate[0].AbandoneRate
+				}
+
+				$('.answerRatePie').data('easyPieChart').update(_AnswerRate);
+				$('.abandoneRatePie').data('easyPieChart').update(_AbandoneRate);
+
+			});
+		}
+
+
+		function getTimeunit() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/mntng/dash/call/time",
+				data: {Dept_No: _DeptCode.join(',')},
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (Rst) {
+				let td_len=Rst.DashTime.length;
+				let sum_receive=0;
+				let sum_answer=0;
+				let sum_abandone=0;
+				let sum_redirect=0;
+
+				for(let i=0; i<td_len; i++){
+					sum_receive=sum_receive + Rst.DashTime[i].CntReceived;
+					sum_answer=sum_answer+Rst.DashTime[i].CntAnswered;
+					sum_abandone=sum_abandone+Rst.DashTime[i].CntAbandoned;
+					sum_redirect=sum_redirect+Rst.DashTime[i].CntRedirected;
+				}
+
+				$('#total_receive').text(isNaN(sum_receive) ? "0" : sum_receive);
+				$('#total_answer').text(isNaN(sum_answer) ? "0" : sum_answer );
+				$('#total_abandone').text(isNaN(sum_abandone) ? "0" : sum_abandone );
+				//$('#total_redirect').text(isNaN(sum_redirect) ? "0" : sum_redirect );
+				$('#total_callback').text(Rst.callback.Cnt);
+
+
+				let data1 = [];
+				let data2 = [];
+				let data3 = [];
+				let data4 = [];
+
+				let idx_i = 0;
+
+				for (let i = 9; i <= 20; i += 1){
+
+					if(td_len > 0 && idx_i < td_len && i === Rst.DashTime[idx_i].TimeUnit){
+						data1.push(Rst.DashTime[idx_i].CntReceived);
+						data2.push(Rst.DashTime[idx_i].CntAnswered);
+						data3.push(Rst.DashTime[idx_i].CntAbandoned);
+						data4.push(Rst.DashTime[idx_i].CntRedirected);
+
+						idx_i++
+					}
+					else{
+						data1.push(0);
+						data2.push(0);
+						data3.push(0);
+						data4.push(0);
+					}
+				}
+
+				multiLineLabels(data1, data2, data3);
+
+			});
+
+		}
+
+		/* multi line labels */
+		function multiLineLabels (data1, data2, data3) {
+
+			new Chartist.Bar('#multiLineLabels',
+					{
+						labels: ['9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'],
+						series: [
+							{
+								className: 'bar_color1',
+								data: data1
+							},
+							{
+								className: 'bar_color2',
+								data: data2
+							},
+							{
+								className: 'bar_color3',
+								data: data3
+							}
+							// ,
+							// {
+							// 	className: 'bar_color4',
+							// 	data: data4
+							// }
+						]
+					},
+					{
+						seriesBarDistance: 25,
+						axisX:
+								{
+									offset: 30
+								},
+						axisY:
+								{
+									offset: 20,
+									scaleMinSpace: 10,
+									onlyInteger: true
+								},
+						plugins: [
+							Chartist.plugins.ctBarLabels()
+						]
+					});
+		}
+
+
+		$(document).ready(function() {
+
+			//dept
+			const getDept = function() {
+				$.ajax({
+					method: "POST",
+					url: CONTEXT_PATH+"/cmm/ajax/dept/list",
+					error: function(jqXHR) { jqXHR_Process(jqXHR) }
+				}).done(function (data) {
+
+					$.ajax({
+						method: "POST",
+						url: CONTEXT_PATH+"/mntng/dash/curdept",
+						error: function(jqXHR) { jqXHR_Process(jqXHR) }
+					}).done(function (cur) {
+						let selected = false;
+
+						$("#_dept option:not(option:eq(0))").remove();
+
+						$.each(data.Dept, function (i, item) {
+							if(item.Lvl !== 1) {
+								$.each(cur.Cur_Dept, function (j, cur_item) {
+									if(item.Dept_No == cur_item.Dept_No) {
+										selected = true;
+										_DeptCode.push(cur_item.Dept_No);
+									}
+								});
+
+								if( cur.Cur_Dept.length === 0 ) selected = true;
+								$("#_dept").append($('<option>', { value: item.Dept_No, text: item.Dept_Nm, selected: selected }));
+
+							}
+							selected = false;
+						});
+
+						$('#_dept').multiselect({
+							includeFilterClearBtn: false,
+							enableFiltering: true,
+							includeSelectAllOption: true,
+							selectAllText: '전체선택',
+							nonSelectedText: '- 전체 -',
+							allSelectedText: '전체 선택됨',
+							buttonWidth: '100%',
+							maxHeight: 400,
+							buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+						});
+						$('#_dept').multiselect('rebuild');
+
+						getWaitCallStatus();
+						getAgentStatus();
+						getCallStatus();
+						getRstRate();
+						getTimeunit();
+					});
+
+				});
+			};
+
+			getDept();
+
+			getWaitCallStatus();
+			setInterval("getWaitCallStatus()", 5000);
+
+			getAgentStatus();
+			setInterval("getAgentStatus()", 5000);
+
+			getCallStatus();
+			setInterval("getCallStatus()", 5000);
+
+			getRstRate();
+			setInterval("getRstRate()", 30000);
+
+			getTimeunit();
+			setInterval("getTimeunit()", 30000);
+
+
+			$("#_dept").change(function (){
+				_DeptCode = $(this).val();
+
+				if (_DeptCode.length ==0 ) _DeptCode.push(0);
+
+				getWaitCallStatus();
+				getAgentStatus();
+				getCallStatus();
+				getRstRate();
+				getTimeunit();
+			});
+
+
+		});
+	</script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+<!--	<i class="subheader-icon fal fa-window"></i> 통합 대시보드-->
+	<div style="width:400px">
+		<select class="custom-select" multiple="multiple" id="_dept" >
+		</select>
+	</div>
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+	<div class="panel">
+		<div class="panel-container show">
+			<div class="panel-content" style="padding: 0.1rem 1rem;">
+
+				<div class="row">
+					<div class="col-sm-4 col-xl-2"><!--bg-info-200-->
+						<div class="p-3 bg-light rounded overflow-hidden position-relative">
+							<div class="text-center">
+								<h3 class="rem1-5 d-block l-h-n m-0 fw-500"><span id="call_Wait">0</span><small class="m-0 l-h-n">대기콜</small>
+								</h3>
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-4 col-xl-2"><!--bg-info-200-->
+						<div class="p-3 bg-light rounded overflow-hidden position-relative">
+							<div class="text-center">
+								<h3 class="rem1-5 d-block l-h-n m-0 fw-500"><span id="call_AbandoneRate">0%</span><small class="m-0 l-h-n">포기율</small>
+								</h3>
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-4 col-xl-2"><!--bg-info-200-->
+						<div class="p-3 bg-light rounded overflow-hidden position-relative">
+							<div class="text-center">
+								<h3 class="rem1-5 d-block l-h-n m-0 fw-500"><span class="call_MaxWaitTime">00:00:00</span><small class="m-0 l-h-n">최장대기시간</small>
+								</h3>
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-4 col-xl-2"><!--bg-info-200-->
+						<div class="p-3 bg-light rounded overflow-hidden position-relative">
+							<div class="text-center">
+								<h3 class="rem1-5 d-block l-h-n m-0 fw-500"><span id="call_AvgAnswerTime">00:00:00</span><small class="m-0 l-h-n">평균응대호시간</small>
+								</h3>
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-4 col-xl-2"><!--bg-info-200-->
+						<div class="p-3 bg-light rounded overflow-hidden position-relative">
+							<div class="text-center">
+								<h3 class="rem1-5 d-block l-h-n m-0 fw-500"><span id="call_ServiceLevel">0%</span><small class="m-0 l-h-n">서비스레벨</small>
+								</h3>
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-4 col-xl-2"><!--bg-info-200-->
+						<div class="p-3 bg-light rounded overflow-hidden position-relative">
+							<div class="text-center">
+								<h3 class="rem1-5 d-block l-h-n m-0 fw-500"><span class="call_EstWaitTime">00:00:00</span><small class="m-0 l-h-n">예상응대호 대기시간</small>
+								</h3>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+	</div>
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2>콜현황</h2>
+		</div>
+
+		<div class="panel-container show">
+			<div class="panel-content">
+				<div class="row">
+					<div id="multiLineLabels" class="ct-chart" style="width:100%; height:230px;"></div>
+
+					<!--					<div id="bar-chart" class="chart m-3" style="width:100%;height:180px"></div>-->
+				</div>
+
+				<div class="row">
+					<div class="col-sm-6 col-xl-3"><!--bg-info-200-->
+						<div class="p-1 bg-light rounded overflow-hidden position-relative">
+							<div class="text-center">
+								<h3 class="rem1-5 d-block l-h-n m-0 fw-500"><span id="total_receive">0</span><small class="mt-1 m-0 l-h-n" style="color:#94ae0a;font-weight: bold">인입호</small>
+								</h3>
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-6 col-xl-3"><!--bg-info-200-->
+						<div class="p-1 bg-light rounded overflow-hidden position-relative">
+							<div class="text-center">
+								<h3 class="rem1-5 d-block l-h-n m-0 fw-500"><span id="total_answer">0</span><small class="mt-1 m-0 l-h-n" style="color:#115fa6;font-weight: bold">응대호</small>
+								</h3>
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-6 col-xl-3"><!--bg-info-200-->
+						<div class="p-1 bg-light rounded overflow-hidden position-relative">
+							<div class="text-center">
+								<h3 class="rem1-5 d-block l-h-n m-0 fw-500"><span id="total_abandone">0</span><small class="mt-1 m-0 l-h-n" style="color:#a61120;font-weight: bold">포기호</small>
+								</h3>
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-6 col-xl-3"><!--bg-info-200-->
+						<div class="p-1 bg-light rounded overflow-hidden position-relative">
+							<div class="text-center">
+								<h3 class="rem1-5 d-block l-h-n m-0 fw-500"><span id="total_callback">0</span><small class="mt-1 m-0 l-h-n" style="color:#ff8809;font-weight: bold">미처리콜백</small>
+								</h3>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+
+		<div class="col-xl-4">
+			<div class="panel">
+				<div class="panel-hdr">
+					<h2>처리 현황</h2>
+				</div>
+
+				<div class="panel-container show">
+					<div class="panel-content">
+
+						<div class="row">
+
+							<div class="col-xl-6">
+								<div class="d-flex flex-column align-items-center">
+									<div class="js-easy-pie-chart answerRatePie position-relative d-flex align-items-center justify-content-center" style="color: #2ac8ef" data-percent="0" data-piesize="145" data-linewidth="22" data-trackcolor="#ffffff" data-scalelength="8">
+										<div class="d-flex flex-column align-items-center justify-content-center position-absolute pos-left pos-right pos-top pos-bottom fw-300 fs-xl">
+											<span class="js-percent d-block text-dark" style="font-size:1.2rem !important;"></span>
+											<div class="d-block fs-xs text-dark">
+												<small style="font-size: 1rem;color:#666666;font-weight: bold">응대율</small>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-xl-6">
+								<div class="d-flex flex-column align-items-center">
+									<div class="js-easy-pie-chart abandoneRatePie position-relative d-flex align-items-center justify-content-center" style="color: #ef2a85" data-percent="0" data-piesize="145" data-linewidth="22" data-trackcolor="#ffffff" data-scalelength="8">
+										<div class="d-flex flex-column align-items-center justify-content-center position-absolute pos-left pos-right pos-top pos-bottom fw-300 fs-xl">
+											<span class="js-percent d-block text-dark" style="font-size:1.2rem !important;"></span>
+											<div class="d-block fs-xs text-dark">
+												<small style="font-size: 1rem;color:#666666;font-weight: bold">포기율</small>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+						</div>
+
+
+						<div class="mt-3 d-flex d-flex flex-column border-faded border-top-0 border-left-0 border-right-0">
+							<h4 class="mt-2 mb-0">
+								<span class="badge dash_badge text-white" style="background-color:#12c897">평균대기시간</span>
+								<span class="pl-2 call_EstWaitTime">00:00:00</span>
+							</h4>
+						</div>
+						<div class="d-flex d-flex flex-column border-faded border-top-0 border-left-0 border-right-0">
+							<h4 class="mt-2 mb-0">
+								<span class="badge dash_badge text-white" style="background-color:#f1485b">최장대기시간</span>
+								<span class="pl-2 call_MaxWaitTime">00:00:00</span>
+							</h4>
+						</div>
+
+					</div>
+				</div>
+
+			</div>
+		</div>
+		<div class="col-xl-4">
+			<div class="panel">
+				<div class="panel-hdr">
+					<h2>대기콜 현황</h2>
+				</div>
+
+				<div class="panel-container show">
+					<div class="panel-content">
+						<div class="d-flex d-flex flex-column border-faded border-top-0 border-left-0 border-right-0">
+							<h4 class="mt-2 mb-0">
+								<span class="badge dash_badge text-white" style="background-color:#48F150">00 ~ 10초 대기</span>
+								<span class="pl-2" id="in10">0</span>
+							</h4>
+						</div>
+						<div class="progress" style="height: 0.15rem;margin-left: 6.8rem !important;">
+							<div id="_in10_bar" class="progress-bar" role="progressbar" style="background-color:#48F150; width: 0%" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
+						</div>
+						<div class="d-flex d-flex flex-column border-faded border-top-0 border-left-0 border-right-0">
+							<h4 class="mt-2 mb-0">
+								<span class="badge dash_badge text-white" style="background-color:#84F148">11 ~ 20초 대기</span>
+								<span class="pl-2" id="in20">0</span>
+							</h4>
+						</div>
+						<div class="progress" style="height: 0.15rem;margin-left: 6.8rem !important;">
+							<div id="_in20_bar" class="progress-bar" role="progressbar" style="background-color:#84F148; width: 0%" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
+						</div>
+						<div class="d-flex d-flex flex-column border-faded border-top-0 border-left-0 border-right-0">
+							<h4 class="mt-2 mb-0">
+								<span class="badge dash_badge text-white" style="background-color:#CBF148">21 ~ 30초 대기</span>
+								<span class="pl-2" id="in30">0</span>
+							</h4>
+						</div>
+						<div class="progress" style="height: 0.15rem;margin-left: 6.8rem !important;">
+							<div id="_in30_bar" class="progress-bar" role="progressbar" style="background-color:#CBF148; width: 0%" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
+						</div>
+						<div class="d-flex d-flex flex-column border-faded border-top-0 border-left-0 border-right-0">
+							<h4 class="mt-2 mb-0">
+								<span class="badge dash_badge text-white" style="background-color:#F1DF48">31 ~ 40초 대기</span>
+								<span class="pl-2" id="in40">0</span>
+							</h4>
+						</div>
+						<div class="progress" style="height: 0.15rem;margin-left: 6.8rem !important;">
+							<div id="_in40_bar" class="progress-bar" role="progressbar" style="background-color:#F1DF48; width: 0%" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
+						</div>
+						<div class="d-flex d-flex flex-column border-faded border-top-0 border-left-0 border-right-0">
+							<h4 class="mt-2 mb-0">
+								<span class="badge dash_badge text-white" style="background-color:#F1A748">41 ~ 50초 대기</span>
+								<span class="pl-2" id="in50">0</span>
+							</h4>
+						</div>
+						<div class="progress" style="height: 0.15rem;margin-left: 6.8rem !important;">
+							<div id="_in50_bar" class="progress-bar" role="progressbar" style="background-color:#F1A748; width: 0%" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
+						</div>
+						<div class="d-flex d-flex flex-column border-faded border-top-0 border-left-0 border-right-0">
+							<h4 class="mt-2 mb-0">
+								<span class="badge dash_badge text-white" style="background-color:#F17048">51 ~ 60초 대기</span>
+								<span class="pl-2" id="in60">0</span></h4>
+						</div>
+						<div class="progress" style="height: 0.15rem;margin-left: 6.8rem !important;">
+							<div id="_in60_bar" class="progress-bar" role="progressbar" style="background-color:#F17048; width: 0%" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
+						</div>
+						<div class="d-flex d-flex flex-column border-faded border-top-0 border-left-0 border-right-0">
+							<h4 class="mt-2 mb-0">
+								<span class="badge dash_badge text-white" style="background-color:#F1485B">60초 이상 대기</span>
+								<span class="pl-2" id="over60">0</span>
+							</h4>
+						</div>
+						<div class="progress" style="height: 0.15rem;margin-left: 6.8rem !important;">
+							<div id="_over60_bar" class="progress-bar" role="progressbar" style="background-color:#F1485B; width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+		<div class="col-xl-4">
+			<div class="panel">
+				<div class="panel-hdr">
+					<h2>상담원 현황</h2>
+				</div>
+
+				<div class="panel-container show">
+					<div class="panel-content">
+						<div class="d-flex d-flex flex-column border-faded border-top-0 border-left-0 border-right-0">
+							<h4 class="mt-2 mb-0">
+								<span class="badge dash_badge text-white" style="background-color:#86A4A1">로그인</span>
+								<span class="pl-2" id="agent_Login">0</span>
+							</h4>
+						</div>
+						<div class="d-flex d-flex flex-column border-faded border-top-0 border-left-0 border-right-0">
+							<h4 class="mt-2 mb-0">
+								<span class="badge dash_badge text-white" style="background-color:#86A4A1">상담중</span>
+								<span class="pl-2" id="agent_Busy">0</span>
+							</h4>
+						</div>
+						<div class="d-flex d-flex flex-column border-faded border-top-0 border-left-0 border-right-0">
+							<h4 class="mt-2 mb-0">
+								<span class="badge dash_badge text-white" style="background-color:#86A4A1">대기중</span>
+								<span class="pl-2" id="agent_Idle">0</span>
+							</h4>
+						</div>
+						<div class="d-flex d-flex flex-column border-faded border-top-0 border-left-0 border-right-0">
+							<h4 class="mt-2 mb-0">
+								<span class="badge dash_badge text-white" style="background-color:#86A4A1">작&nbsp;&nbsp;&nbsp;업</span>
+								<span class="pl-2" id="agent_Work">0</span>
+							</h4>
+						</div>
+						<div class="d-flex d-flex flex-column border-faded border-top-0 border-left-0 border-right-0">
+							<h4 class="mt-2 mb-0">
+								<span class="badge dash_badge text-white" style="background-color:#86A4A1">이&nbsp;&nbsp;&nbsp;석</span>
+								<span class="pl-2" id="agent_Away">0</span>
+							</h4>
+						</div>
+
+						<div class="d-flex d-flex flex-column border-faded border-top-0 border-left-0 border-right-0">
+							<h4 class="mt-2 mb-0">
+								<span class="badge dash_badge text-white" style="background-color:#FFFFFF">&nbsp;</span>
+							</h4>
+						</div>
+						<div class="d-flex d-flex flex-column border-faded border-top-0 border-left-0 border-right-0">
+							<h4 class="mt-2 mb-0">
+								<span class="badge dash_badge text-white" style="background-color:#FFFFFF">&nbsp;</span>
+							</h4>
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+
+	</div>
+
+
+
+
+</main>
+
+</html>

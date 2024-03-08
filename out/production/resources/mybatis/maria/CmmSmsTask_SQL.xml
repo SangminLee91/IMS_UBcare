@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="smstask">
+    <select id="getThresHold" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Mnt_Mntng_ThresHold_S(#{SvrIp})
+	</select> 
+	<select id="getProcData" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_ProcHist_S(#{SvrIp})
+	</select>
+	<select id="getServer" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mnt_Mntng_Svr_Ip_S()
+	</select>
+	
+	<!-- 최종 SMS 발송 일시 저장 -->
+	<insert id="LastSmsSendDt_u" parameterType="hashmap">
+		CALL USP_Mnt_Mntng_Sms_LastSend_U(#{SvrIp}, #{ThresHold_Type})
+	</insert>
+	
+</mapper>

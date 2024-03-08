@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css">
+    <link rel="stylesheet" th:href="@{/css/formplugins/bootstrap-timepicker/bootstrap-timepicker.css}">
+</th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+    <script th:src="@{/js/formplugins/bootstrap-timepicker/bootstrap-timepicker.min.js}"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+            const table = $('#dt_basic').DataTable({
+                data:[],
+                columns: [
+                    { "data": "recordtimestamp" },
+                    { "data": "entitynm" },
+                    { "data": "numavgloggedon" },
+                    { "data": "numreceived" },
+                    { "data": "answer" },
+                    { "data": "answer_rate" },
+                    { "data": "leak_tate" },
+                    { "data": "avg_consult_time" },
+                    { "data": "avg_wait_time" },
+                    { "data": "wait_rate" },
+                    { "data": "numabandoned" },
+                    { "data": "avg_abandon_time" },
+                    { "data": "abandon_rate" },
+                    { "data": "numoutgoing" },
+                    { "data": "avg_handledtime" },
+                    { "data": "callback_in" },
+                    { "data": "callback_process" },
+                    { "data": "avg_callback_process_time" },
+                    { "data": "avg_callback_rate" },
+                    { "data": "callback_rate" }
+                ],
+                searching: false,
+                ordering: false,
+                bPaginate: true,
+                iDisplayLength: 30,
+                //scrollX: true,
+            });
+
+
+
+            $('._time').timepicker({
+                defaultTime: "",
+                showMeridian: false, //24시간
+                icons: {
+                    up: "fal fa-caret-up",
+                    down: "fal fa-caret-down"
+                }
+            });
+
+            //검색Btn
+            $("._searchGo").click(function(){
+
+                let Queue_Key = "";// $(".sel_queue").val().toString().replace(/,/gi, "|");
+                let Search_Type = $("._searchType:checked").val()
+                let sDate = $("#sdate").val();
+                let eDate = $("#edate").val();
+                let sTime = ""; // $("#stime").val();
+                let eTime = ""; //$("#etime").val();
+
+                table.clear().draw();
+
+                $(".dataTables_processing").css("display","block");
+                $.ajax({
+                    method: "POST",
+                    url: CONTEXT_PATH+"/stt/ub/total/head/data",
+                    data: {
+                        Queue_Key: Queue_Key
+                        , Search_Type: Search_Type
+                        , sDate: sDate
+                        , eDate: eDate
+                        , sTime: sTime
+                        , eTime: eTime
+                    },error: function(jqXHR) { jqXHR_Process(jqXHR) }
+                }).done(function (data) {
+                    table.clear().draw();
+                    table.rows.add(data.Stt).draw();
+                    $(".dataTables_processing").css("display","none");
+                    table.DataTable().columns.adjust().draw();
+                });
+            })
+
+
+            $("#_excel").click(function(){
+                let Queue_Key = "";// $(".sel_queue").val().toString().replace(/,/gi, "|");
+                let Search_Type = $("._searchType:checked").val()
+                let sDate = $("#sdate").val();
+                let eDate = $("#edate").val();
+                let sTime = ""//$("#stime").val();
+                let eTime = ""//$("#etime").val();
+
+                location.href = CONTEXT_PATH+"/stt/ub/excel/total_head?Queue_Key="+encodeURI(Queue_Key)+"&Search_Type="+encodeURI(Search_Type)+"&sDate="+encodeURI(sDate)+"&eDate="+encodeURI(eDate)+"&sTime="+encodeURI(sTime)+"&eTime="+encodeURI(eTime);
+
+            });
+
+            $("#sdate").val(getYesterday()); //오늘날짜 기본
+            $("#edate").val(getYesterday()); //오늘날짜 기본
+
+        });
+    </script>
+
+</th:block>
+
+<th:block layout:fragment="headertitle">
+    <i class="subheader-icon fal fa-window"></i> 총괄 현황(본사)
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+    <div class="panel">
+        <div class="panel-hdr">
+            <h2></h2>
+            <div id="buttons" class="btn-group">
+                <button class="btn-xs btn-dark" id="_excel">Excel</button>
+            </div>
+        </div>
+        <div class="panel-container show">
+            <div class="panel-content">
+
+                <div class="form-row">
+<!--                    <div class="col-sm-3 mb-2">-->
+<!--                        <label class="form-label d-none">큐</label>-->
+<!--                        <select multiple="multiple" id="Queue_Key" name="Queue_Key" class="sel_queue"></select>-->
+<!--                    </div>-->
+
+                    <div class="col-md">
+                        <label class="form-label d-none">날짜</label>
+                        <div class="input-daterange input-group">
+                            <input type="text" class="form-control datepicker" name="sdate" id="sdate" placeholder="시작일자">
+                            <div class="input-group-append input-group-prepend">
+                                <span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>
+                            </div>
+                            <input type="text" class="form-control datepicker" name="edate" id="edate" placeholder="종료일자">
+                        </div>
+                    </div>
+<!--                    <div class="col-md">-->
+<!--                        <label class="form-label d-none">시간</label>-->
+<!--                        <div class="input-daterange input-group">-->
+<!--                            <input class="_time form-control" type="text" name="stime" id="stime" placeholder="시작 시간"  value="09:00">-->
+<!--                            <div class="input-group-append input-group-prepend">-->
+<!--                                <span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>-->
+<!--                            </div>-->
+<!--                            <input class="_time form-control" type="text" name="etime" id="etime" placeholder="종료 시간" value="19:00">-->
+<!--                        </div>-->
+<!--                    </div>-->
+
+                    <div class="col-md ">
+                        <label class="form-label d-none">&nbsp;</label>
+                        <div class="frame-wrap pt-2">
+                            <div class="custom-control custom-radio custom-control-inline">
+                                <input type="radio" class="_searchType custom-control-input" id="rdo_month" name="searchType" value="4">
+                                <label class="custom-control-label" for="rdo_month">월별</label>
+                            </div>
+                            <div class="custom-control custom-radio custom-control-inline">
+                                <input type="radio" class="_searchType custom-control-input" id="rdo_day" name="searchType" value="2" checked="">
+                                <label class="custom-control-label" for="rdo_day">일별</label>
+                            </div>
+<!--                            <div class="custom-control custom-radio custom-control-inline">-->
+<!--                                <input type="radio" class="_searchType custom-control-input" id="rdo_hour" name="searchType" value="1">-->
+<!--                                <label class="custom-control-label" for="rdo_hour">시간별</label>-->
+<!--                            </div>-->
+<!--                            <div class="custom-control custom-radio custom-control-inline">-->
+<!--                                <input type="radio" class="_searchType custom-control-input" id="rdo_time" name="searchType" value="0">-->
+<!--                                <label class="custom-control-label" for="rdo_time">15분별</label>-->
+<!--                            </div>-->
+                        </div>
+                    </div>
+
+
+                    <div class="col-md">
+                        <label class="form-label d-none ">&nbsp;</label>
+                        <button class="btn btn-sm btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span>Search</span></button>
+                    </div>
+                </div>
+
+                <table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+                    <thead class="thead-themed">
+                    <tr>
+                        <th rowspan="2" class="text-center">날짜</th>
+                        <th rowspan="2" class="text-center">큐이름</th>
+                        <th colspan="11" class="text-center border-bottom-0">상담인입</th>
+                        <th colspan="2" class="text-center border-bottom-0">발신콜</th>
+                        <th colspan="5" class="text-center border-bottom-0">콜백</th>
+                    </tr>
+                    <tr>
+                        <th class="text-center">일평균 로그인수</th>
+                        <th class="text-center">총할당콜</th>
+                        <th class="text-center">수신성공콜</th>
+                        <th class="text-center">응답율</th>
+                        <th class="text-center">누수율</th>
+                        <th class="text-center">평균상담시간</th>
+                        <th class="text-center">평균통화대기시간</th>
+                        <th class="text-center">통화대기율(+10초)</th>
+                        <th class="text-center">포기콜</th>
+                        <th class="text-center">평균통화포기시간</th>
+                        <th class="text-center">통화포기율</th>
+                        <th class="text-center">콜처리수</th>
+                        <th class="text-center">평균통화시간</th>
+                        <th class="text-center">발생건</th>
+                        <th class="text-center">처리건</th>
+                        <th class="text-center">평균응답시간</th>
+                        <th class="text-center">처리율</th>
+                        <th class="text-center">발생율</th>
+                    </tr>
+                    </thead>
+
+                </table>
+
+            </div>
+        </div>
+    </div>
+
+</main>
+</html>

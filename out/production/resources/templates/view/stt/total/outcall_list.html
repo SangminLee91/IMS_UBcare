@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko"
+	  xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layouts/layout}">
+
+
+<!-- 컨텐츠 고유 CSS 추가 -->
+<th:block layout:fragment="css"></th:block>
+
+<!-- 컨텐츠 고유 스크립트 추가 -->
+<th:block layout:fragment="script">
+	<script type="text/javascript">
+	$(document).ready(function() {
+		const table = $('#dt_basic').DataTable({
+			serverSide : true,
+			ajax: {
+				url: CONTEXT_PATH+"/stt/total/outcall/dtl",
+				type: "POST",
+				data: function ( d ) {
+/*					let teamKey = '';
+					if ($("._empSel").val().toString().replace(/,/gi, "|") !== ""){ //상담원 선택시 부서정보는 날린다!!
+						teamKey = '';
+					}
+					else {
+						teamKey = $("._deptSel").val().toString().replace(/,/gi, "|");
+					}*/
+					d.UserKey =  $("._empSel").val().toString().replace(/,/gi, "|");
+					d.TeamKey =  $("._deptSel").val().toString().replace(/,/gi, "|");
+					d.Start_Dt = $("#sdate").val();
+					d.End_Dt = $("#edate").val();
+				}
+			},
+			columns: [
+				{ "data": "callstart" },
+				{ "data": "Emp_Nm" },
+				{ "data": "UserID" },
+				{ "data": "Dept_Nm" },
+				{ "data": "origdestination" },
+				{ "data": "callyn" },
+				{ "data": "tothandlingtime" }
+			],
+			ordering: true,
+			searching: false,
+			iDisplayLength: 20,
+			bPaginate: true
+		});
+
+
+		let jsonEmp = null;
+		//부서
+		const getDept = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/cmm/ajax/dept/list",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				$.each(data.Dept, function (i, item) {
+					$("._deptSel").append($('<option>', { value: item.Dept_No, text: item.Dept_Nm}));
+				});
+
+				$('._deptSel').multiselect({
+					includeFilterClearBtn: false,
+					enableFiltering: true,
+					includeSelectAllOption: true,
+					selectAllText: '전체선택',
+					nonSelectedText: '부 서',
+					allSelectedText: '전체 선택됨',
+					buttonWidth: '100%',
+					maxHeight: 400,
+					buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+				});
+			});
+
+		}
+
+		//사원
+		const getEmp = function() {
+			$.ajax({
+				method: "POST",
+				url: CONTEXT_PATH+"/cmm/ajax/emp/list",
+				error: function(jqXHR) { jqXHR_Process(jqXHR) }
+			}).done(function (data) {
+				jsonEmp = data.Emp;
+				$(".sel_emp option").remove();
+				makeEmp(data.Emp);
+			});
+		}
+		const makeEmp = function(data)
+		{
+			//$(".sel_emp option").remove();
+			$.each(data, function (i, item) {
+				$("._empSel").append($('<option>', { value: item.Agent_Key, text: item.Emp_Nm +' ['+item.userid+']' }));
+			});
+			$('._empSel').multiselect({
+				includeFilterClearBtn: false,
+				enableFiltering: true,
+				includeSelectAllOption: true,
+				selectAllText: '전체선택',
+				nonSelectedText: '사 원',
+				allSelectedText: '전체 선택됨',
+				buttonWidth: '100%',
+				maxHeight: 400,
+				buttonClass: 'btn dropdown-toggle btn-light bs-placeholder'
+			});
+			$('._empSel').multiselect('rebuild');
+		}
+
+		//부서 변경시 해당부서 사원만 노출
+		$("._deptSel").change(function(){
+			$("._empSel option").remove();
+			let data = jsonEmp;
+
+			if($(this).val() != "")
+			{
+				for(let i = 0; i < $(this).val().length; i++)
+				{
+					let val_Dept_No = $(this).val()[i];
+					data = jsonEmp.filter(function(val) { //선택된 부서의 사원만 필터
+						return (val.Dept_No == val_Dept_No);
+					});
+					makeEmp(data);
+				}
+			}
+			else
+			{
+				makeEmp(data);
+			}
+		});
+
+		//검색Btn
+		$("._searchGo").click(function(){
+
+			table.ajax.reload();
+		})
+
+		getDept();
+		getEmp();
+
+		$("#sdate").val(getToday()); //오늘날짜 기본
+		$("#edate").val(getToday()); //오늘날짜 기본
+	});
+	</script>
+</th:block>
+
+<th:block layout:fragment="headertitle">
+	<i class="subheader-icon fal fa-window"></i> 발신 상세 목록
+</th:block>
+
+<main layout:fragment="content" id="js-page-content" role="main" class="page-content">
+
+	<div class="panel">
+		<div class="panel-hdr">
+			<h2></h2>
+			 <div id="buttons" class="btn-group"></div>
+		</div>
+		<div class="panel-container show">
+			<div class="panel-content">
+
+				<div class="form-row">
+					<div class="col-md">
+						<label class="form-label d-none">부서</label>
+						<select multiple="multiple" class="_deptSel"></select>
+					</div>
+					<div class="col-md">
+						<label class="form-label d-none">상담원</label>
+						<select multiple="multiple" class="_empSel"></select>
+					</div>
+					<div class="col-md">
+						<label class="form-label d-none">날짜</label>
+						<div class="input-daterange input-group">
+							<input type="text" class="form-control datepicker" name="startdate" id="sdate" placeholder="시작일자">
+							<div class="input-group-append input-group-prepend">
+								<span class="input-group-text fs-xl"><i class="fal fa-ellipsis-h"></i></span>
+							</div>
+							<input type="text" class="form-control datepicker" name="finishdate" id="edate" placeholder="종료일자">
+						</div>
+					</div>
+					<div class="col-md">
+						<label class="form-label d-none ">&nbsp;</label>
+						<button class="btn btn-sm btn-dark waves-effect waves-themed _searchGo" type="button"><i class="fal fa-search mr-lg-2"></i><span class="">Search</span></button>
+					</div>
+				</div>
+	
+				<table id="dt_basic" class="table-sm table-bordered table-hover table-striped w-100" style="width:100%">
+					<thead class="thead-themed">
+						<tr>
+							<th class="text-center">날짜</th>
+							<th class="text-center">상담원 이름</th>
+							<th class="text-center">상담원 ID</th>
+							<th class="text-center">부서</th>
+							<th class="text-center">발신번호</th>
+							<th class="text-center">통화연결 여부</th>
+							<th class="text-center">통화시간</th>
+						</tr>
+					</thead>
+				</table>
+
+			</div>
+		</div>
+	</div>
+	
+</main>		
+
+</html>

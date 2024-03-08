@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="cmmEtc">
+
+    <select id="MainDash" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Main_Dash_S()
+	</select> 
+    <select id="MainDashPrev" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Main_Dash_PrevDay_S()
+	</select> 
+	
+	
+
+    <select id="getMenu" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Cmm_Menu_S_New(#{_EMP_NO}, #{_CURRENT_URL_})
+	</select> 
+	
+	<!-- 서버 모니터링 관리 -->
+    <select id="getSvr" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Mnt_Mntng_Svr_S()
+	</select> 
+	<insert id="addSvr" parameterType="hashmap">
+    	CALL USP_Mnt_Mntng_Svr_I(#{Svr_Ip}, #{Svr_Desc}, NULLIF(#{Cpu_ThresHold},''), NULLIF(#{Memory_ThresHold},''), 0)
+	</insert> 
+	<update id="edtSvr" parameterType="hashmap">
+    	CALL USP_Mnt_Mntng_Svr_U(NULLIF(#{Svr_Seq},''), #{Svr_Ip}, #{Svr_Desc}, NULLIF(#{Cpu_ThresHold},''), NULLIF(#{Memory_ThresHold},''), 0)
+	</update>
+	<update id="delSvr" parameterType="hashmap">
+    	CALL USP_Mnt_Mntng_Svr_D(NULLIF(#{Svr_Seq},''))
+	</update>
+	
+	<!-- 서버 모니터링 프로세스 등록  -->
+    <select id="getProc" parameterType="hashmap" resultType="hashmap">
+    	CALL USP_Mnt_Mntng_Proc_S(#{Svr_Ip})
+	</select> 
+	<insert id="addProc" parameterType="hashmap">
+    	CALL USP_Mnt_Mntng_Proc_I(#{Svr_Ip}, #{Process_Nm}, NULLIF(#{Process_Cnt},''))
+	</insert> 
+	<update id="edtProc" parameterType="hashmap">
+    	CALL USP_Mnt_Mntng_Proc_U(NULLIF(#{Proc_Seq},''), #{Svr_Ip}, #{Process_Nm}, NULLIF(#{Process_Cnt},''))
+	</update>
+	<update id="delProc" parameterType="hashmap">
+    	CALL USP_Mnt_Mntng_Proc_D(NULLIF(#{Proc_Seq},''))
+	</update>
+
+	
+	<!-- 녹취 청취 이력 -->
+	<!-- 
+	<resultMap id="listenHist1" type="hashmap"></resultMap>
+	<resultMap id="listenHist2" type="hashmap"></resultMap>
+    <select id="getListenHist" parameterType="hashmap" resultType="hashmap" resultMap="listenHist1, listenHist2">
+    	CALL USP_Hist_Rec_Listen_S(#{start}, #{length}, #{listen_sdate}, #{listen_edate}, #{listen_userid}, #{listen_usernm}, #{rec_sdate}, #{rec_edate}, #{rec_userid}, #{rec_usernm})
+	</select> 
+	 -->
+    <select id="getListenHistTotCnt" parameterType="hashmap" resultType="hashmap">
+    	<!-- CALL USP_Hist_Rec_Listen_TotCnt_S(NULLIF(#{start},''), NULLIF(#{length},''), #{listen_sdate}, #{listen_edate}, #{listen_userid}, #{listen_usernm}, #{rec_sdate}, #{rec_edate}, #{rec_userid}, #{rec_usernm}) -->
+		EXEC CTI_RECDB.RECORD.dbo.usp_ims_hist_listen_cnt_s #{listen_sdate}, #{listen_edate}
+</select>
+    <select id="getListenHistData" parameterType="hashmap" resultType="hashmap">
+     	<!-- CALL USP_Hist_Rec_Listen_Data_S(NULLIF(#{start},''), NULLIF(#{length},''), #{listen_sdate}, #{listen_edate}, #{listen_userid}, #{listen_usernm}, #{rec_sdate}, #{rec_edate}, #{rec_userid}, #{rec_usernm}) -->
+		EXEC CTI_RECDB.RECORD.dbo.usp_ims_hist_listen_s #{start}, #{length}, #{listen_sdate}, #{listen_edate}
+	</select>
+
+
+	<!-- 녹취 다운로드 이력 -->
+    <select id="getDownHistCnt" parameterType="hashmap" resultType="hashmap">
+    	<!-- CALL USP_Hist_Rec_Down_Cnt_S(#{down_sdate}, #{down_edate}, #{loginid}, #{loginnm}, #{rec_sdate}, #{rec_edate}, #{userid}, #{usernm}) -->
+		EXEC CTI_RECDB.RECORD.dbo.usp_ims_hist_down_cnt_s #{down_sdate}, #{down_edate}
+	</select>
+    <select id="getDownHist" parameterType="hashmap" resultType="hashmap">
+    	<!-- CALL USP_Hist_Rec_Down_S(NULLIF(#{start},''), NULLIF(#{length},''), #{down_sdate}, #{down_edate}, #{loginid}, #{loginnm}, #{rec_sdate}, #{rec_edate}, #{userid}, #{usernm}) -->
+		EXEC CTI_RECDB.RECORD.dbo.usp_ims_hist_down_s #{start}, #{length}, #{down_sdate}, #{down_edate}
+	</select>
+	
+	<!-- 녹취 조회 -->
+    <select id="getRecordCnt" parameterType="hashmap" resultType="hashmap">
+    	<!-- CALL USP_Mng_Record_Cnt_S(#{sdate}, #{edate}, #{stime}, #{etime}, #{userid}, #{usernm}, #{slocalno}, #{elocalno}, NULLIF(#{stalk},''), NULLIF(#{etalk},''), #{tel}, #{inout}, #{_EMP_NO}) -->
+		EXEC CTI_RECDB.RECORD.dbo.usp_ims_record_cnt_s #{sdate}, #{edate}, #{stime}, #{etime}, #{userid}, #{usernm}, #{slocalno}, #{elocalno}, #{stalk}, #{etalk}, #{tel}, #{inout}, #{_EMP_NO}
+</select>
+    <select id="getRecord" parameterType="hashmap" resultType="hashmap">
+    	<!-- CALL USP_Mng_Record_S(#{start}, #{length}, #{sdate}, #{edate}, #{stime}, #{etime}, #{userid}, #{usernm}, #{slocalno}, #{elocalno}, NULLIF(#{stalk},''), NULLIF(#{etalk},''), #{tel}, #{inout}, #{_EMP_NO}) -->
+		EXEC CTI_RECDB.RECORD.dbo.usp_ims_record_s #{start}, #{length}, #{sdate}, #{edate}, #{stime}, #{etime}, #{userid}, #{usernm}, #{slocalno}, #{elocalno}, #{stalk}, #{etalk}, #{tel}, #{inout}, #{_EMP_NO}
+</select>
+	
+	<!-- 총괄 현황 엑셀 다운로드 -->		
+	<select id="ExcelStt" parameterType="hashmap" resultType="hashmap">
+		CALL ims_ifx.USP_Excel_Total_Stats_Day_S(#{Year}, #{MM}, #{Dept_No})
+	</select>
+	<select id="ExcelYearStt" parameterType="hashmap" resultType="hashmap">
+		CALL ims_ifx.USP_Excel_Total_Stats_Year_S(#{Year}, #{MM}, #{Dept_No})
+	</select>
+	<select id="ExcelYearTotalStt" parameterType="hashmap" resultType="hashmap">
+		CALL ims_ifx.USP_Excel_Total_Stats_TotalYear_S(#{Year}, #{Dept_No})
+	</select>      		
+        		
+	<!-- 개인 현황 엑셀 다운로드 -->		   		
+    <select id="WeekDay" parameterType="hashmap" resultType="hashmap">
+		CALL ims_ifx.USP_Excel_Emp_WeekDay_S(#{Year}, #{Month}, #{Week})
+	</select>
+	<select id="Week" parameterType="hashmap" resultType="hashmap">
+		CALL ims_ifx.USP_Excel_Agent_Stats_S(#{Year}, #{Month}, #{Week}, #{Dept_No}, #{Type})
+	</select>
+
+	<!-- dnis info -->
+	<select id="DnisList" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Cmm_Dnis_S()
+	</select>
+
+	<!-- dept info -->
+	<select id="DeptList" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Mem_Total_Dept_S()
+	</select>
+
+	<!-- div info -->
+	<select id="DivList" parameterType="hashmap" resultType="hashmap">
+		CALL USP_Code_USR_S()
+	</select>
+
+</mapper>
